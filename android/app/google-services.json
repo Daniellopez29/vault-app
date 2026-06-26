@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "49495820436",
+    "project_id": "vault-app-b1b78",
+    "storage_bucket": "vault-app-b1b78.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:49495820436:android:88d1692210e877120d8c81",
+        "android_client_info": {
+          "package_name": "com.example.vault_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "49495820436-7v0dkv7bafr5jc2vvm656d89ap5mqoea.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.vault_app",
+            "certificate_hash": "000ad8845c2929d6c3ba499273a310c7de4b9bba"
+          }
+        },
+        {
+          "client_id": "49495820436-oq98o62p3vjedpee1v1k6afqadnt2i2o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjpHN7cWQIsiNA2RdkYcetVXz4wVu6eKY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "49495820436-oq98o62p3vjedpee1v1k6afqadnt2i2o.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "49495820436-kkrvh9tl5kl4s7skkfbeu7r08vck1ga2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.vaultApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
