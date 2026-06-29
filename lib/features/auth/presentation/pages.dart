@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'providers.dart';
 import 'widgets.dart';
+import '../../home/presentation/widgets.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -39,6 +41,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 }
 
+Future<void> _launchPrivacyPolicy() async {
+  final url = Uri.parse('https://daniellopez29.github.io/vault-privacy-policy');
+  if (await canLaunchUrl(url)) {
+    await launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+}
+
 class _WelcomePage extends StatelessWidget {
   final VoidCallback onLoginWithEmail;
   const _WelcomePage({required this.onLoginWithEmail});
@@ -47,11 +56,9 @@ class _WelcomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Fondo
         Positioned.fill(
           child: Image.asset('assets/images/fondologin.png', fit: BoxFit.cover),
         ),
-        // Overlay semitransparente
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
@@ -82,7 +89,6 @@ class _WelcomePage extends StatelessWidget {
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                 ),
                 const Spacer(),
-                // Botón Google
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -101,7 +107,6 @@ class _WelcomePage extends StatelessWidget {
                 const SizedBox(height: 12),
                 const Text('-ó-', style: TextStyle(color: Colors.grey)),
                 const SizedBox(height: 12),
-                // Botón Correo
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -117,9 +122,14 @@ class _WelcomePage extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                const Text('Términos de Privacidad | Política de Uso',
-                    style: TextStyle(fontSize: 12, color: Colors.grey)),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: _launchPrivacyPolicy,
+                  child: const Text(
+                    'Términos de Privacidad | Política de Uso',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ),
                 const SizedBox(height: 16),
               ],
             ),
@@ -152,29 +162,34 @@ class _LoginFormPage extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: const [
-                SizedBox(height: 16),
-                Text('VAULT',
+              children: [
+                const SizedBox(height: 16),
+                const Text('VAULT',
                     style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2),
                     textAlign: TextAlign.center),
-                SizedBox(height: 8),
-                Text('¡Bienvenido otra vez!',
+                const SizedBox(height: 8),
+                const Text('¡Bienvenido otra vez!',
                     style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center),
-                SizedBox(height: 4),
-                Text('Tu colección premium, bajo control inteligente.',
+                const SizedBox(height: 4),
+                const Text('Tu colección premium, bajo control inteligente.',
                     style: TextStyle(fontSize: 14, color: Colors.black54),
                     textAlign: TextAlign.center),
-                SizedBox(height: 40),
-                LoginForm(),
-                SizedBox(height: 24),
-                Text('Términos de Privacidad | Política de Uso',
+                const SizedBox(height: 40),
+                const LoginForm(),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: _launchPrivacyPolicy,
+                  child: const Text(
+                    'Términos de Privacidad | Política de Uso',
                     style: TextStyle(fontSize: 12, color: Colors.grey),
-                    textAlign: TextAlign.center),
-                SizedBox(height: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 16),
               ],
             ),
           ),
@@ -184,16 +199,36 @@ class _LoginFormPage extends ConsumerWidget {
   }
 }
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  int _currentIndex = 1;
+
+  final List<Widget> _pages = const [
+    PlaceholderView(title: 'Shop (Marketplace)'),
+    PlaceholderView(title: 'Home / Feed'),
+    PlaceholderView(title: 'Carrito'),
+    PlaceholderView(title: 'Perfil de Usuario'),
+  ];
+
+  void _onAddPressed() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Próximamente: Registrar nuevo activo')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(authControllerProvider).user;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Vault'),
+        title: Text(user?.email ?? 'Vault'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -206,11 +241,11 @@ class HomePage extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(
-        child: Text(
-          '¡Bienvenido, ${user?.email ?? ''}!',
-          style: const TextStyle(fontSize: 20),
-        ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
+      bottomNavigationBar: VaultBottomNavBar(
+        currentIndex: _currentIndex,
+        onTabSelected: (i) => setState(() => _currentIndex = i),
+        onAddPressed: _onAddPressed,
       ),
     );
   }
