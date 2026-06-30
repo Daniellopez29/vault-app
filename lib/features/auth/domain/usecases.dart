@@ -7,12 +7,11 @@ import 'repositories.dart';
 
 class LoginUseCase implements UseCase<UserEntity, LoginParams> {
   final AuthRepository repository;
-  LoginUseCase(this.repository);
+  const LoginUseCase(this.repository);
 
   @override
-  Future<Either<Failure, UserEntity>> call(LoginParams params) {
-    return repository.login(email: params.email, password: params.password);
-  }
+  Future<Either<Failure, UserEntity>> call(LoginParams params) =>
+      repository.login(email: params.email, password: params.password);
 }
 
 class LoginParams extends Equatable {
@@ -26,28 +25,34 @@ class LoginParams extends Equatable {
 
 class RegisterUseCase implements UseCase<UserEntity, RegisterParams> {
   final AuthRepository repository;
-  RegisterUseCase(this.repository);
+  const RegisterUseCase(this.repository);
 
   @override
-  Future<Either<Failure, UserEntity>> call(RegisterParams params) {
-    return repository.register(email: params.email, password: params.password);
-  }
+  Future<Either<Failure, UserEntity>> call(RegisterParams params) =>
+      repository.register(
+        email: params.email,
+        password: params.password,
+        fullName: params.fullName,
+      );
 }
 
 class RegisterParams extends Equatable {
   final String email;
   final String password;
-  const RegisterParams({required this.email, required this.password});
+  final String fullName;
+  const RegisterParams({
+    required this.email,
+    required this.password,
+    required this.fullName,
+  });
 
   @override
-  List<Object?> get props => [email, password];
+  List<Object?> get props => [email, password, fullName];
 }
 
 class LoginWithGoogleUseCase {
   final AuthRepository repository;
-  LoginWithGoogleUseCase(this.repository);
+  const LoginWithGoogleUseCase(this.repository);
 
-  Future<Either<Failure, UserEntity>> call() {
-    return repository.loginWithGoogle();
-  }
+  Future<Either<Failure, UserEntity>> call() => repository.loginWithGoogle();
 }

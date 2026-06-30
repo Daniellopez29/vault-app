@@ -4,6 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'providers.dart';
 import 'widgets.dart';
 import '../../home/presentation/widgets.dart';
+import '../../home/presentation/feed_widgets.dart';
+import '../../profile/presentation/widgets.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -211,9 +213,9 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   final List<Widget> _pages = const [
     PlaceholderView(title: 'Shop (Marketplace)'),
-    PlaceholderView(title: 'Home / Feed'),
+    FeedTab(),
     PlaceholderView(title: 'Carrito'),
-    PlaceholderView(title: 'Perfil de Usuario'),
+    ProfileTab(),
   ];
 
   void _onAddPressed() {

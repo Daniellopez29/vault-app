@@ -19,7 +19,11 @@ class AuthState extends Equatable {
     this.errorMessage,
   });
 
-  AuthState copyWith({AuthStatus? status, UserEntity? user, String? errorMessage}) {
+  AuthState copyWith({
+    AuthStatus? status,
+    UserEntity? user,
+    String? errorMessage,
+  }) {
     return AuthState(
       status: status ?? this.status,
       user: user ?? this.user,
@@ -31,9 +35,9 @@ class AuthState extends Equatable {
   List<Object?> get props => [status, user, errorMessage];
 }
 
-final authRepositoryProvider = Provider<AuthRepository>((ref) => AuthRepositoryImpl(
-  remoteDataSource: AuthRemoteDataSourceImpl(),
-));
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  return AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl());
+});
 
 final loginUseCaseProvider = Provider<LoginUseCase>((ref) {
   return LoginUseCase(ref.read(authRepositoryProvider));
@@ -47,11 +51,12 @@ final loginWithGoogleUseCaseProvider = Provider<LoginWithGoogleUseCase>((ref) {
   return LoginWithGoogleUseCase(ref.read(authRepositoryProvider));
 });
 
-final authControllerProvider = StateNotifierProvider<AuthController, AuthState>((ref) {
+final authControllerProvider =
+StateNotifierProvider<AuthController, AuthState>((ref) {
   return AuthController(
-    ref.read(loginUseCaseProvider),
-    ref.read(registerUseCaseProvider),
-    ref.read(loginWithGoogleUseCaseProvider),
+    loginUseCase: ref.read(loginUseCaseProvider),
+    registerUseCase: ref.read(registerUseCaseProvider),
+    loginWithGoogleUseCase: ref.read(loginWithGoogleUseCaseProvider),
   );
 });
 
@@ -60,24 +65,39 @@ class AuthController extends StateNotifier<AuthState> {
   final RegisterUseCase _registerUseCase;
   final LoginWithGoogleUseCase _loginWithGoogleUseCase;
 
-  AuthController(this._loginUseCase, this._registerUseCase, this._loginWithGoogleUseCase)
-      : super(const AuthState());
+  AuthController({
+    required LoginUseCase loginUseCase,
+    required RegisterUseCase registerUseCase,
+    required LoginWithGoogleUseCase loginWithGoogleUseCase,
+  })  : _loginUseCase = loginUseCase,
+        _registerUseCase = registerUseCase,
+        _loginWithGoogleUseCase = loginWithGoogleUseCase,
+        super(const AuthState());
 
   Future<void> login({required String email, required String password}) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     final result = await _loginUseCase(LoginParams(email: email, password: password));
     result.fold(
-          (failure) => state = state.copyWith(status: AuthStatus.error, errorMessage: failure.message),
-          (user) => state = state.copyWith(status: AuthStatus.authenticated, user: user),
+          (failure) => state = state.copyWith(
+          status: AuthStatus.error, errorMessage: failure.message),
+          (user) => state = state.copyWith(
+          status: AuthStatus.authenticated, user: user),
     );
   }
 
-  Future<void> register({required String email, required String password}) async {
+  Future<void> register({
+    required String email,
+    required String password,
+    required String fullName,
+  }) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
-    final result = await _registerUseCase(RegisterParams(email: email, password: password));
+    final result = await _registerUseCase(
+        RegisterParams(email: email, password: password, fullName: fullName));
     result.fold(
-          (failure) => state = state.copyWith(status: AuthStatus.error, errorMessage: failure.message),
-          (user) => state = state.copyWith(status: AuthStatus.authenticated, user: user),
+          (failure) => state = state.copyWith(
+          status: AuthStatus.error, errorMessage: failure.message),
+          (user) => state = state.copyWith(
+          status: AuthStatus.authenticated, user: user),
     );
   }
 
@@ -85,8 +105,10 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     final result = await _loginWithGoogleUseCase();
     result.fold(
-          (failure) => state = state.copyWith(status: AuthStatus.error, errorMessage: failure.message),
-          (user) => state = state.copyWith(status: AuthStatus.authenticated, user: user),
+          (failure) => state = state.copyWith(
+          status: AuthStatus.error, errorMessage: failure.message),
+          (user) => state = state.copyWith(
+          status: AuthStatus.authenticated, user: user),
     );
   }
 

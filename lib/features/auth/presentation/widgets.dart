@@ -12,6 +12,7 @@ class LoginForm extends ConsumerStatefulWidget {
 
 class _LoginFormState extends ConsumerState<LoginForm> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscure = true;
@@ -19,6 +20,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -29,9 +31,16 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     if (_isLogin) {
-      ref.read(authControllerProvider.notifier).login(email: email, password: password);
+      ref.read(authControllerProvider.notifier).login(
+        email: email,
+        password: password,
+      );
     } else {
-      ref.read(authControllerProvider.notifier).register(email: email, password: password);
+      ref.read(authControllerProvider.notifier).register(
+        email: email,
+        password: password,
+        fullName: _nameController.text.trim(),
+      );
     }
   }
 
@@ -53,11 +62,29 @@ class _LoginFormState extends ConsumerState<LoginForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (!_isLogin) ...[
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Nombre completo',
+                prefixIcon: Icon(Icons.person_outline),
+              ),
+              textCapitalization: TextCapitalization.words,
+              validator: (v) => v == null || v.trim().isEmpty
+                  ? 'Ingresa tu nombre'
+                  : null,
+            ),
+            const SizedBox(height: 16),
+          ],
           TextFormField(
             controller: _emailController,
-            decoration: const InputDecoration(labelText: 'Correo electrónico'),
+            decoration: const InputDecoration(
+              labelText: 'Correo electrónico',
+              prefixIcon: Icon(Icons.email_outlined),
+            ),
             keyboardType: TextInputType.emailAddress,
-            validator: (v) => v == null || !v.contains('@') ? 'Correo inválido' : null,
+            validator: (v) =>
+            v == null || !v.contains('@') ? 'Correo inválido' : null,
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -65,46 +92,55 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             obscureText: _obscure,
             decoration: InputDecoration(
               labelText: 'Contraseña',
+              prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
                 onPressed: () => setState(() => _obscure = !_obscure),
               ),
             ),
-            validator: (v) => v == null || v.length < 6 ? 'Mínimo 6 caracteres' : null,
+            validator: (v) =>
+            v == null || v.length < 6 ? 'Mínimo 6 caracteres' : null,
           ),
           if (state.status == AuthStatus.error) ...[
             const SizedBox(height: 12),
-            Text(state.errorMessage ?? '', style: const TextStyle(color: Colors.red)),
+            Text(state.errorMessage ?? '',
+                style: const TextStyle(color: Colors.red)),
           ],
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: isLoading ? null : _submit,
             child: isLoading
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator())
+                ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
                 : Text(_isLogin ? 'Iniciar sesión' : 'Crear cuenta'),
           ),
           const SizedBox(height: 8),
           TextButton(
-            onPressed: () => setState(() => _isLogin = !_isLogin),
+            onPressed: () => setState(() {
+              _isLogin = !_isLogin;
+              _nameController.clear();
+            }),
             child: Text(_isLogin
                 ? '¿No tienes cuenta? Regístrate'
                 : '¿Ya tienes cuenta? Inicia sesión'),
           ),
-          const Row(
-            children: [
-              Expanded(child: Divider()),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Text('o', style: TextStyle(color: Colors.grey)),
-              ),
-              Expanded(child: Divider()),
-            ],
-          ),
+          const Row(children: [
+            Expanded(child: Divider()),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Text('o', style: TextStyle(color: Colors.grey)),
+            ),
+            Expanded(child: Divider()),
+          ]),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: isLoading
                 ? null
-                : () => ref.read(authControllerProvider.notifier).loginWithGoogle(),
+                : () =>
+                ref.read(authControllerProvider.notifier).loginWithGoogle(),
             icon: const Icon(Icons.g_mobiledata, size: 24),
             label: const Text('Continuar con Google'),
           ),

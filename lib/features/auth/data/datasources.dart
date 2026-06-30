@@ -4,8 +4,10 @@ import '../../../core/error.dart';
 
 abstract class AuthRemoteDataSource {
   Future<void> login(String email, String password);
-  Future<void> register(String email, String password);
+  Future<void> register(String email, String password, String fullName);
   Future<void> loginWithGoogle();
+  String? getCurrentDisplayName();
+  String? getCurrentEmail();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -14,22 +16,21 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> login(String email, String password) async {
     try {
-      await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
     } on FirebaseAuthException catch (e) {
       throw ServerFailure(_mapError(e.code));
     }
   }
 
   @override
-  Future<void> register(String email, String password) async {
+  Future<void> register(String email, String password, String fullName) async {
     try {
-      await _auth.createUserWithEmailAndPassword(
+      final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+      await credential.user?.updateDisplayName(fullName);
+      await credential.user?.reload();
     } on FirebaseAuthException catch (e) {
       throw ServerFailure(_mapError(e.code));
     }
@@ -38,13 +39,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> loginWithGoogle() async {
     try {
-      final googleSignIn = GoogleSignIn();
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      final googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) throw ServerFailure('Inicio de sesión cancelado.');
-
-      final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
-
+      final googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -58,24 +55,22 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 
+  @override
+  String? getCurrentDisplayName() => _auth.currentUser?.displayName;
+
+  @override
+  String? getCurrentEmail() => _auth.currentUser?.email;
+
   String _mapError(String code) {
     switch (code) {
-      case 'user-not-found':
-        return 'No existe una cuenta con ese correo.';
-      case 'wrong-password':
-        return 'Contraseña incorrecta.';
-      case 'invalid-email':
-        return 'El correo no es válido.';
-      case 'user-disabled':
-        return 'Esta cuenta ha sido deshabilitada.';
-      case 'invalid-credential':
-        return 'Correo o contraseña incorrectos.';
-      case 'email-already-in-use':
-        return 'Ya existe una cuenta con ese correo.';
-      case 'weak-password':
-        return 'La contraseña es muy débil.';
-      default:
-        return 'Error inesperado. Intenta de nuevo.';
+      case 'user-not-found':     return 'No existe una cuenta con ese correo.';
+      case 'wrong-password':     return 'Contraseña incorrecta.';
+      case 'invalid-email':      return 'El correo no es válido.';
+      case 'user-disabled':      return 'Esta cuenta ha sido deshabilitada.';
+      case 'invalid-credential': return 'Correo o contraseña incorrectos.';
+      case 'email-already-in-use': return 'Ya existe una cuenta con ese correo.';
+      case 'weak-password':      return 'La contraseña es muy débil.';
+      default:                   return 'Error inesperado. Intenta de nuevo.';
     }
   }
 }
