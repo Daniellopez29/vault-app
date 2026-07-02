@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/screen_security.dart';
 import 'providers.dart';
 import 'widgets.dart';
 import '../../home/presentation/widgets.dart';
@@ -18,7 +19,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final PageController _pageController = PageController();
 
   @override
+  void initState() {
+    super.initState();
+    ScreenSecurity.enable();
+  }
+
+  @override
   void dispose() {
+    ScreenSecurity.disable();
     _pageController.dispose();
     super.dispose();
   }
