@@ -16,7 +16,6 @@ class LoginPage extends ConsumerStatefulWidget {
 
 class _LoginPageState extends ConsumerState<LoginPage> {
   final PageController _pageController = PageController();
-  int _currentPage = 0;
 
   @override
   void dispose() {
@@ -29,7 +28,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return Scaffold(
       body: PageView(
         controller: _pageController,
-        onPageChanged: (index) => setState(() => _currentPage = index),
         children: [
           _WelcomePage(onLoginWithEmail: () {
             _pageController.animateToPage(1,
@@ -64,7 +62,7 @@ class _WelcomePage extends StatelessWidget {
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.65),
+              color: Colors.white.withValues(alpha: 0.65),
             ),
           ),
         ),
@@ -155,7 +153,7 @@ class _LoginFormPage extends ConsumerWidget {
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.65),
+              color: Colors.white.withValues(alpha: 0.65),
             ),
           ),
         ),
