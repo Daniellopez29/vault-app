@@ -22,7 +22,7 @@ class VaultBottomNavBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.black.withOpacity(0.08))),
+        border: Border(top: BorderSide(color: Colors.black.withValues(alpha: 0.08))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -49,7 +49,7 @@ class _NavIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: onTap,
-      icon: Icon(icon, size: 26, color: isActive ? _kDark : _kDark.withOpacity(0.35)),
+      icon: Icon(icon, size: 26, color: isActive ? _kDark : _kDark.withValues(alpha: 0.35)),
     );
   }
 }

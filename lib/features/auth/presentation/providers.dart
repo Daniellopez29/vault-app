@@ -57,6 +57,7 @@ StateNotifierProvider<AuthController, AuthState>((ref) {
     loginUseCase: ref.read(loginUseCaseProvider),
     registerUseCase: ref.read(registerUseCaseProvider),
     loginWithGoogleUseCase: ref.read(loginWithGoogleUseCaseProvider),
+    authRepository: ref.read(authRepositoryProvider),
   );
 });
 
@@ -64,14 +65,17 @@ class AuthController extends StateNotifier<AuthState> {
   final LoginUseCase _loginUseCase;
   final RegisterUseCase _registerUseCase;
   final LoginWithGoogleUseCase _loginWithGoogleUseCase;
+  final AuthRepository _authRepository;
 
   AuthController({
     required LoginUseCase loginUseCase,
     required RegisterUseCase registerUseCase,
     required LoginWithGoogleUseCase loginWithGoogleUseCase,
+    required AuthRepository authRepository,
   })  : _loginUseCase = loginUseCase,
         _registerUseCase = registerUseCase,
         _loginWithGoogleUseCase = loginWithGoogleUseCase,
+        _authRepository = authRepository,
         super(const AuthState());
 
   Future<void> login({required String email, required String password}) async {
@@ -113,6 +117,7 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    await _authRepository.logout();
     state = const AuthState();
   }
 }
