@@ -11,6 +11,7 @@ import '../../home/presentation/widgets.dart';
 import '../../profile/presentation/profile_tab.dart';
 import '../../reviews/presentation/reviews_tab.dart';
 import '../../services/presentation/services_tab.dart';
+import '../../../core/screen_security.dart';
 import 'providers.dart';
 import 'widgets.dart';
 
@@ -25,7 +26,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final PageController _pageController = PageController();
 
   @override
+  void initState() {
+    super.initState();
+    ScreenSecurity.enable();
+  }
+
+  @override
   void dispose() {
+    ScreenSecurity.disable();
     _pageController.dispose();
     super.dispose();
   }
