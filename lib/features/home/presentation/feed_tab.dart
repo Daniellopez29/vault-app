@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
-
-const _kDark = Color(0xFF2D2D3A);
 
 class FeedTab extends ConsumerWidget {
   const FeedTab({super.key});
@@ -15,7 +14,7 @@ class FeedTab extends ConsumerWidget {
     switch (state.status) {
       case FeedStatus.initial:
       case FeedStatus.loading:
-        return const Center(child: CircularProgressIndicator(color: _kDark));
+        return const Center(child: CircularProgressIndicator());
       case FeedStatus.error:
         return Center(
           child: Column(
@@ -77,14 +76,19 @@ class _PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     final post = widget.post;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: VaultColors.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -96,8 +100,8 @@ class _PostCardState extends State<PostCard> {
               aspectRatio: 16 / 11,
               child: post.imageUrl.startsWith('assets/')
                   ? Container(
-                color: Colors.grey.shade300,
-                child: const Icon(Icons.image_outlined, size: 48, color: Colors.grey),
+                color: VaultColors.background,
+                child: Icon(Icons.image_outlined, size: 48, color: VaultColors.textSecondary),
               )
                   : Image.network(post.imageUrl, fit: BoxFit.cover),
             ),
@@ -114,39 +118,32 @@ class _PostCardState extends State<PostCard> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(post.title,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                          Text(post.timeAgo,
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                          Text(post.title, style: tt.titleLarge),
+                          Text(post.timeAgo, style: tt.bodyMedium),
                         ],
                       ),
                     ),
-                    Text(post.authorName,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text(post.authorName, style: tt.titleMedium),
                   ],
                 ),
                 const SizedBox(height: 8),
                 AnimatedCrossFade(
                   duration: const Duration(milliseconds: 200),
-                  crossFadeState:
-                  _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                  crossFadeState: _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
                   firstChild: Text(
                     post.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
+                    style: tt.bodyLarge,
                   ),
-                  secondChild: Text(
-                    post.description,
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
-                  ),
+                  secondChild: Text(post.description, style: tt.bodyLarge),
                 ),
                 GestureDetector(
                   onTap: () => setState(() => _expanded = !_expanded),
                   child: Icon(
                     _expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                     size: 18,
-                    color: Colors.grey.shade600,
+                    color: VaultColors.textSecondary,
                   ),
                 ),
               ],
@@ -160,14 +157,14 @@ class _PostCardState extends State<PostCard> {
                 _ActionStat(
                   icon: post.isLiked ? Icons.favorite : Icons.favorite_border,
                   count: post.likesCount,
-                  color: post.isLiked ? Colors.red : _kDark,
+                  color: post.isLiked ? VaultColors.error : VaultColors.textPrimary,
                   onTap: widget.onLikeTap,
                 ),
                 const SizedBox(width: 16),
                 _ActionStat(
                   icon: Icons.chat_bubble_outline,
                   count: post.commentsCount,
-                  color: _kDark,
+                  color: VaultColors.textPrimary,
                   onTap: () {},
                 ),
                 const SizedBox(width: 16),
@@ -175,7 +172,7 @@ class _PostCardState extends State<PostCard> {
                   onPressed: widget.onSaveTap,
                   icon: Icon(
                     post.isSaved ? Icons.bookmark : Icons.bookmark_border,
-                    color: _kDark,
+                    color: VaultColors.textPrimary,
                     size: 22,
                   ),
                   visualDensity: VisualDensity.compact,
@@ -204,12 +201,13 @@ class _ActionStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return GestureDetector(
       onTap: onTap,
       child: Column(
         children: [
           Icon(icon, size: 20, color: color),
-          Text('$count', style: TextStyle(fontSize: 11, color: color)),
+          Text('$count', style: tt.labelSmall?.copyWith(color: color)),
         ],
       ),
     );

@@ -33,20 +33,83 @@ class AssetModel extends AssetEntity {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'brand': brand,
-      'name': name,
-      'imageUrl': imageUrl,
-      'acquisitionDate': acquisitionDate.toIso8601String(),
-      'originalPrice': originalPrice,
-      'origin': origin,
-      'size': size,
-      'condition': condition,
-      'servicesCount': servicesCount,
-      'restorationsCount': restorationsCount,
-      'isVerified': isVerified,
-    };
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'brand': brand,
+    'name': name,
+    'imageUrl': imageUrl,
+    'acquisitionDate': acquisitionDate.toIso8601String(),
+    'originalPrice': originalPrice,
+    'origin': origin,
+    'size': size,
+    'condition': condition,
+    'servicesCount': servicesCount,
+    'restorationsCount': restorationsCount,
+    'isVerified': isVerified,
+  };
+}
+
+class RestorerServiceModel extends RestorerServiceEntity {
+  const RestorerServiceModel({
+    required super.id,
+    required super.title,
+    required super.description,
+    required super.price,
+  });
+
+  factory RestorerServiceModel.fromJson(Map<String, dynamic> json) {
+    return RestorerServiceModel(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String,
+      price: (json['price'] as num).toDouble(),
+    );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'description': description,
+    'price': price,
+  };
+}
+
+class RestorerProfileModel extends RestorerProfileEntity {
+  const RestorerProfileModel({
+    required super.userId,
+    required super.bio,
+    required super.specialties,
+    required super.services,
+    super.rating,
+    super.reviewsCount,
+  });
+
+  factory RestorerProfileModel.fromJson(Map<String, dynamic> json) {
+    return RestorerProfileModel(
+      userId: json['userId'] as String,
+      bio: json['bio'] as String,
+      specialties: List<String>.from(json['specialties'] as List),
+      services: (json['services'] as List)
+          .map((s) => RestorerServiceModel.fromJson(s as Map<String, dynamic>))
+          .toList(),
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      reviewsCount: json['reviewsCount'] as int? ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'userId': userId,
+    'bio': bio,
+    'specialties': specialties,
+    'services': services
+        .map((s) => RestorerServiceModel(
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      price: s.price,
+    ).toJson())
+        .toList(),
+    'rating': rating,
+    'reviewsCount': reviewsCount,
+  };
 }

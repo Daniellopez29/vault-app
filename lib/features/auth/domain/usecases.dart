@@ -1,9 +1,11 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
+import '../../../../core/enums.dart';
 import '../../../core/error.dart';
 import '../../../core/usecase.dart';
 import 'entities.dart';
 import 'repositories.dart';
+
 
 class LoginUseCase implements UseCase<UserEntity, LoginParams> {
   final AuthRepository repository;
@@ -12,6 +14,14 @@ class LoginUseCase implements UseCase<UserEntity, LoginParams> {
   @override
   Future<Either<Failure, UserEntity>> call(LoginParams params) =>
       repository.login(email: params.email, password: params.password);
+}
+
+class UpdateDisplayNameUseCase {
+  final AuthRepository repository;
+  const UpdateDisplayNameUseCase(this.repository);
+
+  Future<Either<Failure, UserEntity>> call(String fullName) =>
+      repository.updateDisplayName(fullName);
 }
 
 class LoginParams extends Equatable {
@@ -55,4 +65,34 @@ class LoginWithGoogleUseCase {
   const LoginWithGoogleUseCase(this.repository);
 
   Future<Either<Failure, UserEntity>> call() => repository.loginWithGoogle();
+}
+
+class SaveUserRoleUseCase {
+  final AuthRepository repository;
+  const SaveUserRoleUseCase(this.repository);
+
+  Future<Either<Failure, UserEntity>> call(UserRole role) =>
+      repository.saveUserRole(role);
+}
+
+class GetCurrentUserUseCase {
+  final AuthRepository repository;
+  const GetCurrentUserUseCase(this.repository);
+
+  Future<Either<Failure, UserEntity>> call() => repository.getCurrentUser();
+}
+
+class DeleteAccountUseCase {
+  final AuthRepository repository;
+  const DeleteAccountUseCase(this.repository);
+
+  Future<Either<Failure, void>> call() => repository.deleteAccount();
+}
+
+class UpdatePasswordUseCase {
+  final AuthRepository repository;
+  const UpdatePasswordUseCase(this.repository);
+
+  Future<Either<Failure, void>> call(String newPassword) =>
+      repository.updatePassword(newPassword);
 }

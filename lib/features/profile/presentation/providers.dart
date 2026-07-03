@@ -7,7 +7,8 @@ import '../domain/repositories.dart';
 import '../domain/usecases.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
-  return ProfileRepositoryImpl(remoteDataSource: ProfileRemoteDataSourceImpl());
+  return ProfileRepositoryImpl(
+      remoteDataSource: ProfileRemoteDataSourceImpl());
 });
 
 final getUserAssetsUseCaseProvider = Provider<GetUserAssetsUseCase>((ref) {
@@ -17,6 +18,18 @@ final getUserAssetsUseCaseProvider = Provider<GetUserAssetsUseCase>((ref) {
 final deleteAssetUseCaseProvider = Provider<DeleteAssetUseCase>((ref) {
   return DeleteAssetUseCase(ref.read(profileRepositoryProvider));
 });
+
+final getRestorerProfileUseCaseProvider =
+Provider<GetRestorerProfileUseCase>((ref) {
+  return GetRestorerProfileUseCase(ref.read(profileRepositoryProvider));
+});
+
+final saveRestorerProfileUseCaseProvider =
+Provider<SaveRestorerProfileUseCase>((ref) {
+  return SaveRestorerProfileUseCase(ref.read(profileRepositoryProvider));
+});
+
+// ─── ASSETS STATE ─────────────────────────────────────────────────────────────
 
 enum ProfileAssetsStatus { initial, loading, loaded, error }
 
@@ -43,8 +56,6 @@ class ProfileAssetsState {
     );
   }
 
-  /// Conteo de artículos por marca/categoría, calculado en tiempo real
-  /// a partir de los assets reales (no datos quemados).
   Map<String, int> get categoryCounts {
     final counts = <String, int>{};
     for (final asset in assets) {
@@ -53,14 +64,17 @@ class ProfileAssetsState {
     return counts;
   }
 
+  double get totalValue =>
+      assets.fold(0, (sum, a) => sum + a.originalPrice);
+
   int get totalArticles => assets.length;
 }
 
 final profileAssetsControllerProvider =
 StateNotifierProvider<ProfileAssetsController, ProfileAssetsState>((ref) {
   return ProfileAssetsController(
-    ref.read(getUserAssetsUseCaseProvider),
-    ref.read(deleteAssetUseCaseProvider),
+    getUserAssetsUseCase: ref.read(getUserAssetsUseCaseProvider),
+    deleteAssetUseCase: ref.read(deleteAssetUseCaseProvider),
   );
 });
 
@@ -68,8 +82,12 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
   final GetUserAssetsUseCase _getUserAssets;
   final DeleteAssetUseCase _deleteAsset;
 
-  ProfileAssetsController(this._getUserAssets, this._deleteAsset)
-      : super(const ProfileAssetsState()) {
+  ProfileAssetsController({
+    required GetUserAssetsUseCase getUserAssetsUseCase,
+    required DeleteAssetUseCase deleteAssetUseCase,
+  })  : _getUserAssets = getUserAssetsUseCase,
+        _deleteAsset = deleteAssetUseCase,
+        super(const ProfileAssetsState()) {
     loadAssets();
   }
 
@@ -89,6 +107,85 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
     result.fold(
           (failure) => state = state.copyWith(errorMessage: failure.message),
           (_) => loadAssets(),
+    );
+  }
+}
+
+// ─── RESTORER PROFILE STATE ───────────────────────────────────────────────────
+
+enum RestorerProfileStatus { initial, loading, loaded, empty, error }
+
+class RestorerProfileState {
+  final RestorerProfileStatus status;
+  final RestorerProfileEntity? profile;
+  final String? errorMessage;
+
+  const RestorerProfileState({
+    this.status = RestorerProfileStatus.initial,
+    this.profile,
+    this.errorMessage,
+  });
+
+  RestorerProfileState copyWith({
+    RestorerProfileStatus? status,
+    RestorerProfileEntity? profile,
+    String? errorMessage,
+  }) {
+    return RestorerProfileState(
+      status: status ?? this.status,
+      profile: profile ?? this.profile,
+      errorMessage: errorMessage,
+    );
+  }
+}
+
+final restorerProfileControllerProvider =
+StateNotifierProvider.family<RestorerProfileController,
+    RestorerProfileState, String>((ref, userId) {
+  return RestorerProfileController(
+    getRestorerProfile: ref.read(getRestorerProfileUseCaseProvider),
+    saveRestorerProfile: ref.read(saveRestorerProfileUseCaseProvider),
+    userId: userId,
+  );
+});
+
+class RestorerProfileController
+    extends StateNotifier<RestorerProfileState> {
+  final GetRestorerProfileUseCase _getRestorerProfile;
+  final SaveRestorerProfileUseCase _saveRestorerProfile;
+  final String _userId;
+
+  RestorerProfileController({
+    required GetRestorerProfileUseCase getRestorerProfile,
+    required SaveRestorerProfileUseCase saveRestorerProfile,
+    required String userId,
+  })  : _getRestorerProfile = getRestorerProfile,
+        _saveRestorerProfile = saveRestorerProfile,
+        _userId = userId,
+        super(const RestorerProfileState()) {
+    loadProfile();
+  }
+
+  Future<void> loadProfile() async {
+    state = state.copyWith(status: RestorerProfileStatus.loading);
+    final result = await _getRestorerProfile(_userId);
+    result.fold(
+          (failure) => state = state.copyWith(
+          status: RestorerProfileStatus.error,
+          errorMessage: failure.message),
+          (profile) => state = state.copyWith(
+          status: profile == null
+              ? RestorerProfileStatus.empty
+              : RestorerProfileStatus.loaded,
+          profile: profile),
+    );
+  }
+
+  Future<void> saveProfile(RestorerProfileEntity profile) async {
+    final result = await _saveRestorerProfile(profile);
+    result.fold(
+          (failure) => state = state.copyWith(errorMessage: failure.message),
+          (_) => loadProfile(),
     );
   }
 }

@@ -31,17 +31,46 @@ class AssetEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    brand,
-    name,
-    imageUrl,
-    acquisitionDate,
-    originalPrice,
-    origin,
-    size,
-    condition,
-    servicesCount,
-    restorationsCount,
-    isVerified,
+    id, brand, name, imageUrl, acquisitionDate, originalPrice,
+    origin, size, condition, servicesCount, restorationsCount, isVerified,
   ];
+}
+
+class RestorerServiceEntity extends Equatable {
+  final String id;
+  final String title;
+  final String description;
+  final double price;
+
+  const RestorerServiceEntity({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.price,
+  });
+
+  @override
+  List<Object?> get props => [id, title, description, price];
+}
+
+class RestorerProfileEntity extends Equatable {
+  final String userId;
+  final String bio;
+  final List<String> specialties;
+  final List<RestorerServiceEntity> services;
+  final double rating;
+  final int reviewsCount;
+
+  const RestorerProfileEntity({
+    required this.userId,
+    required this.bio,
+    required this.specialties,
+    required this.services,
+    this.rating = 0.0,
+    this.reviewsCount = 0,
+  });
+
+  @override
+  List<Object?> get props =>
+      [userId, bio, specialties, services, rating, reviewsCount];
 }

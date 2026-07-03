@@ -3,11 +3,12 @@ import '../../../core/error.dart';
 import '../domain/entities.dart';
 import '../domain/repositories.dart';
 import 'datasources.dart';
+import 'models.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileRemoteDataSource remoteDataSource;
 
-  ProfileRepositoryImpl({required this.remoteDataSource});
+  const ProfileRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<Either<Failure, List<AssetEntity>>> getUserAssets() async {
@@ -25,6 +26,47 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, void>> deleteAsset(String assetId) async {
     try {
       await remoteDataSource.deleteAsset(assetId);
+      return const Right(null);
+    } on ServerFailure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, RestorerProfileEntity?>> getRestorerProfile(
+      String userId) async {
+    try {
+      final profile = await remoteDataSource.getRestorerProfile(userId);
+      return Right(profile);
+    } on ServerFailure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> saveRestorerProfile(
+      RestorerProfileEntity profile) async {
+    try {
+      final model = RestorerProfileModel(
+        userId: profile.userId,
+        bio: profile.bio,
+        specialties: profile.specialties,
+        services: profile.services
+            .map((s) => RestorerServiceModel(
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          price: s.price,
+        ))
+            .toList(),
+        rating: profile.rating,
+        reviewsCount: profile.reviewsCount,
+      );
+      await remoteDataSource.saveRestorerProfile(model);
       return const Right(null);
     } on ServerFailure catch (e) {
       return Left(e);
