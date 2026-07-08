@@ -4,5 +4,9 @@ import 'entities.dart';
 
 abstract class ProfileRepository {
   Future<Either<Failure, List<AssetEntity>>> getUserAssets();
+  Future<Either<Failure, void>> addAsset(AssetEntity asset);
+  Future<Either<Failure, void>> updateAsset(AssetEntity asset);
   Future<Either<Failure, void>> deleteAsset(String assetId);
+  Future<Either<Failure, RestorerProfileEntity?>> getRestorerProfile(String userId);
+  Future<Either<Failure, void>> saveRestorerProfile(RestorerProfileEntity profile);
 }

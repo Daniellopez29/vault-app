@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme.dart';
 
-const _kDark = Color(0xFF2D2D3A); // mismo color que usas en los botones de login
+class NavItem {
+  final IconData icon;
+  final String label;
+  const NavItem({required this.icon, required this.label});
+}
 
-/// Barra de navegación inferior de Vault: Shop, Home, [+], Carrito, Perfil.
-/// El [+] es una acción (abrir "Nuevo Activo"), no una pestaña.
 class VaultBottomNavBar extends StatelessWidget {
-  final int currentIndex; // 0=Shop, 1=Home, 2=Carrito, 3=Perfil
+  final int currentIndex;
   final ValueChanged<int> onTabSelected;
   final VoidCallback onAddPressed;
+  final List<dynamic> navItems;
 
   const VaultBottomNavBar({
     super.key,
     required this.currentIndex,
     required this.onTabSelected,
     required this.onAddPressed,
+    required this.navItems,
   });
 
   @override
@@ -21,18 +26,25 @@ class VaultBottomNavBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.black.withValues(alpha: 0.08))),
+        color: VaultColors.surface,
+        border: Border(
+          top: BorderSide(color: VaultColors.divider),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _NavIcon(icon: Icons.storefront_outlined, isActive: currentIndex == 0, onTap: () => onTabSelected(0)),
-          _NavIcon(icon: Icons.home_outlined, isActive: currentIndex == 1, onTap: () => onTabSelected(1)),
-          _AddButton(onTap: onAddPressed),
-          _NavIcon(icon: Icons.shopping_bag_outlined, isActive: currentIndex == 2, onTap: () => onTabSelected(2)),
-          _NavIcon(icon: Icons.person_outline, isActive: currentIndex == 3, onTap: () => onTabSelected(3)),
-        ],
+        children: List.generate(navItems.length, (index) {
+          final item = navItems[index];
+          if (item.icon == Icons.add) {
+            return _AddButton(onTap: onAddPressed);
+          }
+          final pageIndex = index > 2 ? index - 1 : index;
+          return _NavIcon(
+            icon: item.icon,
+            isActive: currentIndex == pageIndex,
+            onTap: () => onTabSelected(index),
+          );
+        }),
       ),
     );
   }
@@ -49,7 +61,11 @@ class _NavIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: onTap,
-      icon: Icon(icon, size: 26, color: isActive ? _kDark : _kDark.withValues(alpha: 0.35)),
+      icon: Icon(
+        icon,
+        size: 26,
+        color: isActive ? VaultColors.primary : VaultColors.textSecondary,
+      ),
     );
   }
 }
@@ -65,14 +81,16 @@ class _AddButton extends StatelessWidget {
       child: Container(
         width: 38,
         height: 38,
-        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: _kDark, width: 1.5)),
-        child: const Icon(Icons.add, color: _kDark, size: 22),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: VaultColors.primary, width: 1.5),
+        ),
+        child: Icon(Icons.add, color: VaultColors.primary, size: 22),
       ),
     );
   }
 }
 
-/// Placeholder reutilizable para pantallas pendientes de diseñar.
 class PlaceholderView extends StatelessWidget {
   final String title;
   const PlaceholderView({super.key, required this.title});
@@ -80,7 +98,7 @@ class PlaceholderView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey)),
+      child: Text(title, style: Theme.of(context).textTheme.titleLarge),
     );
   }
 }
