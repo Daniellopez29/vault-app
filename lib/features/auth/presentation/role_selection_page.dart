@@ -3,11 +3,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/enums.dart';
 import '../../../../core/router.dart';
+import '../../../../core/screen_security.dart';
 import '../../../../core/theme.dart';
 import 'providers.dart';
 
-class RoleSelectionPage extends ConsumerWidget {
+class RoleSelectionPage extends ConsumerStatefulWidget {
   const RoleSelectionPage({super.key});
+
+  @override
+  ConsumerState<RoleSelectionPage> createState() => _RoleSelectionPageState();
+}
+
+class _RoleSelectionPageState extends ConsumerState<RoleSelectionPage> {
+  @override
+  void initState() {
+    super.initState();
+    ScreenSecurity.enable();
+  }
+
+  @override
+  void dispose() {
+    ScreenSecurity.disable();
+    super.dispose();
+  }
 
   /// Al elegir un rol hay dos caminos:
   /// - Flujo Google: el usuario ya existe (estado roleSelection) → guarda el rol.
@@ -22,7 +40,7 @@ class RoleSelectionPage extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final isLoading =
         ref.watch(authControllerProvider).status == AuthStatus.loading;

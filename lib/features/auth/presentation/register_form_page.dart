@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/enums.dart';
 import '../../../../core/router.dart';
+import '../../../../core/screen_security.dart';
 import '../../../../core/theme.dart';
 import 'providers.dart';
 
@@ -84,7 +85,14 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
   bool _obscure = true;
 
   @override
+  void initState() {
+    super.initState();
+    ScreenSecurity.enable();
+  }
+
+  @override
   void dispose() {
+    ScreenSecurity.disable();
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
