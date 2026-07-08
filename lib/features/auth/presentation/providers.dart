@@ -68,15 +68,11 @@ class AuthController extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
 
   AuthController({
-    required LoginUseCase loginUseCase,
-    required RegisterUseCase registerUseCase,
-    required LoginWithGoogleUseCase loginWithGoogleUseCase,
-    required AuthRepository authRepository,
-  })  : _loginUseCase = loginUseCase,
-        _registerUseCase = registerUseCase,
-        _loginWithGoogleUseCase = loginWithGoogleUseCase,
-        _authRepository = authRepository,
-        super(const AuthState());
+    required this._loginUseCase,
+    required this._registerUseCase,
+    required this._loginWithGoogleUseCase,
+    required this._authRepository,
+  })  : super(const AuthState());
 
   Future<void> login({required String email, required String password}) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
