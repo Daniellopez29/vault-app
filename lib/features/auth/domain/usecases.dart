@@ -43,6 +43,11 @@ class RegisterUseCase implements UseCase<UserEntity, RegisterParams> {
         email: params.email,
         password: params.password,
         fullName: params.fullName,
+        role: params.role,
+        phone: params.phone,
+        businessName: params.businessName,
+        specialty: params.specialty,
+        location: params.location,
       );
 }
 
@@ -50,14 +55,37 @@ class RegisterParams extends Equatable {
   final String email;
   final String password;
   final String fullName;
+  final UserRole role;
+
+  // Campos opcionales por rol (Vendedor, Restaurador, Servicio).
+  // Se capturan en la UI; su persistencia llega con Supabase.
+  final String? phone;
+  final String? businessName;
+  final String? specialty;
+  final String? location;
+
   const RegisterParams({
     required this.email,
     required this.password,
     required this.fullName,
+    required this.role,
+    this.phone,
+    this.businessName,
+    this.specialty,
+    this.location,
   });
 
   @override
-  List<Object?> get props => [email, password, fullName];
+  List<Object?> get props => [
+    email,
+    password,
+    fullName,
+    role,
+    phone,
+    businessName,
+    specialty,
+    location,
+  ];
 }
 
 class LoginWithGoogleUseCase {

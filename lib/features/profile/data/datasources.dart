@@ -3,6 +3,8 @@ import 'models.dart';
 
 abstract class ProfileRemoteDataSource {
   Future<List<AssetModel>> getUserAssets();
+  Future<void> addAsset(AssetModel asset);
+  Future<void> updateAsset(AssetModel asset);
   Future<void> deleteAsset(String assetId);
   Future<RestorerProfileModel?> getRestorerProfile(String userId);
   Future<void> saveRestorerProfile(RestorerProfileModel profile);
@@ -19,6 +21,29 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       return List.of(_assets);
     } catch (e) {
       throw ServerFailure('Error al cargar tus artículos: $e');
+    }
+  }
+
+  @override
+  Future<void> addAsset(AssetModel asset) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    try {
+      _assets.insert(0, asset);
+    } catch (e) {
+      throw ServerFailure('Error al registrar el activo: $e');
+    }
+  }
+
+  @override
+  Future<void> updateAsset(AssetModel asset) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    try {
+      final index = _assets.indexWhere((a) => a.id == asset.id);
+      if (index >= 0) {
+        _assets[index] = asset;
+      }
+    } catch (e) {
+      throw ServerFailure('Error al actualizar el activo: $e');
     }
   }
 

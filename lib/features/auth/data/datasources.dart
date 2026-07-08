@@ -7,7 +7,16 @@ import 'models.dart';
 
 abstract class AuthRemoteDataSource {
   Future<UserModel> login(String email, String password);
-  Future<UserModel> register(String email, String password, String fullName);
+  Future<UserModel> register({
+    required String email,
+    required String password,
+    required String fullName,
+    required UserRole role,
+    String? phone,
+    String? businessName,
+    String? specialty,
+    String? location,
+  });
   Future<UserModel> loginWithGoogle();
   Future<UserModel> saveUserRole(UserRole role);
   Future<UserModel> getCurrentUser();
@@ -19,17 +28,21 @@ abstract class AuthRemoteDataSource {
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  static const _keyRole = 'user_role';
+  /// La clave del rol se compone con el UID para que cada cuenta conserve
+  /// su propio rol en el dispositivo. Con una clave global, el rol de la
+  /// última cuenta que iniciaba sesión sobrescribía al de las demás
+  /// (un Coleccionista entraba como Restaurador, por ejemplo).
+  String _roleKey(String uid) => 'user_role_$uid';
 
-  Future<UserRole> _getSavedRole() async {
+  Future<UserRole> _getSavedRole(String uid) async {
     final prefs = await SharedPreferences.getInstance();
-    final value = prefs.getString(_keyRole);
+    final value = prefs.getString(_roleKey(uid));
     return UserRole.fromValue(value ?? 'general');
   }
 
-  Future<void> _saveRole(UserRole role) async {
+  Future<void> _saveRole(String uid, UserRole role) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyRole, role.value);
+    await prefs.setString(_roleKey(uid), role.value);
   }
 
   UserModel _buildModel(User user, UserRole role) {
@@ -48,16 +61,25 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         email: email,
         password: password,
       );
-      final role = await _getSavedRole();
-      return _buildModel(credential.user!, role);
+      final user = credential.user!;
+      final role = await _getSavedRole(user.uid);
+      return _buildModel(user, role);
     } on FirebaseAuthException catch (e) {
       throw ServerFailure(_mapError(e.code));
     }
   }
 
   @override
-  Future<UserModel> register(
-      String email, String password, String fullName) async {
+  Future<UserModel> register({
+    required String email,
+    required String password,
+    required String fullName,
+    required UserRole role,
+    String? phone,
+    String? businessName,
+    String? specialty,
+    String? location,
+  }) async {
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -65,8 +87,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
       await credential.user!.updateDisplayName(fullName);
       await credential.user!.reload();
-      await _saveRole(UserRole.general);
-      return _buildModel(_auth.currentUser!, UserRole.general);
+      final user = _auth.currentUser!;
+
+      // Guarda el rol ELEGIDO en el registro (ya no un rol fijo).
+      await _saveRole(user.uid, role);
+
+      // NOTA: phone, businessName, specialty y location se reciben ya,
+      // pero su persistencia llega con Supabase. Aquí solo se captura el flujo;
+      // cuando exista el backend, se escriben en la tabla de perfiles.
+
+      return _buildModel(user, role);
     } on FirebaseAuthException catch (e) {
       throw ServerFailure(_mapError(e.code));
     }
@@ -83,8 +113,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         idToken: googleAuth.idToken,
       );
       await _auth.signInWithCredential(credential);
-      final role = await _getSavedRole();
-      return _buildModel(_auth.currentUser!, role);
+      final user = _auth.currentUser!;
+      final role = await _getSavedRole(user.uid);
+      return _buildModel(user, role);
     } on FirebaseAuthException catch (e) {
       throw ServerFailure(_mapError(e.code));
     } catch (e) {
@@ -98,7 +129,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final user = _auth.currentUser;
       if (user == null) throw ServerFailure('No hay sesión activa.');
-      await _saveRole(role);
+      await _saveRole(user.uid, role);
       return _buildModel(user, role);
     } catch (e) {
       if (e is ServerFailure) rethrow;
@@ -111,7 +142,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final user = _auth.currentUser;
       if (user == null) throw ServerFailure('No hay sesión activa.');
-      final role = await _getSavedRole();
+      final role = await _getSavedRole(user.uid);
       return _buildModel(user, role);
     } catch (e) {
       if (e is ServerFailure) rethrow;
@@ -140,8 +171,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (user == null) throw ServerFailure('No hay sesión activa.');
       await user.updateDisplayName(fullName);
       await user.reload();
-      final role = await _getSavedRole();
-      return _buildModel(_auth.currentUser!, role);
+      final refreshed = _auth.currentUser!;
+      final role = await _getSavedRole(refreshed.uid);
+      return _buildModel(refreshed, role);
     } on FirebaseAuthException catch (e) {
       throw ServerFailure(_mapError(e.code));
     } catch (e) {

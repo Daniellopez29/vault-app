@@ -30,9 +30,23 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
     required String fullName,
+    required UserRole role,
+    String? phone,
+    String? businessName,
+    String? specialty,
+    String? location,
   }) async {
     try {
-      final user = await remoteDataSource.register(email, password, fullName);
+      final user = await remoteDataSource.register(
+        email: email,
+        password: password,
+        fullName: fullName,
+        role: role,
+        phone: phone,
+        businessName: businessName,
+        specialty: specialty,
+        location: location,
+      );
       return Right(user);
     } on ServerFailure catch (e) {
       return Left(e);

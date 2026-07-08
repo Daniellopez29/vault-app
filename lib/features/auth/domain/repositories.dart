@@ -13,6 +13,11 @@ abstract class AuthRepository {
     required String email,
     required String password,
     required String fullName,
+    required UserRole role,
+    String? phone,
+    String? businessName,
+    String? specialty,
+    String? location,
   });
 
   Future<Either<Failure, UserEntity>> loginWithGoogle();

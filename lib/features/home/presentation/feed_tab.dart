@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
@@ -21,7 +22,7 @@ class FeedTab extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(state.errorMessage ?? 'Error al cargar el feed'),
-              const SizedBox(height: 12),
+              const SizedBox(height: VaultSpacing.md),
               TextButton(
                 onPressed: () => ref.read(feedControllerProvider.notifier).loadFeed(),
                 child: const Text('Reintentar'),
@@ -36,12 +37,12 @@ class FeedTab extends ConsumerWidget {
         return RefreshIndicator(
           onRefresh: () => ref.read(feedControllerProvider.notifier).loadFeed(),
           child: ListView.builder(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(VaultSpacing.md),
             itemCount: state.posts.length,
             itemBuilder: (context, index) {
               final post = state.posts[index];
               return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.only(bottom: VaultSpacing.lg),
                 child: PostCard(
                   post: post,
                   onLikeTap: () => ref.read(feedControllerProvider.notifier).toggleLike(post.id),
@@ -82,32 +83,35 @@ class _PostCardState extends State<PostCard> {
     return Container(
       decoration: BoxDecoration(
         color: VaultColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: VaultRadius.cardBorder,
+        boxShadow: VaultShadows.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(VaultRadius.card),
+            ),
             child: AspectRatio(
               aspectRatio: 16 / 11,
-              child: post.imageUrl.startsWith('assets/')
+              child: post.imageUrl.isEmpty || post.imageUrl.startsWith('assets/')
                   ? Container(
                 color: VaultColors.background,
-                child: Icon(Icons.image_outlined, size: 48, color: VaultColors.textSecondary),
+                child: Icon(
+                  Icons.image_outlined,
+                  size: VaultIconSize.xl,
+                  color: VaultColors.textSecondary,
+                ),
               )
                   : Image.network(post.imageUrl, fit: BoxFit.cover),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: VaultSpacing.lg,
+              vertical: VaultSpacing.md,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -126,10 +130,12 @@ class _PostCardState extends State<PostCard> {
                     Text(post.authorName, style: tt.titleMedium),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: VaultSpacing.sm),
                 AnimatedCrossFade(
                   duration: const Duration(milliseconds: 200),
-                  crossFadeState: _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                  crossFadeState: _expanded
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
                   firstChild: Text(
                     post.description,
                     maxLines: 2,
@@ -141,8 +147,10 @@ class _PostCardState extends State<PostCard> {
                 GestureDetector(
                   onTap: () => setState(() => _expanded = !_expanded),
                   child: Icon(
-                    _expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                    size: 18,
+                    _expanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    size: VaultIconSize.sm,
                     color: VaultColors.textSecondary,
                   ),
                 ),
@@ -150,30 +158,35 @@ class _PostCardState extends State<PostCard> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(right: 14, bottom: 8),
+            padding: const EdgeInsets.only(
+              right: VaultSpacing.lg,
+              bottom: VaultSpacing.sm,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 _ActionStat(
                   icon: post.isLiked ? Icons.favorite : Icons.favorite_border,
                   count: post.likesCount,
-                  color: post.isLiked ? VaultColors.error : VaultColors.textPrimary,
+                  color: post.isLiked
+                      ? VaultColors.error
+                      : VaultColors.textPrimary,
                   onTap: widget.onLikeTap,
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: VaultSpacing.lg),
                 _ActionStat(
                   icon: Icons.chat_bubble_outline,
                   count: post.commentsCount,
                   color: VaultColors.textPrimary,
                   onTap: () {},
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: VaultSpacing.lg),
                 IconButton(
                   onPressed: widget.onSaveTap,
                   icon: Icon(
                     post.isSaved ? Icons.bookmark : Icons.bookmark_border,
                     color: VaultColors.textPrimary,
-                    size: 22,
+                    size: VaultIconSize.md,
                   ),
                   visualDensity: VisualDensity.compact,
                 ),
@@ -206,7 +219,7 @@ class _ActionStat extends StatelessWidget {
       onTap: onTap,
       child: Column(
         children: [
-          Icon(icon, size: 20, color: color),
+          Icon(icon, size: VaultIconSize.md, color: color),
           Text('$count', style: tt.labelSmall?.copyWith(color: color)),
         ],
       ),

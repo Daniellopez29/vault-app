@@ -23,6 +23,30 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Future<Either<Failure, void>> addAsset(AssetEntity asset) async {
+    try {
+      await remoteDataSource.addAsset(AssetModel.fromEntity(asset));
+      return const Right(null);
+    } on ServerFailure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateAsset(AssetEntity asset) async {
+    try {
+      await remoteDataSource.updateAsset(AssetModel.fromEntity(asset));
+      return const Right(null);
+    } on ServerFailure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> deleteAsset(String assetId) async {
     try {
       await remoteDataSource.deleteAsset(assetId);

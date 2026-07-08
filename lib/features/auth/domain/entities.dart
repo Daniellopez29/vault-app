@@ -11,7 +11,7 @@ class UserEntity extends Equatable {
     required this.id,
     required this.email,
     this.fullName,
-    this.role = UserRole.general,
+    this.role = UserRole.user,
   });
 
   @override

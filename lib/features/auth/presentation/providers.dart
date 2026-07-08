@@ -123,15 +123,30 @@ class AuthController extends StateNotifier<AuthState> {
     required String email,
     required String password,
     required String fullName,
+    required UserRole role,
+    String? phone,
+    String? businessName,
+    String? specialty,
+    String? location,
   }) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     final result = await _registerUseCase(
-        RegisterParams(email: email, password: password, fullName: fullName));
+      RegisterParams(
+        email: email,
+        password: password,
+        fullName: fullName,
+        role: role,
+        phone: phone,
+        businessName: businessName,
+        specialty: specialty,
+        location: location,
+      ),
+    );
     result.fold(
           (failure) => state = state.copyWith(
           status: AuthStatus.error, errorMessage: failure.message),
           (user) => state = state.copyWith(
-          status: AuthStatus.roleSelection, user: user),
+          status: AuthStatus.authenticated, user: user),
     );
   }
 

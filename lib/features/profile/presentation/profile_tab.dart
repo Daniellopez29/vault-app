@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../auth/presentation/providers.dart';
 import '../../favorites/presentation/favorites_tab.dart';
-import '../../settings/presentation/settings_page.dart';
 import 'providers.dart';
 import 'widgets.dart';
 
@@ -24,9 +25,7 @@ class ProfileTab extends ConsumerWidget {
           actions: [
             IconButton(
               icon: const Icon(Icons.settings_outlined),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsPage()),
-              ),
+              onPressed: () => context.push(AppRoutes.settings),
             ),
           ],
           bottom: TabBar(

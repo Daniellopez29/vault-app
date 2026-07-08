@@ -15,6 +15,10 @@ final getUserAssetsUseCaseProvider = Provider<GetUserAssetsUseCase>((ref) {
   return GetUserAssetsUseCase(ref.read(profileRepositoryProvider));
 });
 
+final addAssetUseCaseProvider = Provider<AddAssetUseCase>((ref) {
+  return AddAssetUseCase(ref.read(profileRepositoryProvider));
+});
+
 final deleteAssetUseCaseProvider = Provider<DeleteAssetUseCase>((ref) {
   return DeleteAssetUseCase(ref.read(profileRepositoryProvider));
 });
@@ -27,6 +31,15 @@ Provider<GetRestorerProfileUseCase>((ref) {
 final saveRestorerProfileUseCaseProvider =
 Provider<SaveRestorerProfileUseCase>((ref) {
   return SaveRestorerProfileUseCase(ref.read(profileRepositoryProvider));
+});
+
+final setAssetForSaleUseCaseProvider = Provider<SetAssetForSaleUseCase>((ref) {
+  return SetAssetForSaleUseCase(ref.read(profileRepositoryProvider));
+});
+
+final setAssetPublishedUseCaseProvider =
+Provider<SetAssetPublishedUseCase>((ref) {
+  return SetAssetPublishedUseCase(ref.read(profileRepositoryProvider));
 });
 
 // ─── ASSETS STATE ─────────────────────────────────────────────────────────────
@@ -56,10 +69,12 @@ class ProfileAssetsState {
     );
   }
 
+  /// Conteo de activos por categoría (para el header del Perfil).
   Map<String, int> get categoryCounts {
     final counts = <String, int>{};
     for (final asset in assets) {
-      counts[asset.brand] = (counts[asset.brand] ?? 0) + 1;
+      final key = asset.category.displayName;
+      counts[key] = (counts[key] ?? 0) + 1;
     }
     return counts;
   }
@@ -74,19 +89,31 @@ final profileAssetsControllerProvider =
 StateNotifierProvider<ProfileAssetsController, ProfileAssetsState>((ref) {
   return ProfileAssetsController(
     getUserAssetsUseCase: ref.read(getUserAssetsUseCaseProvider),
+    addAssetUseCase: ref.read(addAssetUseCaseProvider),
     deleteAssetUseCase: ref.read(deleteAssetUseCaseProvider),
+    setAssetForSaleUseCase: ref.read(setAssetForSaleUseCaseProvider),
+    setAssetPublishedUseCase: ref.read(setAssetPublishedUseCaseProvider),
   );
 });
 
 class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
   final GetUserAssetsUseCase _getUserAssets;
+  final AddAssetUseCase _addAsset;
   final DeleteAssetUseCase _deleteAsset;
+  final SetAssetForSaleUseCase _setForSale;
+  final SetAssetPublishedUseCase _setPublished;
 
   ProfileAssetsController({
     required GetUserAssetsUseCase getUserAssetsUseCase,
+    required AddAssetUseCase addAssetUseCase,
     required DeleteAssetUseCase deleteAssetUseCase,
+    required SetAssetForSaleUseCase setAssetForSaleUseCase,
+    required SetAssetPublishedUseCase setAssetPublishedUseCase,
   })  : _getUserAssets = getUserAssetsUseCase,
+        _addAsset = addAssetUseCase,
         _deleteAsset = deleteAssetUseCase,
+        _setForSale = setAssetForSaleUseCase,
+        _setPublished = setAssetPublishedUseCase,
         super(const ProfileAssetsState()) {
     loadAssets();
   }
@@ -102,12 +129,81 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
     );
   }
 
+  /// Registra un activo nuevo y refresca el grid con la lista actualizada.
+  Future<bool> addAsset(AssetEntity asset) async {
+    final result = await _addAsset(asset);
+    return result.fold(
+          (failure) {
+        state = state.copyWith(errorMessage: failure.message);
+        return false;
+      },
+          (_) {
+        loadAssets();
+        return true;
+      },
+    );
+  }
+
   Future<void> deleteAsset(String assetId) async {
     final result = await _deleteAsset(assetId);
     result.fold(
           (failure) => state = state.copyWith(errorMessage: failure.message),
           (_) => loadAssets(),
     );
+  }
+
+  /// Pone o quita un activo de venta. Actualización optimista: el cambio
+  /// se refleja en pantalla al instante, y si falla, recarga el estado real.
+  Future<void> setForSale(
+      AssetEntity asset, {
+        required bool forSale,
+        double? price,
+        String? description,
+      }) async {
+    _patchAsset(asset.copyWith(
+      isForSale: forSale,
+      salePrice: forSale ? price : null,
+      saleDescription: forSale ? description : null,
+    ));
+
+    final result = await _setForSale(SetForSaleParams(
+      asset: asset,
+      forSale: forSale,
+      price: price,
+      description: description,
+    ));
+    result.fold((failure) {
+      state = state.copyWith(errorMessage: failure.message);
+      loadAssets();
+    }, (_) {});
+  }
+
+  /// Publica o despublica un activo en el Feed (actualización optimista).
+  Future<void> setPublished(
+      AssetEntity asset, {
+        required bool published,
+        String? caption,
+      }) async {
+    _patchAsset(asset.copyWith(
+      isPublished: published,
+      publishCaption: published ? caption : null,
+    ));
+
+    final result = await _setPublished(
+      SetPublishedParams(asset: asset, published: published, caption: caption),
+    );
+    result.fold((failure) {
+      state = state.copyWith(errorMessage: failure.message);
+      loadAssets();
+    }, (_) {});
+  }
+
+  /// Reemplaza un activo en la lista por su versión actualizada, en un solo lugar.
+  void _patchAsset(AssetEntity updated) {
+    final assets = [
+      for (final a in state.assets) a.id == updated.id ? updated : a,
+    ];
+    state = state.copyWith(assets: assets);
   }
 }
 

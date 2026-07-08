@@ -1,27 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/enums.dart';
+import '../../../../core/router.dart';
+import '../../../../core/theme.dart';
 import 'providers.dart';
-import 'pages.dart';
 
 class RoleSelectionPage extends ConsumerWidget {
   const RoleSelectionPage({super.key});
 
+  /// Al elegir un rol hay dos caminos:
+  /// - Flujo Google: el usuario ya existe (estado roleSelection) → guarda el rol.
+  /// - Flujo registro por correo: aún no hay cuenta → va al formulario con el rol.
+  void _onRoleSelected(BuildContext context, WidgetRef ref, UserRole role) {
+    final status = ref.read(authControllerProvider).status;
+    if (status == AuthStatus.roleSelection) {
+      ref.read(authControllerProvider.notifier).saveRole(role);
+    } else {
+      context.push(AppRoutes.register, extra: role);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tt = Theme.of(context).textTheme;
     final isLoading =
         ref.watch(authControllerProvider).status == AuthStatus.loading;
 
     ref.listen(authControllerProvider, (_, next) {
       if (next.status == AuthStatus.authenticated) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomePage()),
-        );
+        context.go(AppRoutes.home);
       }
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: VaultColors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -29,25 +42,21 @@ class RoleSelectionPage extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 48),
-              const Text(
+              Text(
                 'VAULT',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2,
-                ),
+                style: tt.headlineLarge?.copyWith(fontSize: 28),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 '¿Cómo usarás la app?',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: tt.headlineMedium?.copyWith(fontSize: 22),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 4),
               Text(
                 'Selecciona tu perfil para personalizar tu experiencia.',
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                style: tt.bodyMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
@@ -57,8 +66,7 @@ class RoleSelectionPage extends ConsumerWidget {
                   child: _RoleCard(
                     role: role,
                     isLoading: isLoading,
-                    onTap: () =>
-                        ref.read(authControllerProvider.notifier).saveRole(role),
+                    onTap: () => _onRoleSelected(context, ref, role),
                   ),
                 ),
               ),
@@ -83,28 +91,25 @@ class _RoleCard extends StatelessWidget {
 
   IconData get _icon {
     switch (role) {
-      case UserRole.general:   return Icons.person_outline;
-      case UserRole.collector: return Icons.inventory_2_outlined;
-      case UserRole.restorer:  return Icons.build_outlined;
+      case UserRole.user:     return Icons.person_outline;
+      case UserRole.seller:   return Icons.sell_outlined;
+      case UserRole.restorer: return Icons.build_outlined;
+      case UserRole.service:  return Icons.storefront_outlined;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
     return GestureDetector(
       onTap: isLoading ? null : onTap,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: VaultColors.surface,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          border: Border.all(color: VaultColors.divider),
         ),
         child: Row(
           children: [
@@ -112,10 +117,10 @@ class _RoleCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: const Color(0xFF2D2D3A).withOpacity(0.08),
+                color: VaultColors.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(_icon, color: const Color(0xFF2D2D3A), size: 24),
+              child: Icon(_icon, color: VaultColors.primary, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -124,23 +129,17 @@ class _RoleCard extends StatelessWidget {
                 children: [
                   Text(
                     role.displayName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
+                    style: tt.titleLarge?.copyWith(fontSize: 15),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     role.description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: tt.bodyMedium?.copyWith(fontSize: 12),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.grey),
+            Icon(Icons.chevron_right, color: VaultColors.textSecondary),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
@@ -24,18 +25,12 @@ class ProfileHeader extends StatelessWidget {
     final displayName = fullName?.isNotEmpty == true ? fullName! : email;
 
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(VaultSpacing.lg),
+      padding: const EdgeInsets.all(VaultSpacing.lg),
       decoration: BoxDecoration(
         color: VaultColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: VaultRadius.cardBorder,
+        boxShadow: VaultShadows.card,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,14 +40,17 @@ class ProfileHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Perfil de Usuario', style: tt.titleLarge),
-                const SizedBox(height: 10),
-                Text('Artículos Totales: $totalArticles', style: tt.titleMedium),
-                const SizedBox(height: 4),
+                const SizedBox(height: VaultSpacing.sm),
+                Text('Artículos Totales: $totalArticles',
+                    style: tt.titleMedium),
+                const SizedBox(height: VaultSpacing.xs),
                 if (categoryCounts.isEmpty)
-                  Text('Aún no tienes artículos registrados', style: tt.bodyMedium)
+                  Text('Aún no tienes artículos registrados',
+                      style: tt.bodyMedium)
                 else
                   ...categoryCounts.entries.map(
-                        (e) => Text('${e.key}: ${e.value}', style: tt.bodyMedium),
+                        (e) => Text('${e.key}: ${e.value}',
+                        style: tt.bodyMedium),
                   ),
               ],
             ),
@@ -62,9 +60,10 @@ class ProfileHeader extends StatelessWidget {
               CircleAvatar(
                 radius: 36,
                 backgroundColor: VaultColors.primary.withValues(alpha: 0.1),
-                child: Icon(Icons.person, size: 36, color: VaultColors.primary),
+                child:
+                Icon(Icons.person, size: 36, color: VaultColors.primary),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: VaultSpacing.sm),
               Text(displayName, style: tt.titleMedium),
               Text(email, style: tt.labelSmall),
             ],
@@ -87,19 +86,20 @@ class AssetsBody extends StatelessWidget {
       case ProfileAssetsStatus.initial:
       case ProfileAssetsStatus.loading:
         return const Padding(
-          padding: EdgeInsets.all(32),
+          padding: EdgeInsets.all(VaultSpacing.xxl),
           child: Center(child: CircularProgressIndicator()),
         );
       case ProfileAssetsStatus.error:
         return Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(VaultSpacing.xl),
           child: Column(
             children: [
               Text(state.errorMessage ?? 'Error al cargar tus artículos'),
-              const SizedBox(height: 12),
+              const SizedBox(height: VaultSpacing.md),
               TextButton(
-                onPressed: () =>
-                    ref.read(profileAssetsControllerProvider.notifier).loadAssets(),
+                onPressed: () => ref
+                    .read(profileAssetsControllerProvider.notifier)
+                    .loadAssets(),
                 child: const Text('Reintentar'),
               ),
             ],
@@ -107,11 +107,7 @@ class AssetsBody extends StatelessWidget {
         );
       case ProfileAssetsStatus.loaded:
         if (state.assets.isEmpty) return const EmptyAssetsView();
-        return AssetsGrid(
-          assets: state.assets,
-          onDelete: (id) =>
-              ref.read(profileAssetsControllerProvider.notifier).deleteAsset(id),
-        );
+        return AssetsGrid(assets: state.assets);
     }
   }
 }
@@ -123,17 +119,19 @@ class EmptyAssetsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+      padding: const EdgeInsets.symmetric(
+          vertical: VaultSpacing.xxl, horizontal: VaultSpacing.xl),
       child: Column(
         children: [
-          Icon(Icons.inventory_2_outlined, size: 56, color: VaultColors.textSecondary),
-          const SizedBox(height: 12),
+          Icon(Icons.inventory_2_outlined,
+              size: 56, color: VaultColors.textSecondary),
+          const SizedBox(height: VaultSpacing.md),
           Text(
             'Aún no has registrado ningún activo',
             textAlign: TextAlign.center,
             style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: VaultSpacing.xs),
           Text(
             'Usa el botón + para agregar tu primera pieza',
             textAlign: TextAlign.center,
@@ -147,101 +145,453 @@ class EmptyAssetsView extends StatelessWidget {
 
 class AssetsGrid extends StatelessWidget {
   final List<AssetEntity> assets;
-  final ValueChanged<String> onDelete;
 
-  const AssetsGrid({super.key, required this.assets, required this.onDelete});
+  const AssetsGrid({super.key, required this.assets});
 
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(VaultSpacing.md),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.72,
+        mainAxisSpacing: VaultSpacing.md,
+        crossAxisSpacing: VaultSpacing.md,
+        childAspectRatio: 0.66,
       ),
       itemCount: assets.length,
-      itemBuilder: (context, index) {
-        final asset = assets[index];
-        return AssetCard(asset: asset, onDelete: () => onDelete(asset.id));
-      },
+      itemBuilder: (context, index) => AssetCard(asset: assets[index]),
     );
   }
 }
 
-class AssetCard extends StatelessWidget {
+class AssetCard extends ConsumerWidget {
   final AssetEntity asset;
-  final VoidCallback onDelete;
 
-  const AssetCard({super.key, required this.asset, required this.onDelete});
+  const AssetCard({super.key, required this.asset});
+
+  void _openPublishSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: VaultColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+        BorderRadius.vertical(top: Radius.circular(VaultRadius.card)),
+      ),
+      builder: (_) => PublishAssetSheet(asset: asset),
+    );
+  }
+
+  void _openSellSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: VaultColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+        BorderRadius.vertical(top: Radius.circular(VaultRadius.card)),
+      ),
+      builder: (_) => SellAssetSheet(asset: asset),
+    );
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final tt = Theme.of(context).textTheme;
+    final notifier = ref.read(profileAssetsControllerProvider.notifier);
+
     return Container(
       decoration: BoxDecoration(
         color: VaultColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: VaultRadius.cardBorder,
+        boxShadow: VaultShadows.card,
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-              child: Container(
-                color: VaultColors.background,
-                child: Center(
-                  child: Icon(Icons.image_outlined, size: 36, color: VaultColors.textSecondary),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Container(
+                    color: VaultColors.background,
+                    child: Center(
+                      child: Icon(Icons.image_outlined,
+                          size: VaultIconSize.lg,
+                          color: VaultColors.textSecondary),
+                    ),
+                  ),
                 ),
-              ),
+                if (asset.isPublished)
+                  Positioned(
+                    top: VaultSpacing.xs,
+                    left: VaultSpacing.xs,
+                    child: _StatusBadge(
+                      label: 'Publicado',
+                      color: VaultColors.primary,
+                    ),
+                  ),
+                if (asset.isForSale)
+                  Positioned(
+                    top: VaultSpacing.xs,
+                    right: VaultSpacing.xs,
+                    child: _StatusBadge(
+                      label: '\$${asset.salePrice?.toStringAsFixed(0) ?? ''}',
+                      color: VaultColors.accent,
+                    ),
+                  ),
+              ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: const EdgeInsets.symmetric(
+                horizontal: VaultSpacing.sm, vertical: VaultSpacing.xs),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(asset.brand, style: tt.titleMedium?.copyWith(fontSize: 12)),
-                Text(asset.name, style: tt.bodyLarge?.copyWith(fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text('Talla: ${asset.size}', style: tt.bodyMedium?.copyWith(fontSize: 10)),
-                Text(asset.condition, style: tt.bodyMedium?.copyWith(fontSize: 10)),
+                Text(asset.name,
+                    style: tt.bodyLarge?.copyWith(fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+                Text('Talla: ${asset.size}',
+                    style: tt.bodyMedium?.copyWith(fontSize: 10)),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.only(bottom: VaultSpacing.xs),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 16),
-                  onPressed: () {},
-                  visualDensity: VisualDensity.compact,
+                _CardAction(
+                  icon: asset.isPublished ? Icons.public : Icons.public_off,
+                  color: asset.isPublished
+                      ? VaultColors.primary
+                      : VaultColors.textSecondary,
+                  onTap: () => _openPublishSheet(context),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 16),
-                  onPressed: onDelete,
-                  visualDensity: VisualDensity.compact,
+                _CardAction(
+                  icon: asset.isForSale ? Icons.sell : Icons.sell_outlined,
+                  color: asset.isForSale
+                      ? VaultColors.accent
+                      : VaultColors.textSecondary,
+                  onTap: () => _openSellSheet(context),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.shopping_cart_outlined, size: 16),
-                  onPressed: () {},
-                  visualDensity: VisualDensity.compact,
+                _CardAction(
+                  icon: Icons.delete_outline,
+                  color: VaultColors.textSecondary,
+                  onTap: () => notifier.deleteAsset(asset.id),
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Badge de estado (Publicado / En venta) sobre la imagen del activo.
+class _StatusBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _StatusBadge({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: VaultSpacing.sm, vertical: 2),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(VaultRadius.sm),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+/// Botón de acción de la card, con densidad compacta.
+class _CardAction extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _CardAction({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: Icon(icon, size: VaultIconSize.sm, color: color),
+      onPressed: onTap,
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(),
+    );
+  }
+}
+
+/// Hoja para poner un activo en venta (precio + descripción de la oferta).
+class SellAssetSheet extends ConsumerStatefulWidget {
+  final AssetEntity asset;
+
+  const SellAssetSheet({super.key, required this.asset});
+
+  @override
+  ConsumerState<SellAssetSheet> createState() => _SellAssetSheetState();
+}
+
+class _SellAssetSheetState extends ConsumerState<SellAssetSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _priceController;
+  late final TextEditingController _descController;
+
+  @override
+  void initState() {
+    super.initState();
+    _priceController = TextEditingController(
+      text: widget.asset.salePrice?.toStringAsFixed(0) ?? '',
+    );
+    _descController = TextEditingController(
+      text: widget.asset.saleDescription ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _priceController.dispose();
+    _descController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    ref.read(profileAssetsControllerProvider.notifier).setForSale(
+      widget.asset,
+      forSale: true,
+      price: double.tryParse(_priceController.text.trim()),
+      description: _descController.text.trim().isEmpty
+          ? null
+          : _descController.text.trim(),
+    );
+    Navigator.pop(context);
+  }
+
+  void _removeFromSale() {
+    ref.read(profileAssetsControllerProvider.notifier).setForSale(
+      widget.asset,
+      forSale: false,
+    );
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final alreadyForSale = widget.asset.isForSale;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: VaultSpacing.lg,
+        right: VaultSpacing.lg,
+        top: VaultSpacing.lg,
+        bottom: VaultSpacing.lg + bottomInset,
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              alreadyForSale ? 'Editar venta' : 'Poner en venta',
+              style: tt.titleLarge,
+            ),
+            const SizedBox(height: VaultSpacing.xs),
+            Text(widget.asset.name, style: tt.bodyMedium),
+            const SizedBox(height: VaultSpacing.lg),
+            TextFormField(
+              controller: _priceController,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: VaultColors.primary),
+              decoration: InputDecoration(
+                labelText: 'Precio de venta',
+                prefixIcon:
+                const Icon(Icons.attach_money, color: VaultColors.primary),
+                filled: true,
+                fillColor: VaultColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: VaultRadius.buttonBorder,
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              validator: (v) {
+                final value = double.tryParse((v ?? '').trim());
+                if (value == null || value <= 0) return 'Ingresa un precio válido';
+                return null;
+              },
+            ),
+            const SizedBox(height: VaultSpacing.md),
+            TextFormField(
+              controller: _descController,
+              maxLines: 3,
+              style: const TextStyle(color: VaultColors.primary),
+              decoration: InputDecoration(
+                labelText: 'Descripción de la oferta',
+                alignLabelWithHint: true,
+                filled: true,
+                fillColor: VaultColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: VaultRadius.buttonBorder,
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: VaultSpacing.lg),
+            ElevatedButton.icon(
+              onPressed: _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: VaultColors.accent,
+                foregroundColor: Colors.white,
+              ),
+              icon: const Icon(Icons.sell_outlined),
+              label: Text(alreadyForSale ? 'Guardar cambios' : 'Poner en venta'),
+            ),
+            if (alreadyForSale) ...[
+              const SizedBox(height: VaultSpacing.sm),
+              TextButton.icon(
+                onPressed: _removeFromSale,
+                style: TextButton.styleFrom(
+                    foregroundColor: VaultColors.error),
+                icon: const Icon(Icons.remove_circle_outline),
+                label: const Text('Quitar de venta'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Hoja para publicar un activo en el Feed (caption opcional).
+class PublishAssetSheet extends ConsumerStatefulWidget {
+  final AssetEntity asset;
+
+  const PublishAssetSheet({super.key, required this.asset});
+
+  @override
+  ConsumerState<PublishAssetSheet> createState() => _PublishAssetSheetState();
+}
+
+class _PublishAssetSheetState extends ConsumerState<PublishAssetSheet> {
+  late final TextEditingController _captionController;
+
+  @override
+  void initState() {
+    super.initState();
+    _captionController =
+        TextEditingController(text: widget.asset.publishCaption ?? '');
+  }
+
+  @override
+  void dispose() {
+    _captionController.dispose();
+    super.dispose();
+  }
+
+  void _publish() {
+    ref.read(profileAssetsControllerProvider.notifier).setPublished(
+      widget.asset,
+      published: true,
+      caption: _captionController.text.trim().isEmpty
+          ? null
+          : _captionController.text.trim(),
+    );
+    Navigator.pop(context);
+  }
+
+  void _unpublish() {
+    ref.read(profileAssetsControllerProvider.notifier).setPublished(
+      widget.asset,
+      published: false,
+    );
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final alreadyPublished = widget.asset.isPublished;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: VaultSpacing.lg,
+        right: VaultSpacing.lg,
+        top: VaultSpacing.lg,
+        bottom: VaultSpacing.lg + bottomInset,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            alreadyPublished ? 'Editar publicación' : 'Publicar en el Feed',
+            style: tt.titleLarge,
+          ),
+          const SizedBox(height: VaultSpacing.xs),
+          Text('Presume ${widget.asset.name} en la comunidad',
+              style: tt.bodyMedium),
+          const SizedBox(height: VaultSpacing.lg),
+          TextField(
+            controller: _captionController,
+            maxLines: 3,
+            style: const TextStyle(color: VaultColors.primary),
+            decoration: InputDecoration(
+              labelText: 'Mensaje (opcional)',
+              hintText: '¿Qué quieres decir sobre esta pieza?',
+              alignLabelWithHint: true,
+              filled: true,
+              fillColor: VaultColors.background,
+              border: OutlineInputBorder(
+                borderRadius: VaultRadius.buttonBorder,
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: VaultSpacing.lg),
+          ElevatedButton.icon(
+            onPressed: _publish,
+            icon: const Icon(Icons.public),
+            label: Text(alreadyPublished ? 'Guardar cambios' : 'Publicar'),
+          ),
+          if (alreadyPublished) ...[
+            const SizedBox(height: VaultSpacing.sm),
+            TextButton.icon(
+              onPressed: _unpublish,
+              style: TextButton.styleFrom(foregroundColor: VaultColors.error),
+              icon: const Icon(Icons.public_off),
+              label: const Text('Quitar del feed'),
+            ),
+          ],
         ],
       ),
     );

@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/usecase.dart';
+import '../../auth/presentation/providers.dart';
+import '../../profile/domain/entities.dart';
+import '../../profile/presentation/providers.dart';
 import '../data/datasources.dart';
 import '../data/repositories.dart';
 import '../domain/entities.dart';
@@ -50,19 +53,30 @@ class FeedState {
 
 final feedControllerProvider =
 StateNotifierProvider<FeedController, FeedState>((ref) {
-  return FeedController(
+  final controller = FeedController(
     ref.read(getFeedPostsUseCaseProvider),
     ref.read(toggleLikeUseCaseProvider),
     ref.read(toggleSaveUseCaseProvider),
+    ref,
   );
+  // Cuando cambian los activos publicados del inventario, el Feed se recombina.
+  ref.listen(profileAssetsControllerProvider, (previous, next) {
+    controller.refreshPublished();
+  });
+  return controller;
 });
 
 class FeedController extends StateNotifier<FeedState> {
   final GetFeedPostsUseCase _getFeedPosts;
   final ToggleLikeUseCase _toggleLike;
   final ToggleSaveUseCase _toggleSave;
+  final Ref _ref;
 
-  FeedController(this._getFeedPosts, this._toggleLike, this._toggleSave)
+  // Posts mock cacheados (con su estado de like/save vivo).
+  List<PostEntity> _mockPosts = const [];
+
+  FeedController(
+      this._getFeedPosts, this._toggleLike, this._toggleSave, this._ref)
       : super(const FeedState()) {
     loadFeed();
   }
@@ -73,54 +87,73 @@ class FeedController extends StateNotifier<FeedState> {
     result.fold(
           (failure) => state = state.copyWith(
           status: FeedStatus.error, errorMessage: failure.message),
-          (posts) => state = state.copyWith(status: FeedStatus.loaded, posts: posts),
+          (posts) {
+        _mockPosts = posts;
+        state =
+            state.copyWith(status: FeedStatus.loaded, posts: _combinedPosts());
+      },
     );
   }
 
-  Future<void> toggleLike(String postId) async {
-    // Actualización optimista
-    final updated = state.posts.map((p) {
-      if (p.id == postId) {
-        return PostEntity(
-          id: p.id,
-          authorName: p.authorName,
-          authorAvatarUrl: p.authorAvatarUrl,
-          imageUrl: p.imageUrl,
-          title: p.title,
-          description: p.description,
-          timeAgo: p.timeAgo,
-          likesCount: p.isLiked ? p.likesCount - 1 : p.likesCount + 1,
-          commentsCount: p.commentsCount,
-          isLiked: !p.isLiked,
-          isSaved: p.isSaved,
-        );
-      }
-      return p;
+  /// Recombina tus publicaciones + mock, sin volver a pedir el mock.
+  void refreshPublished() {
+    if (state.status != FeedStatus.loaded) return;
+    state = state.copyWith(posts: _combinedPosts());
+  }
+
+  /// Tus publicaciones primero, luego el feed mock.
+  List<PostEntity> _combinedPosts() {
+    final published = _ref
+        .read(profileAssetsControllerProvider)
+        .assets
+        .where((asset) => asset.isPublished)
+        .map(_assetToPost)
+        .toList();
+    return [...published, ..._mockPosts];
+  }
+
+  /// Convierte un activo publicado en un post del Feed.
+  PostEntity _assetToPost(AssetEntity asset) {
+    final authorName =
+        _ref.read(authControllerProvider).user?.fullName ?? 'Tú';
+    return PostEntity(
+      id: asset.id,
+      authorName: authorName,
+      authorAvatarUrl: '',
+      imageUrl: asset.imageUrl,
+      title: asset.name,
+      description: asset.publishCaption ?? '',
+      timeAgo: 'Ahora',
+      likesCount: 0,
+      commentsCount: 0,
+    );
+  }
+
+  List<PostEntity> _applyLike(List<PostEntity> posts, String postId) {
+    return posts.map((p) {
+      if (p.id != postId) return p;
+      return p.copyWith(
+        isLiked: !p.isLiked,
+        likesCount: p.isLiked ? p.likesCount - 1 : p.likesCount + 1,
+      );
     }).toList();
-    state = state.copyWith(posts: updated);
+  }
+
+  List<PostEntity> _applySave(List<PostEntity> posts, String postId) {
+    return posts
+        .map((p) => p.id == postId ? p.copyWith(isSaved: !p.isSaved) : p)
+        .toList();
+  }
+
+  Future<void> toggleLike(String postId) async {
+    _mockPosts = _applyLike(_mockPosts, postId);
+    state = state.copyWith(posts: _applyLike(state.posts, postId));
     await _toggleLike(postId);
   }
 
   Future<void> toggleSave(String postId) async {
-    final updated = state.posts.map((p) {
-      if (p.id == postId) {
-        return PostEntity(
-          id: p.id,
-          authorName: p.authorName,
-          authorAvatarUrl: p.authorAvatarUrl,
-          imageUrl: p.imageUrl,
-          title: p.title,
-          description: p.description,
-          timeAgo: p.timeAgo,
-          likesCount: p.likesCount,
-          commentsCount: p.commentsCount,
-          isLiked: p.isLiked,
-          isSaved: !p.isSaved,
-        );
-      }
-      return p;
-    }).toList();
-    state = state.copyWith(posts: updated);
+    _mockPosts = _applySave(_mockPosts, postId);
+    state = state.copyWith(posts: _applySave(state.posts, postId));
     await _toggleSave(postId);
   }
 }

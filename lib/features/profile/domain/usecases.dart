@@ -13,12 +13,51 @@ class GetUserAssetsUseCase implements UseCase<List<AssetEntity>, NoParams> {
       repository.getUserAssets();
 }
 
+class AddAssetUseCase {
+  final ProfileRepository repository;
+  const AddAssetUseCase(this.repository);
+
+  Future<Either<Failure, void>> call(AssetEntity asset) =>
+      repository.addAsset(asset);
+}
+
 class DeleteAssetUseCase {
   final ProfileRepository repository;
   const DeleteAssetUseCase(this.repository);
 
   Future<Either<Failure, void>> call(String assetId) =>
       repository.deleteAsset(assetId);
+}
+
+/// Pone o quita un activo de venta. Al poner en venta guarda precio y
+/// descripción; al quitar, los limpia. La regla de negocio vive aquí.
+class SetAssetForSaleUseCase {
+  final ProfileRepository repository;
+  const SetAssetForSaleUseCase(this.repository);
+
+  Future<Either<Failure, void>> call(SetForSaleParams params) {
+    final updated = params.asset.copyWith(
+      isForSale: params.forSale,
+      salePrice: params.forSale ? params.price : null,
+      saleDescription: params.forSale ? params.description : null,
+    );
+    return repository.updateAsset(updated);
+  }
+}
+
+/// Publica o despublica un activo en el Feed. Al publicar guarda el caption;
+/// al despublicar, lo limpia. La regla de negocio vive aquí.
+class SetAssetPublishedUseCase {
+  final ProfileRepository repository;
+  const SetAssetPublishedUseCase(this.repository);
+
+  Future<Either<Failure, void>> call(SetPublishedParams params) {
+    final updated = params.asset.copyWith(
+      isPublished: params.published,
+      publishCaption: params.published ? params.caption : null,
+    );
+    return repository.updateAsset(updated);
+  }
 }
 
 class GetRestorerProfileUseCase {
@@ -35,4 +74,30 @@ class SaveRestorerProfileUseCase {
 
   Future<Either<Failure, void>> call(RestorerProfileEntity profile) =>
       repository.saveRestorerProfile(profile);
+}
+
+class SetForSaleParams {
+  final AssetEntity asset;
+  final bool forSale;
+  final double? price;
+  final String? description;
+
+  const SetForSaleParams({
+    required this.asset,
+    required this.forSale,
+    this.price,
+    this.description,
+  });
+}
+
+class SetPublishedParams {
+  final AssetEntity asset;
+  final bool published;
+  final String? caption;
+
+  const SetPublishedParams({
+    required this.asset,
+    required this.published,
+    this.caption,
+  });
 }
