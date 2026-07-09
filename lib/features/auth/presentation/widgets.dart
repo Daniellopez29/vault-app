@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/router.dart';
+import '../../../../core/theme.dart';
 import 'providers.dart';
-import 'pages.dart';
 
 class LoginForm extends ConsumerStatefulWidget {
   const LoginForm({super.key});
@@ -12,15 +15,12 @@ class LoginForm extends ConsumerStatefulWidget {
 
 class _LoginFormState extends ConsumerState<LoginForm> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscure = true;
-  bool _isLogin = true;
 
   @override
   void dispose() {
-    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -28,20 +28,50 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    if (_isLogin) {
-      ref.read(authControllerProvider.notifier).login(
-        email: email,
-        password: password,
-      );
-    } else {
-      ref.read(authControllerProvider.notifier).register(
-        email: email,
-        password: password,
-        fullName: _nameController.text.trim(),
-      );
-    }
+    ref.read(authControllerProvider.notifier).login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+  }
+
+  InputDecoration _fieldDecoration({
+    required String label,
+    required IconData prefixIcon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(
+        color: VaultColors.primary,
+        fontWeight: FontWeight.w500,
+      ),
+      prefixIcon: Icon(prefixIcon, color: VaultColors.primary),
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: VaultColors.surface.withValues(alpha: 0.85),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: VaultColors.primary.withValues(alpha: 0.2),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: VaultColors.primary, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: VaultColors.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: VaultColors.error, width: 2),
+      ),
+    );
   }
 
   @override
@@ -51,9 +81,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
     ref.listen(authControllerProvider, (_, next) {
       if (next.status == AuthStatus.authenticated) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomePage()),
-        );
+        context.go(AppRoutes.home);
+      } else if (next.status == AuthStatus.roleSelection) {
+        context.go(AppRoutes.roleSelection);
       }
     });
 
@@ -62,27 +92,14 @@ class _LoginFormState extends ConsumerState<LoginForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (!_isLogin) ...[
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Nombre completo',
-                prefixIcon: Icon(Icons.person_outline),
-              ),
-              textCapitalization: TextCapitalization.words,
-              validator: (v) => v == null || v.trim().isEmpty
-                  ? 'Ingresa tu nombre'
-                  : null,
-            ),
-            const SizedBox(height: 16),
-          ],
           TextFormField(
             controller: _emailController,
-            decoration: const InputDecoration(
-              labelText: 'Correo electrónico',
-              prefixIcon: Icon(Icons.email_outlined),
+            decoration: _fieldDecoration(
+              label: 'Correo electrónico',
+              prefixIcon: Icons.email_outlined,
             ),
             keyboardType: TextInputType.emailAddress,
+            style: const TextStyle(color: VaultColors.primary),
             validator: (v) =>
             v == null || !v.contains('@') ? 'Correo inválido' : null,
           ),
@@ -90,21 +107,38 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           TextFormField(
             controller: _passwordController,
             obscureText: _obscure,
-            decoration: InputDecoration(
-              labelText: 'Contraseña',
-              prefixIcon: const Icon(Icons.lock_outline),
+            decoration: _fieldDecoration(
+              label: 'Contraseña',
+              prefixIcon: Icons.lock_outline,
               suffixIcon: IconButton(
-                icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                icon: Icon(
+                  _obscure ? Icons.visibility_off : Icons.visibility,
+                  color: VaultColors.primary,
+                ),
                 onPressed: () => setState(() => _obscure = !_obscure),
               ),
             ),
+            style: const TextStyle(color: VaultColors.primary),
             validator: (v) =>
             v == null || v.length < 6 ? 'Mínimo 6 caracteres' : null,
           ),
           if (state.status == AuthStatus.error) ...[
             const SizedBox(height: 12),
-            Text(state.errorMessage ?? '',
-                style: const TextStyle(color: Colors.red)),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: VaultColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                state.errorMessage ?? '',
+                style: const TextStyle(
+                  color: VaultColors.error,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
           ],
           const SizedBox(height: 24),
           ElevatedButton(
@@ -113,27 +147,38 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                 ? const SizedBox(
               height: 20,
               width: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
             )
-                : Text(_isLogin ? 'Iniciar sesión' : 'Crear cuenta'),
+                : const Text('Iniciar sesión'),
           ),
           const SizedBox(height: 8),
           TextButton(
-            onPressed: () => setState(() {
-              _isLogin = !_isLogin;
-              _nameController.clear();
-            }),
-            child: Text(_isLogin
-                ? '¿No tienes cuenta? Regístrate'
-                : '¿Ya tienes cuenta? Inicia sesión'),
-          ),
-          const Row(children: [
-            Expanded(child: Divider()),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Text('o', style: TextStyle(color: Colors.grey)),
+            onPressed:
+            isLoading ? null : () => context.push(AppRoutes.roleSelection),
+            child: const Text(
+              '¿No tienes cuenta? Regístrate',
+              style: TextStyle(
+                color: VaultColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            Expanded(child: Divider()),
+          ),
+          Row(children: [
+            const Expanded(child: Divider(color: VaultColors.primary)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                'o',
+                style: TextStyle(
+                  color: VaultColors.primary.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const Expanded(child: Divider(color: VaultColors.primary)),
           ]),
           const SizedBox(height: 8),
           OutlinedButton.icon(
@@ -141,8 +186,19 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                 ? null
                 : () =>
                 ref.read(authControllerProvider.notifier).loginWithGoogle(),
-            icon: const Icon(Icons.g_mobiledata, size: 24),
-            label: const Text('Continuar con Google'),
+            icon: const FaIcon(
+              FontAwesomeIcons.google,
+              size: 18,
+              color: VaultColors.primary,
+            ),
+            label: const Text(
+              'Continuar con Google',
+              style: TextStyle(color: VaultColors.primary),
+            ),
+            style: OutlinedButton.styleFrom(
+              backgroundColor: VaultColors.surface.withValues(alpha: 0.85),
+              side: const BorderSide(color: VaultColors.primary),
+            ),
           ),
         ],
       ),

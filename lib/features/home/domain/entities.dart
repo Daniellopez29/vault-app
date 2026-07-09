@@ -27,6 +27,26 @@ class PostEntity extends Equatable {
     this.isSaved = false,
   });
 
+  PostEntity copyWith({
+    int? likesCount,
+    bool? isLiked,
+    bool? isSaved,
+  }) {
+    return PostEntity(
+      id: id,
+      authorName: authorName,
+      authorAvatarUrl: authorAvatarUrl,
+      imageUrl: imageUrl,
+      title: title,
+      description: description,
+      timeAgo: timeAgo,
+      likesCount: likesCount ?? this.likesCount,
+      commentsCount: commentsCount,
+      isLiked: isLiked ?? this.isLiked,
+      isSaved: isSaved ?? this.isSaved,
+    );
+  }
+
   @override
   List<Object?> get props => [
     id,

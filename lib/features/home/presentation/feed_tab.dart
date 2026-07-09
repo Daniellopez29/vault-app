@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/dimens.dart';
+import '../../../core/theme.dart';
+import '../../comments/presentation/comments_sheet.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
-
-const _kDark = Color(0xFF2D2D3A);
 
 class FeedTab extends ConsumerWidget {
   const FeedTab({super.key});
@@ -15,14 +16,14 @@ class FeedTab extends ConsumerWidget {
     switch (state.status) {
       case FeedStatus.initial:
       case FeedStatus.loading:
-        return const Center(child: CircularProgressIndicator(color: _kDark));
+        return const Center(child: CircularProgressIndicator());
       case FeedStatus.error:
         return Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(state.errorMessage ?? 'Error al cargar el feed'),
-              const SizedBox(height: 12),
+              const SizedBox(height: VaultSpacing.md),
               TextButton(
                 onPressed: () => ref.read(feedControllerProvider.notifier).loadFeed(),
                 child: const Text('Reintentar'),
@@ -37,12 +38,12 @@ class FeedTab extends ConsumerWidget {
         return RefreshIndicator(
           onRefresh: () => ref.read(feedControllerProvider.notifier).loadFeed(),
           child: ListView.builder(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(VaultSpacing.md),
             itemCount: state.posts.length,
             itemBuilder: (context, index) {
               final post = state.posts[index];
               return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.only(bottom: VaultSpacing.lg),
                 child: PostCard(
                   post: post,
                   onLikeTap: () => ref.read(feedControllerProvider.notifier).toggleLike(post.id),
@@ -77,33 +78,41 @@ class _PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     final post = widget.post;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, 2)),
-        ],
+        color: VaultColors.surface,
+        borderRadius: VaultRadius.cardBorder,
+        boxShadow: VaultShadows.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(VaultRadius.card),
+            ),
             child: AspectRatio(
               aspectRatio: 16 / 11,
-              child: post.imageUrl.startsWith('assets/')
+              child: post.imageUrl.isEmpty || post.imageUrl.startsWith('assets/')
                   ? Container(
-                color: Colors.grey.shade300,
-                child: const Icon(Icons.image_outlined, size: 48, color: Colors.grey),
+                color: VaultColors.background,
+                child: Icon(
+                  Icons.image_outlined,
+                  size: VaultIconSize.xl,
+                  color: VaultColors.textSecondary,
+                ),
               )
                   : Image.network(post.imageUrl, fit: BoxFit.cover),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: VaultSpacing.lg,
+              vertical: VaultSpacing.md,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -114,69 +123,71 @@ class _PostCardState extends State<PostCard> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(post.title,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                          Text(post.timeAgo,
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                          Text(post.title, style: tt.titleLarge),
+                          Text(post.timeAgo, style: tt.bodyMedium),
                         ],
                       ),
                     ),
-                    Text(post.authorName,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text(post.authorName, style: tt.titleMedium),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: VaultSpacing.sm),
                 AnimatedCrossFade(
                   duration: const Duration(milliseconds: 200),
-                  crossFadeState:
-                  _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                  crossFadeState: _expanded
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
                   firstChild: Text(
                     post.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
+                    style: tt.bodyLarge,
                   ),
-                  secondChild: Text(
-                    post.description,
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
-                  ),
+                  secondChild: Text(post.description, style: tt.bodyLarge),
                 ),
                 GestureDetector(
                   onTap: () => setState(() => _expanded = !_expanded),
                   child: Icon(
-                    _expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                    size: 18,
-                    color: Colors.grey.shade600,
+                    _expanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    size: VaultIconSize.sm,
+                    color: VaultColors.textSecondary,
                   ),
                 ),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(right: 14, bottom: 8),
+            padding: const EdgeInsets.only(
+              right: VaultSpacing.lg,
+              bottom: VaultSpacing.sm,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 _ActionStat(
                   icon: post.isLiked ? Icons.favorite : Icons.favorite_border,
                   count: post.likesCount,
-                  color: post.isLiked ? Colors.red : _kDark,
+                  color: post.isLiked
+                      ? VaultColors.error
+                      : VaultColors.textPrimary,
                   onTap: widget.onLikeTap,
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: VaultSpacing.lg),
                 _ActionStat(
                   icon: Icons.chat_bubble_outline,
                   count: post.commentsCount,
-                  color: _kDark,
-                  onTap: () {},
+                  color: VaultColors.textPrimary,
+                  onTap: () => showCommentsSheet(context, targetId: post.id),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: VaultSpacing.lg),
                 IconButton(
                   onPressed: widget.onSaveTap,
                   icon: Icon(
                     post.isSaved ? Icons.bookmark : Icons.bookmark_border,
-                    color: _kDark,
-                    size: 22,
+                    color: VaultColors.textPrimary,
+                    size: VaultIconSize.md,
                   ),
                   visualDensity: VisualDensity.compact,
                 ),
@@ -204,12 +215,13 @@ class _ActionStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return GestureDetector(
       onTap: onTap,
       child: Column(
         children: [
-          Icon(icon, size: 20, color: color),
-          Text('$count', style: TextStyle(fontSize: 11, color: color)),
+          Icon(icon, size: VaultIconSize.md, color: color),
+          Text('$count', style: tt.labelSmall?.copyWith(color: color)),
         ],
       ),
     );
