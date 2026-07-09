@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
+import '../../comments/presentation/comments_sheet.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
 
@@ -178,7 +179,7 @@ class _PostCardState extends State<PostCard> {
                   icon: Icons.chat_bubble_outline,
                   count: post.commentsCount,
                   color: VaultColors.textPrimary,
-                  onTap: () {},
+                  onTap: () => showCommentsSheet(context, targetId: post.id),
                 ),
                 const SizedBox(width: VaultSpacing.lg),
                 IconButton(

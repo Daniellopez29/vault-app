@@ -75,14 +75,11 @@ class CommentsController extends StateNotifier<CommentsState> {
   final ToggleCommentLikeUseCase _toggleLike;
 
   CommentsController({
-    required String targetId,
+    required this._targetId,
     required GetCommentsUseCase getComments,
-    required AddCommentUseCase addComment,
-    required ToggleCommentLikeUseCase toggleLike,
-  })  : _targetId = targetId,
-        _getComments = getComments,
-        _addComment = addComment,
-        _toggleLike = toggleLike,
+    required this._addComment,
+    required this._toggleLike,
+  })  : _getComments = getComments,
         super(const CommentsState()) {
     loadComments();
   }
