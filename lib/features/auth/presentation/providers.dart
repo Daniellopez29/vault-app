@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/enums.dart';
@@ -6,6 +8,11 @@ import '../data/repositories.dart';
 import '../domain/entities.dart';
 import '../domain/repositories.dart';
 import '../domain/usecases.dart';
+
+/// Tiempo de inactividad tras el cual se cierra la sesión automáticamente.
+/// El timer solo corre mientras hay un usuario autenticado y se reinicia
+/// con cada interacción (ver [AuthController.onUserInteraction]).
+const kInactivityTimeout = Duration(minutes: 5);
 
 enum AuthStatus { initial, loading, authenticated, roleSelection, error }
 
@@ -96,6 +103,8 @@ class AuthController extends StateNotifier<AuthState> {
   final UpdatePasswordUseCase _updatePasswordUseCase;
   final LogoutUseCase _logoutUseCase;
 
+  Timer? _inactivityTimer;
+
   AuthController({
     required this._loginUseCase,
     required this._registerUseCase,
@@ -173,6 +182,7 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    _cancelInactivityTimer();
     await _logoutUseCase();
     state = const AuthState();
   }
@@ -187,10 +197,33 @@ class AuthController extends StateNotifier<AuthState> {
         return false;
       },
           (_) {
+        _cancelInactivityTimer();
         state = const AuthState();
         return true;
       },
     );
+  }
+
+  // ── Cierre de sesión por inactividad ──────────────────────────────────────
+
+  /// Se debe llamar en cada interacción del usuario (tap, scroll, etc.)
+  /// mientras la app está en uso. Reinicia la cuenta regresiva de
+  /// [kInactivityTimeout]; si se agota sin nueva interacción, cierra sesión.
+  void onUserInteraction() {
+    if (state.status != AuthStatus.authenticated) return;
+    _inactivityTimer?.cancel();
+    _inactivityTimer = Timer(kInactivityTimeout, logout);
+  }
+
+  void _cancelInactivityTimer() {
+    _inactivityTimer?.cancel();
+    _inactivityTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _cancelInactivityTimer();
+    super.dispose();
   }
 
   Future<bool> updateDisplayName(String fullName) async {
