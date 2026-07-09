@@ -82,16 +82,12 @@ class CartController extends StateNotifier<CartState> {
   final ClearCartUseCase _clearCart;
 
   CartController({
-    required GetCartItemsUseCase getItems,
+    required this._getItems,
     required AddCartItemUseCase addItem,
-    required RemoveCartItemUseCase removeItem,
-    required UpdateCartQuantityUseCase updateQuantity,
-    required ClearCartUseCase clearCart,
-  })  : _getItems = getItems,
-        _addItem = addItem,
-        _removeItem = removeItem,
-        _updateQuantity = updateQuantity,
-        _clearCart = clearCart,
+    required this._removeItem,
+    required this._updateQuantity,
+    required this._clearCart,
+  })  : _addItem = addItem,
         super(const CartState()) {
     loadCart();
   }

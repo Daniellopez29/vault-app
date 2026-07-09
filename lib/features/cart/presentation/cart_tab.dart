@@ -98,7 +98,7 @@ class _CartContent extends ConsumerWidget {
                 vertical: VaultSpacing.sm,
               ),
               itemCount: state.items.length,
-              separatorBuilder: (_, __) => Divider(color: VaultColors.divider),
+              separatorBuilder: (_, _) => Divider(color: VaultColors.divider),
               itemBuilder: (context, index) {
                 final item = state.items[index];
                 return CartItemRow(

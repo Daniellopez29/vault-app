@@ -56,7 +56,7 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                 child: methodsAsync.when(
                   loading: () =>
                   const Center(child: CircularProgressIndicator()),
-                  error: (_, __) => Center(
+                  error: (_, _) => Center(
                     child: Text(
                       'Error al cargar los métodos de pago',
                       style: tt.bodyMedium,
@@ -67,7 +67,7 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                     _selectedId ??= methods.isNotEmpty ? methods.first.id : null;
                     return ListView.separated(
                       itemCount: methods.length,
-                      separatorBuilder: (_, __) =>
+                      separatorBuilder: (_, _) =>
                       const SizedBox(height: VaultSpacing.md),
                       itemBuilder: (context, index) {
                         final method = methods[index];

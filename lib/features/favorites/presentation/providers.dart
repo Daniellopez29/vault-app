@@ -61,10 +61,9 @@ class FavoritesController extends StateNotifier<FavoritesState> {
   final RemoveSavedPostUseCase _removeSavedPost;
 
   FavoritesController({
-    required GetSavedPostsUseCase getSavedPosts,
+    required this._getSavedPosts,
     required RemoveSavedPostUseCase removeSavedPost,
-  })  : _getSavedPosts = getSavedPosts,
-        _removeSavedPost = removeSavedPost,
+  })  : _removeSavedPost = removeSavedPost,
         super(const FavoritesState()) {
     loadSavedPosts();
   }

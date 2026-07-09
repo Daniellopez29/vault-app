@@ -252,12 +252,10 @@ class RestorerProfileController
   final String _userId;
 
   RestorerProfileController({
-    required GetRestorerProfileUseCase getRestorerProfile,
+    required this._getRestorerProfile,
     required SaveRestorerProfileUseCase saveRestorerProfile,
-    required String userId,
-  })  : _getRestorerProfile = getRestorerProfile,
-        _saveRestorerProfile = saveRestorerProfile,
-        _userId = userId,
+    required this._userId,
+  })  : _saveRestorerProfile = saveRestorerProfile,
         super(const RestorerProfileState()) {
     loadProfile();
   }
