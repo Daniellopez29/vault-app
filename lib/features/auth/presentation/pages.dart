@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/enums.dart';
 import '../../../../core/router.dart';
 import '../../../../core/theme.dart';
@@ -15,13 +14,6 @@ import 'providers.dart';
 import 'widgets.dart';
 import '../../marketplace/presentation/shop_tab.dart';
 import '../../cart/presentation/cart_tab.dart';
-
-Future<void> _launchPrivacyPolicy() async {
-  final url = Uri.parse('https://daniellopez29.github.io/vault-privacy-policy');
-  if (await canLaunchUrl(url)) {
-    await launchUrl(url, mode: LaunchMode.externalApplication);
-  }
-}
 
 /// Pantalla de bienvenida: dos caminos claros (crear cuenta / iniciar sesión).
 class LoginPage extends ConsumerStatefulWidget {
@@ -106,7 +98,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   const SizedBox(height: 16),
                   TextButton(
-                    onPressed: _launchPrivacyPolicy,
+                    onPressed: () => context.push(AppRoutes.legal),
                     child: const Text(
                       'Términos de Privacidad | Política de Uso',
                       style: TextStyle(
@@ -189,7 +181,7 @@ class SignInPage extends ConsumerWidget {
                   const LoginForm(),
                   const SizedBox(height: 16),
                   TextButton(
-                    onPressed: _launchPrivacyPolicy,
+                    onPressed: () => context.push(AppRoutes.legal),
                     child: const Text(
                       'Términos de Privacidad | Política de Uso',
                       style: TextStyle(
@@ -318,7 +310,10 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: pages),
+      body: SafeArea(
+        bottom: false,
+        child: IndexedStack(index: _currentIndex, children: pages),
+      ),
       bottomNavigationBar: VaultBottomNavBar(
         currentIndex: _currentIndex,
         onTabSelected: (navIndex) {

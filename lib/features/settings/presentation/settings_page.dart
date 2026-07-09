@@ -44,12 +44,12 @@ class SettingsPage extends ConsumerWidget {
               _SettingsTile(
                 icon: Icons.article_outlined,
                 label: 'Términos y condiciones',
-                onTap: () {},
+                onTap: () => context.push(AppRoutes.legal, extra: 0),
               ),
               _SettingsTile(
                 icon: Icons.privacy_tip_outlined,
                 label: 'Política de privacidad',
-                onTap: () {},
+                onTap: () => context.push(AppRoutes.legal, extra: 1),
               ),
               _SettingsTile(
                 icon: Icons.info_outline,

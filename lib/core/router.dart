@@ -8,6 +8,7 @@ import '../features/cart/presentation/cart_tab.dart';
 import '../features/cart/presentation/payment_method_page.dart';
 import '../features/cart/presentation/order_success_page.dart';
 import '../features/profile/presentation/register_asset_page.dart';
+import '../features/legal/presentation/legal_page.dart';
 
 abstract class AppRoutes {
   static const login         = '/login';
@@ -20,6 +21,7 @@ abstract class AppRoutes {
   static const paymentMethod = '/payment-method';
   static const orderSuccess  = '/order-success';
   static const registerAsset = '/register-asset';
+  static const legal         = '/legal';
 }
 
 final appRouter = GoRouter(
@@ -66,6 +68,12 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.registerAsset,
       builder: (context, state) => const RegisterAssetPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.legal,
+      builder: (context, state) => LegalPage(
+        initialIndex: state.extra as int? ?? 0,
+      ),
     ),
   ],
 );
