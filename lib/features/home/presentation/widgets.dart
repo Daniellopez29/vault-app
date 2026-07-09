@@ -24,27 +24,32 @@ class VaultBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: VaultColors.surface,
         border: Border(
           top: BorderSide(color: VaultColors.divider),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(navItems.length, (index) {
-          final item = navItems[index];
-          if (item.icon == Icons.add) {
-            return _AddButton(onTap: onAddPressed);
-          }
-          final pageIndex = index > 2 ? index - 1 : index;
-          return _NavIcon(
-            icon: item.icon,
-            isActive: currentIndex == pageIndex,
-            onTap: () => onTabSelected(index),
-          );
-        }),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(navItems.length, (index) {
+              final item = navItems[index];
+              if (item.icon == Icons.add) {
+                return _AddButton(onTap: onAddPressed);
+              }
+              final pageIndex = index > 2 ? index - 1 : index;
+              return _NavIcon(
+                icon: item.icon,
+                isActive: currentIndex == pageIndex,
+                onTap: () => onTabSelected(index),
+              );
+            }),
+          ),
+        ),
       ),
     );
   }
