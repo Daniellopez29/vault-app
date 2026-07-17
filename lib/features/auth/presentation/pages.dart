@@ -282,21 +282,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
+  /// El botón "+" siempre es "crear publicación" para el Feed (texto y/o
+  /// fotos) -- es el mismo para todos los roles, no depende de qué tan
+  /// registrado esté el usuario como negocio.
   void _onAddPressed() {
-    final role = ref.read(authControllerProvider).user?.role ?? UserRole.user;
-    if (role == UserRole.user) {
-      context.push(AppRoutes.registerAsset);
-      return;
-    }
-    final message = switch (role) {
-      UserRole.seller   => 'Próximamente: Publicar activo en venta',
-      UserRole.restorer => 'Próximamente: Publicar nuevo servicio',
-      UserRole.service  => 'Próximamente: Publicar servicio de tu negocio',
-      UserRole.user     => '', // ya manejado arriba
-    };
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    context.push(AppRoutes.createPost);
   }
 
   @override

@@ -24,6 +24,35 @@ enum AssetCategory {
       case AssetCategory.other:        return 'Otros';
     }
   }
+
+  /// Debe coincidir con el CHECK constraint de `assets.category` (init.sql).
+  /// El backend también admite 'carteras' y 'pulsos', sin equivalente aquí
+  /// todavía -- llegan como [AssetCategory.other] al leer.
+  String get value {
+    switch (this) {
+      case AssetCategory.sneakers:     return 'sneakers';
+      case AssetCategory.caps:         return 'gorras';
+      case AssetCategory.watches:      return 'relojes';
+      case AssetCategory.glasses:      return 'lentes';
+      case AssetCategory.bags:         return 'bolsos';
+      case AssetCategory.jewelry:      return 'bisuteria';
+      case AssetCategory.collectibles: return 'coleccionables';
+      case AssetCategory.other:        return 'otros';
+    }
+  }
+
+  static AssetCategory fromValue(String value) {
+    switch (value) {
+      case 'sneakers':       return AssetCategory.sneakers;
+      case 'gorras':         return AssetCategory.caps;
+      case 'relojes':        return AssetCategory.watches;
+      case 'lentes':         return AssetCategory.glasses;
+      case 'bolsos':         return AssetCategory.bags;
+      case 'bisuteria':      return AssetCategory.jewelry;
+      case 'coleccionables': return AssetCategory.collectibles;
+      default:                return AssetCategory.other;
+    }
+  }
 }
 
 class AssetEntity extends Equatable {

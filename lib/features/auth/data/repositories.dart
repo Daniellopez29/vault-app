@@ -18,7 +18,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = await remoteDataSource.login(email, password);
       return Right(user);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -48,7 +48,7 @@ class AuthRepositoryImpl implements AuthRepository {
         location: location,
       );
       return Right(user);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -60,7 +60,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = await remoteDataSource.loginWithGoogle();
       return Right(user);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -72,7 +72,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = await remoteDataSource.saveUserRole(role);
       return Right(user);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -84,7 +84,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = await remoteDataSource.getCurrentUser();
       return Right(user);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -93,7 +93,14 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, void>> logout() async {
-    return const Right(null);
+    try {
+      await remoteDataSource.logout();
+      return const Right(null);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
   }
 
   @override
@@ -101,7 +108,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await remoteDataSource.deleteAccount();
       return const Right(null);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -113,7 +120,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = await remoteDataSource.updateDisplayName(fullName);
       return Right(user);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -124,7 +131,35 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await remoteDataSource.updatePassword(newPassword);
       return const Right(null);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> updateRole(UserRole role) async {
+    try {
+      final user = await remoteDataSource.updateRole(role);
+      return Right(user);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> uploadProfilePhoto({
+    required List<int> bytes,
+    required String filename,
+  }) async {
+    try {
+      final user =
+          await remoteDataSource.uploadProfilePhoto(bytes: bytes, filename: filename);
+      return Right(user);
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));

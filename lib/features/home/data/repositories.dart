@@ -14,7 +14,7 @@ class HomeRepositoryImpl implements HomeRepository {
     try {
       final posts = await remoteDataSource.getFeedPosts();
       return Right(posts);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -22,11 +22,11 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Either<Failure, void>> toggleLike(String postId) async {
+  Future<Either<Failure, void>> toggleLike(String postId, bool currentlyLiked) async {
     try {
-      await remoteDataSource.toggleLike(postId);
+      await remoteDataSource.toggleLike(postId, currentlyLiked);
       return const Right(null);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -38,7 +38,22 @@ class HomeRepositoryImpl implements HomeRepository {
     try {
       await remoteDataSource.toggleSave(postId);
       return const Right(null);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> createPost({
+    required String content,
+    required List<PostImageUpload> images,
+  }) async {
+    try {
+      await remoteDataSource.createPost(content: content, images: images);
+      return const Right(null);
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));

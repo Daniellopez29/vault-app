@@ -48,6 +48,50 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:49495820436:android:55c28a242c5a1df50d8c81",
+        "android_client_info": {
+          "package_name": "com.noveno.vault"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "49495820436-k8ofcjhp6liups9vsjftqpm3u1m2gg74.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.noveno.vault",
+            "certificate_hash": "8148108a98654f717a251c3b3d99674589b48d39"
+          }
+        },
+        {
+          "client_id": "49495820436-oq98o62p3vjedpee1v1k6afqadnt2i2o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjpHN7cWQIsiNA2RdkYcetVXz4wVu6eKY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "49495820436-oq98o62p3vjedpee1v1k6afqadnt2i2o.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "49495820436-kkrvh9tl5kl4s7skkfbeu7r08vck1ga2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.vaultApp"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

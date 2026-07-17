@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/enums.dart';
+import '../../../core/providers.dart';
 import '../../../core/usecase.dart';
+import '../../auth/presentation/providers.dart';
 import '../data/datasources.dart';
 import '../data/repositories.dart';
 import '../domain/entities.dart';
@@ -8,7 +11,11 @@ import '../domain/usecases.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepositoryImpl(
-      remoteDataSource: ProfileRemoteDataSourceImpl());
+    remoteDataSource: ProfileRemoteDataSourceImpl(
+      ref.read(apiClientProvider),
+      currentUserId: () => ref.read(authControllerProvider).user?.id,
+    ),
+  );
 });
 
 final getUserAssetsUseCaseProvider = Provider<GetUserAssetsUseCase>((ref) {
@@ -40,6 +47,10 @@ final setAssetForSaleUseCaseProvider = Provider<SetAssetForSaleUseCase>((ref) {
 final setAssetPublishedUseCaseProvider =
 Provider<SetAssetPublishedUseCase>((ref) {
   return SetAssetPublishedUseCase(ref.read(profileRepositoryProvider));
+});
+
+final registerBusinessUseCaseProvider = Provider<RegisterBusinessUseCase>((ref) {
+  return RegisterBusinessUseCase(ref.read(profileRepositoryProvider));
 });
 
 // ─── ASSETS STATE ─────────────────────────────────────────────────────────────
@@ -93,6 +104,10 @@ StateNotifierProvider<ProfileAssetsController, ProfileAssetsState>((ref) {
     deleteAssetUseCase: ref.read(deleteAssetUseCaseProvider),
     setAssetForSaleUseCase: ref.read(setAssetForSaleUseCaseProvider),
     setAssetPublishedUseCase: ref.read(setAssetPublishedUseCaseProvider),
+    // Al poner algo en venta por primera vez, se sube de rol a "Vendedor"
+    // (solo si el usuario todavía es el rol base "usuario").
+    onMarkedForSale: () =>
+        ref.read(authControllerProvider.notifier).upgradeRoleIfBase(UserRole.seller),
   );
 });
 
@@ -102,6 +117,7 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
   final DeleteAssetUseCase _deleteAsset;
   final SetAssetForSaleUseCase _setForSale;
   final SetAssetPublishedUseCase _setPublished;
+  final Future<void> Function() _onMarkedForSale;
 
   ProfileAssetsController({
     required GetUserAssetsUseCase getUserAssetsUseCase,
@@ -109,6 +125,7 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
     required DeleteAssetUseCase deleteAssetUseCase,
     required SetAssetForSaleUseCase setAssetForSaleUseCase,
     required SetAssetPublishedUseCase setAssetPublishedUseCase,
+    required this._onMarkedForSale,
   })  : _getUserAssets = getUserAssetsUseCase,
         _addAsset = addAssetUseCase,
         _deleteAsset = deleteAssetUseCase,
@@ -175,7 +192,9 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
     result.fold((failure) {
       state = state.copyWith(errorMessage: failure.message);
       loadAssets();
-    }, (_) {});
+    }, (_) {
+      if (forSale) _onMarkedForSale();
+    });
   }
 
   /// Publica o despublica un activo en el Feed (actualización optimista).
@@ -253,10 +272,9 @@ class RestorerProfileController
 
   RestorerProfileController({
     required this._getRestorerProfile,
-    required SaveRestorerProfileUseCase saveRestorerProfile,
+    required this._saveRestorerProfile,
     required this._userId,
-  })  : _saveRestorerProfile = saveRestorerProfile,
-        super(const RestorerProfileState()) {
+  })  : super(const RestorerProfileState()) {
     loadProfile();
   }
 

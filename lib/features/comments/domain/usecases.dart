@@ -20,18 +20,6 @@ class AddCommentUseCase {
       repository.addComment(targetId: params.targetId, text: params.text);
 }
 
-class ToggleCommentLikeUseCase {
-  final CommentsRepository repository;
-  const ToggleCommentLikeUseCase(this.repository);
-
-  Future<Either<Failure, List<CommentEntity>>> call(
-      ToggleCommentLikeParams params) =>
-      repository.toggleLike(
-        targetId: params.targetId,
-        commentId: params.commentId,
-      );
-}
-
 class AddCommentParams extends Equatable {
   final String targetId;
   final String text;
@@ -40,17 +28,4 @@ class AddCommentParams extends Equatable {
 
   @override
   List<Object?> get props => [targetId, text];
-}
-
-class ToggleCommentLikeParams extends Equatable {
-  final String targetId;
-  final String commentId;
-
-  const ToggleCommentLikeParams({
-    required this.targetId,
-    required this.commentId,
-  });
-
-  @override
-  List<Object?> get props => [targetId, commentId];
 }

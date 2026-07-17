@@ -131,3 +131,26 @@ class UpdatePasswordUseCase {
   Future<Either<Failure, void>> call(String newPassword) =>
       repository.updatePassword(newPassword);
 }
+
+class UpdateRoleUseCase {
+  final AuthRepository repository;
+  const UpdateRoleUseCase(this.repository);
+
+  Future<Either<Failure, UserEntity>> call(UserRole role) =>
+      repository.updateRole(role);
+}
+
+class UploadProfilePhotoUseCase {
+  final AuthRepository repository;
+  const UploadProfilePhotoUseCase(this.repository);
+
+  Future<Either<Failure, UserEntity>> call(UploadProfilePhotoParams params) =>
+      repository.uploadProfilePhoto(bytes: params.bytes, filename: params.filename);
+}
+
+class UploadProfilePhotoParams {
+  final List<int> bytes;
+  final String filename;
+
+  const UploadProfilePhotoParams({required this.bytes, required this.filename});
+}

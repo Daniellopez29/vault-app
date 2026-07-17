@@ -9,4 +9,13 @@ abstract class ProfileRepository {
   Future<Either<Failure, void>> deleteAsset(String assetId);
   Future<Either<Failure, RestorerProfileEntity?>> getRestorerProfile(String userId);
   Future<Either<Failure, void>> saveRestorerProfile(RestorerProfileEntity profile);
+
+  /// Registra el negocio del usuario (tabla `businesses`: name/type/
+  /// description/location). [type] debe ser 'restaurador' o 'servicio'.
+  Future<Either<Failure, void>> registerBusiness({
+    required String name,
+    required String type,
+    required String description,
+    required String location,
+  });
 }

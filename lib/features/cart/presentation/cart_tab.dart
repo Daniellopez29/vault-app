@@ -50,24 +50,34 @@ class _EmptyCart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.shopping_cart_outlined,
-            size: VaultIconSize.xl,
-            color: VaultColors.textSecondary,
-          ),
-          const SizedBox(height: VaultSpacing.md),
-          Text('Tu carrito está vacío', style: tt.titleLarge),
-          const SizedBox(height: VaultSpacing.xs),
-          Text(
-            'Agrega activos desde el Shop para verlos aquí',
-            style: tt.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-        ],
+    // Mismo Scaffold (fondo + AppBar) que _CartContent -- para que el marco
+    // de la pantalla no cambie entre carrito vacío y con artículos, solo el
+    // contenido del cuerpo.
+    return Scaffold(
+      backgroundColor: VaultColors.background,
+      appBar: AppBar(
+        title: const Text('Checkout'),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.shopping_cart_outlined,
+              size: VaultIconSize.xl,
+              color: VaultColors.textSecondary,
+            ),
+            const SizedBox(height: VaultSpacing.md),
+            Text('Tu carrito está vacío', style: tt.titleLarge),
+            const SizedBox(height: VaultSpacing.xs),
+            Text(
+              'Agrega activos desde el Shop para verlos aquí',
+              style: tt.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

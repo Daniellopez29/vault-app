@@ -26,21 +26,27 @@ enum UserRole {
     }
   }
 
+  /// Debe coincidir exactamente con el CHECK constraint de `users.role`
+  /// en la base de datos real (init.sql): usuario/vendedor/restaurador/servicio.
   String get value {
     switch (this) {
-      case UserRole.user:     return 'user';
-      case UserRole.seller:   return 'seller';
-      case UserRole.restorer: return 'restorer';
-      case UserRole.service:  return 'service';
+      case UserRole.user:     return 'usuario';
+      case UserRole.seller:   return 'vendedor';
+      case UserRole.restorer: return 'restaurador';
+      case UserRole.service:  return 'servicio';
     }
   }
 
   static UserRole fromValue(String value) {
     switch (value) {
+      case 'vendedor':    return UserRole.seller;
+      case 'restaurador': return UserRole.restorer;
+      case 'servicio':    return UserRole.service;
+    // Compatibilidad con datos previos (fixtures/Firebase en inglés).
       case 'seller':   return UserRole.seller;
       case 'restorer': return UserRole.restorer;
       case 'service':  return UserRole.service;
-    // Compatibilidad con cuentas previas ('general'/'collector' = Coleccionista).
+      case 'usuario':
       case 'user':
       case 'general':
       case 'collector':

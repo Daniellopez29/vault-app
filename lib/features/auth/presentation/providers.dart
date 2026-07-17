@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/enums.dart';
+import '../../../core/providers.dart';
 import '../data/datasources.dart';
 import '../data/repositories.dart';
 import '../domain/entities.dart';
@@ -44,7 +45,9 @@ class AuthState extends Equatable {
 }
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepositoryImpl(remoteDataSource: AuthRemoteDataSourceImpl());
+  return AuthRepositoryImpl(
+    remoteDataSource: AuthRemoteDataSourceImpl(ref.read(apiClientProvider)),
+  );
 });
 
 final loginUseCaseProvider = Provider<LoginUseCase>((ref) {
@@ -79,6 +82,14 @@ final updatePasswordUseCaseProvider = Provider<UpdatePasswordUseCase>((ref) {
   return UpdatePasswordUseCase(ref.read(authRepositoryProvider));
 });
 
+final updateRoleUseCaseProvider = Provider<UpdateRoleUseCase>((ref) {
+  return UpdateRoleUseCase(ref.read(authRepositoryProvider));
+});
+
+final uploadProfilePhotoUseCaseProvider = Provider<UploadProfilePhotoUseCase>((ref) {
+  return UploadProfilePhotoUseCase(ref.read(authRepositoryProvider));
+});
+
 final authControllerProvider =
 StateNotifierProvider<AuthController, AuthState>((ref) {
   return AuthController(
@@ -89,6 +100,8 @@ StateNotifierProvider<AuthController, AuthState>((ref) {
     deleteAccountUseCase: ref.read(deleteAccountUseCaseProvider),
     updateDisplayNameUseCase: ref.read(updateDisplayNameUseCaseProvider),
     updatePasswordUseCase: ref.read(updatePasswordUseCaseProvider),
+    updateRoleUseCase: ref.read(updateRoleUseCaseProvider),
+    uploadProfilePhotoUseCase: ref.read(uploadProfilePhotoUseCaseProvider),
     logoutUseCase: ref.read(logoutUseCaseProvider),
   );
 });
@@ -101,6 +114,8 @@ class AuthController extends StateNotifier<AuthState> {
   final DeleteAccountUseCase _deleteAccountUseCase;
   final UpdateDisplayNameUseCase _updateDisplayNameUseCase;
   final UpdatePasswordUseCase _updatePasswordUseCase;
+  final UpdateRoleUseCase _updateRoleUseCase;
+  final UploadProfilePhotoUseCase _uploadProfilePhotoUseCase;
   final LogoutUseCase _logoutUseCase;
 
   Timer? _inactivityTimer;
@@ -113,6 +128,8 @@ class AuthController extends StateNotifier<AuthState> {
     required this._deleteAccountUseCase,
     required this._updateDisplayNameUseCase,
     required this._updatePasswordUseCase,
+    required this._updateRoleUseCase,
+    required this._uploadProfilePhotoUseCase,
     required this._logoutUseCase,
   }) : super(const AuthState());
 
@@ -254,6 +271,53 @@ class AuthController extends StateNotifier<AuthState> {
       },
           (_) {
         state = state.copyWith(status: AuthStatus.authenticated);
+        return true;
+      },
+    );
+  }
+
+  /// Sube al backend y actualiza la foto de perfil. No cambia [status] a
+  /// loading -- se llama desde el header del Perfil, un spinner de página
+  /// completa se vería mal ahí; el llamador maneja su propio estado visual.
+  Future<bool> uploadProfilePhoto({required List<int> bytes, required String filename}) async {
+    final result = await _uploadProfilePhotoUseCase(
+      UploadProfilePhotoParams(bytes: bytes, filename: filename),
+    );
+    return result.fold(
+      (failure) {
+        state = state.copyWith(errorMessage: failure.message);
+        return false;
+      },
+      (user) {
+        state = state.copyWith(status: AuthStatus.authenticated, user: user);
+        return true;
+      },
+    );
+  }
+
+  /// Sube de rol solo si el usuario todavía tiene el rol base ("usuario").
+  /// No degrada ni pisa un rol de negocio (restaurador/servicio) que ya
+  /// haya elegido explícitamente. Falla en silencio -- es un efecto
+  /// secundario de otra acción (poner algo en venta), no debe interrumpir
+  /// ese flujo si el backend no responde.
+  Future<void> upgradeRoleIfBase(UserRole role) async {
+    if (state.user?.role != UserRole.user) return;
+    final result = await _updateRoleUseCase(role);
+    result.fold((_) {}, (user) => state = state.copyWith(user: user));
+  }
+
+  /// Fuerza el rol, sin la condición de [upgradeRoleIfBase]. Se usa cuando
+  /// el usuario eligió explícitamente (p.ej. al registrar un negocio con
+  /// una categoría específica), no como efecto secundario.
+  Future<bool> updateRole(UserRole role) async {
+    final result = await _updateRoleUseCase(role);
+    return result.fold(
+      (failure) {
+        state = state.copyWith(errorMessage: failure.message);
+        return false;
+      },
+      (user) {
+        state = state.copyWith(user: user);
         return true;
       },
     );

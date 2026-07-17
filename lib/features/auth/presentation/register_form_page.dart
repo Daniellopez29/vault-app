@@ -1,70 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/dashed_border.dart';
 import '../../../../core/enums.dart';
-import '../../../../core/router.dart';
 import '../../../../core/screen_security.dart';
 import '../../../../core/theme.dart';
 import 'providers.dart';
 
-/// Identifica cada campo extra opcional, para mapear rol → campos sin hardcodear.
-enum _ExtraField { phone, businessName, specialty, location }
-
-extension _ExtraFieldUI on _ExtraField {
-  String get label {
-    switch (this) {
-      case _ExtraField.phone:        return 'Teléfono';
-      case _ExtraField.businessName: return 'Nombre del negocio';
-      case _ExtraField.specialty:    return 'Especialidad';
-      case _ExtraField.location:     return 'Ubicación';
-    }
-  }
-
-  IconData get icon {
-    switch (this) {
-      case _ExtraField.phone:        return Icons.phone_outlined;
-      case _ExtraField.businessName: return Icons.storefront_outlined;
-      case _ExtraField.specialty:    return Icons.workspace_premium_outlined;
-      case _ExtraField.location:     return Icons.location_on_outlined;
-    }
-  }
-
-  TextInputType get keyboard {
-    switch (this) {
-      case _ExtraField.phone: return TextInputType.phone;
-      default:                return TextInputType.text;
-    }
-  }
-}
-
-/// Campos extra por rol. Único lugar que decide qué pide cada rol.
-List<_ExtraField> _extraFieldsFor(UserRole role) {
-  switch (role) {
-    case UserRole.user:
-      return const [];
-    case UserRole.seller:
-      return const [_ExtraField.phone, _ExtraField.businessName];
-    case UserRole.restorer:
-      return const [
-        _ExtraField.businessName,
-        _ExtraField.specialty,
-        _ExtraField.phone,
-        _ExtraField.location,
-      ];
-    case UserRole.service:
-      return const [
-        _ExtraField.businessName,
-        _ExtraField.specialty,
-        _ExtraField.phone,
-        _ExtraField.location,
-      ];
-  }
-}
-
 class RegisterFormPage extends ConsumerStatefulWidget {
   final UserRole role;
 
-  const RegisterFormPage({super.key, required this.role});
+  /// A dónde ir tras registrarse con éxito -- lo decide la opción elegida
+  /// en RoleSelectionPage (Home / registrar activo / registrar negocio).
+  final String destination;
+
+  const RegisterFormPage({super.key, required this.role, required this.destination});
 
   @override
   ConsumerState<RegisterFormPage> createState() => _RegisterFormPageState();
@@ -76,13 +26,10 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
-  // Un controller por cada campo extra posible.
-  final Map<_ExtraField, TextEditingController> _extraControllers = {
-    for (final field in _ExtraField.values) field: TextEditingController(),
-  };
+  final _confirmPasswordController = TextEditingController();
 
   bool _obscure = true;
+  bool _obscureConfirm = true;
 
   @override
   void initState() {
@@ -96,38 +43,26 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    for (final controller in _extraControllers.values) {
-      controller.dispose();
-    }
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  String? _valueFor(_ExtraField field, List<_ExtraField> activeFields) {
-    if (!activeFields.contains(field)) return null;
-    final text = _extraControllers[field]!.text.trim();
-    return text.isEmpty ? null : text;
-  }
-
   void _onAvatarTap() {
-    // Solo visual por ahora. La selección/subida real llega con Firebase Storage.
+    // Solo visual por ahora. La foto de perfil real se sube desde el
+    // Perfil una vez creada la cuenta (ProfileHeader ya lo soporta).
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Foto de perfil (próximamente)')),
+      const SnackBar(content: Text('Puedes agregar tu foto de perfil después, desde Perfil')),
     );
   }
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    final active = _extraFieldsFor(widget.role);
 
     ref.read(authControllerProvider.notifier).register(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
       fullName: _nameController.text.trim(),
       role: widget.role,
-      phone: _valueFor(_ExtraField.phone, active),
-      businessName: _valueFor(_ExtraField.businessName, active),
-      specialty: _valueFor(_ExtraField.specialty, active),
-      location: _valueFor(_ExtraField.location, active),
     );
   }
 
@@ -136,11 +71,10 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
     final tt = Theme.of(context).textTheme;
     final state = ref.watch(authControllerProvider);
     final isLoading = state.status == AuthStatus.loading;
-    final extraFields = _extraFieldsFor(widget.role);
 
     ref.listen(authControllerProvider, (_, next) {
       if (next.status == AuthStatus.authenticated) {
-        context.go(AppRoutes.home);
+        context.go(widget.destination);
       }
     });
 
@@ -174,7 +108,6 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
                 ),
                 const SizedBox(height: 24),
 
-                // Campos base (todos los roles).
                 _Field(
                   controller: _nameController,
                   label: 'Nombre completo',
@@ -208,18 +141,21 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
                   validator: (v) =>
                   v == null || v.length < 6 ? 'Mínimo 6 caracteres' : null,
                 ),
-
-                // Campos específicos del rol.
-                ...extraFields.map(
-                      (field) => Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: _Field(
-                      controller: _extraControllers[field]!,
-                      label: field.label,
-                      icon: field.icon,
-                      keyboardType: field.keyboard,
+                const SizedBox(height: 16),
+                _Field(
+                  controller: _confirmPasswordController,
+                  label: 'Confirmar contraseña',
+                  icon: Icons.lock_outline,
+                  obscureText: _obscureConfirm,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                      color: VaultColors.primary,
                     ),
+                    onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
                   ),
+                  validator: (v) =>
+                  v != _passwordController.text ? 'Las contraseñas no coinciden' : null,
                 ),
 
                 if (state.status == AuthStatus.error) ...[
@@ -266,7 +202,7 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
 }
 
 /// Avatar circular para la foto de perfil. Solo visual por ahora:
-/// al tocarlo avisa "próximamente". La selección/subida real llega con Storage.
+/// al tocarlo avisa que se agrega después desde el Perfil.
 class _ProfileAvatarPicker extends StatelessWidget {
   final VoidCallback onTap;
 
@@ -280,18 +216,22 @@ class _ProfileAvatarPicker extends StatelessWidget {
         children: [
           Stack(
             children: [
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  color: VaultColors.surface,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: VaultColors.divider, width: 2),
-                ),
-                child: Icon(
-                  Icons.person_outline,
-                  size: 44,
-                  color: VaultColors.textSecondary,
+              DashedBorder(
+                color: VaultColors.divider,
+                shape: BoxShape.circle,
+                strokeWidth: 2,
+                child: Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    color: VaultColors.surface,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.person_outline,
+                    size: 44,
+                    color: VaultColors.textSecondary,
+                  ),
                 ),
               ),
               Positioned(

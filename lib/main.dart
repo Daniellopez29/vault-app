@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/api_client.dart';
 import 'core/router.dart';
 import 'core/theme.dart';
 import 'features/auth/presentation/providers.dart';
@@ -11,6 +12,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // Recupera la URL del backend si se ajustó manualmente desde
+  // Configuración (celular físico en otra red, IP distinta, etc).
+  await ApiConfig.loadOverride();
   runApp(const ProviderScope(child: VaultApp()));
 }
 

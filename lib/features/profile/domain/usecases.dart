@@ -76,6 +76,32 @@ class SaveRestorerProfileUseCase {
       repository.saveRestorerProfile(profile);
 }
 
+class RegisterBusinessUseCase {
+  final ProfileRepository repository;
+  const RegisterBusinessUseCase(this.repository);
+
+  Future<Either<Failure, void>> call(RegisterBusinessParams params) => repository.registerBusiness(
+        name: params.name,
+        type: params.type,
+        description: params.description,
+        location: params.location,
+      );
+}
+
+class RegisterBusinessParams {
+  final String name;
+  final String type;
+  final String description;
+  final String location;
+
+  const RegisterBusinessParams({
+    required this.name,
+    required this.type,
+    required this.description,
+    required this.location,
+  });
+}
+
 class SetForSaleParams {
   final AssetEntity asset;
   final bool forSale;
