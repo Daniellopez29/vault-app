@@ -1,0 +1,90 @@
+﻿import 'package:crypton/crypton.dart';
+import 'package:dartz/dartz.dart';
+import 'package:encrypt/encrypt.dart' as enc;
+import '../../../../core/error.dart';
+import '../../domain/entities.dart';
+import '../../domain/encryption_service.dart';
+import 'key_store.dart';
+
+/// Implementación del E2EE con esquema híbrido RSA + AES.
+///
+/// Por qué híbrido: RSA no cifra textos largos (solo datos pequeños), pero es
+/// ideal para compartir un secreto. AES cifra cualquier tamaño rápido. Por cada
+/// mensaje se genera una llave AES nueva, se cifra el texto con AES, y se cifra
+/// esa llave AES con la pública RSA del receptor. Solo su privada podrá leerlo.
+///
+/// Nada hardcodeado: llave AES e IV se generan aleatorios por mensaje; las
+/// llaves RSA se generan en el dispositivo y la privada nunca sale.
+class RsaEncryptionService implements EncryptionService {
+  final KeyStore _keyStore;
+
+  RsaEncryptionService({KeyStore? keyStore}) : _keyStore = keyStore ?? KeyStore();
+
+  @override
+  Future<Either<Failure, KeyPairEntity>> generateKeyPair() async {
+    try {
+      final publicKey = await _keyStore.generateAndStore();
+      final privateKey = await _keyStore.readPrivateKey();
+      if (privateKey == null) {
+        return const Left(ServerFailure('No se pudo generar el par de llaves.'));
+      }
+      return Right(KeyPairEntity(
+        publicKey: publicKey,
+        privateKey: privateKey.toString(),
+      ));
+    } catch (_) {
+      return const Left(ServerFailure('Error al generar las llaves.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EncryptedMessageEntity>> encryptMessage({
+    required String plainText,
+    required String recipientPublicKey,
+  }) async {
+    try {
+      // Llave AES e IV nuevos y aleatorios para ESTE mensaje.
+      final aesKey = enc.Key.fromSecureRandom(32); // AES-256
+      final iv = enc.IV.fromSecureRandom(16);
+      final encrypter = enc.Encrypter(enc.AES(aesKey, mode: enc.AESMode.cbc));
+
+      // Ciframos el texto con AES.
+      final cipherText = encrypter.encrypt(plainText, iv: iv).base64;
+
+      // Ciframos la llave AES con la pública RSA del receptor.
+      final recipientKey = RSAPublicKey.fromString(recipientPublicKey);
+      final encryptedAesKey = recipientKey.encrypt(aesKey.base64);
+
+      return Right(EncryptedMessageEntity(
+        cipherText: cipherText,
+        encryptedAesKey: encryptedAesKey,
+        iv: iv.base64,
+      ));
+    } catch (_) {
+      return const Left(ServerFailure('Error al cifrar el mensaje.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> decryptMessage({
+    required EncryptedMessageEntity encryptedMessage,
+    required String ownPrivateKey,
+  }) async {
+    try {
+      final privateKey = RSAPrivateKey.fromString(ownPrivateKey);
+
+      // Recuperamos la llave AES con la privada RSA.
+      final aesKeyBase64 = privateKey.decrypt(encryptedMessage.encryptedAesKey);
+      final aesKey = enc.Key.fromBase64(aesKeyBase64);
+      final iv = enc.IV.fromBase64(encryptedMessage.iv);
+      final encrypter = enc.Encrypter(enc.AES(aesKey, mode: enc.AESMode.cbc));
+
+      // Con esa llave AES, desciframos el texto.
+      final plainText = encrypter.decrypt64(encryptedMessage.cipherText, iv: iv);
+      return Right(plainText);
+    } catch (_) {
+      return const Left(ServerFailure('Error al descifrar el mensaje.'));
+    }
+  }
+}
+

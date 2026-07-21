@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
@@ -24,7 +24,7 @@ class ShopTab extends ConsumerWidget {
       ),
     );
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${item.title} añadido al carrito')),
+      SnackBar(content: Text("${item.title} anadido al carrito")),
     );
   }
 
@@ -35,25 +35,34 @@ class ShopTab extends ConsumerWidget {
     switch (state.status) {
       case ShopStatus.initial:
       case ShopStatus.loading:
-        return const Center(child: CircularProgressIndicator());
+        return const Scaffold(
+          backgroundColor: VaultColors.background,
+          body: Center(child: CircularProgressIndicator()),
+        );
 
       case ShopStatus.error:
-        return Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(state.errorMessage ?? 'Error al cargar el Shop'),
-              const SizedBox(height: VaultSpacing.md),
-              TextButton(
-                onPressed: () =>
-                    ref.read(shopControllerProvider.notifier).loadShop(),
-                child: const Text('Reintentar'),
-              ),
-            ],
+        return Scaffold(
+          backgroundColor: VaultColors.background,
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(state.errorMessage ?? "Error al cargar el Shop"),
+                const SizedBox(height: VaultSpacing.md),
+                ElevatedButton(
+                  onPressed: () =>
+                      ref.read(shopControllerProvider.notifier).loadShop(),
+                  child: const Text("Reintentar"),
+                ),
+              ],
+            ),
           ),
         );
 
       case ShopStatus.loaded:
+        final controller = ref.read(shopControllerProvider.notifier);
+        final isSearching = state.searchQuery.trim().isNotEmpty;
+
         return Scaffold(
           backgroundColor: VaultColors.background,
           floatingActionButton: FloatingActionButton(
@@ -69,39 +78,61 @@ class ShopTab extends ConsumerWidget {
                 ref.read(shopControllerProvider.notifier).loadShop(),
             child: CustomScrollView(
               slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      VaultSpacing.md,
-                      VaultSpacing.md,
-                      VaultSpacing.md,
-                      VaultSpacing.xs,
-                    ),
-                    child: PromoCarousel(banners: state.banners),
-                  ),
+                ShopSearchHeader(
+                  query: state.searchQuery,
+                  onQueryChanged: controller.search,
+                  onNotificationsTap: () => context.push(AppRoutes.notifications),
+                  onChatTap: () => context.push(AppRoutes.chat),
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.all(VaultSpacing.md),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: VaultSpacing.md,
-                      mainAxisSpacing: VaultSpacing.md,
-                      mainAxisExtent: 255,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                        final item = state.items[index];
-                        return MarketplaceCard(
-                          item: item,
-                          onCartTap: () => _addToCart(context, ref, item),
-                        );
-                      },
-                      childCount: state.items.length,
+                if (!isSearching)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        VaultSpacing.md,
+                        VaultSpacing.md,
+                        VaultSpacing.md,
+                        VaultSpacing.xs,
+                      ),
+                      child: PromoCarousel(slides: state.slides),
                     ),
                   ),
-                ),
+                if (isSearching && state.items.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(VaultSpacing.xl),
+                        child: Text(
+                          "No se encontraron productos para \"${state.searchQuery}\"",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: VaultColors.textSecondary),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.all(VaultSpacing.md),
+                    sliver: SliverGrid(
+                      gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: VaultSpacing.md,
+                        mainAxisSpacing: VaultSpacing.md,
+                        mainAxisExtent: 255,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                          final item = state.items[index];
+                          return MarketplaceCard(
+                            item: item,
+                            onCartTap: () => _addToCart(context, ref, item),
+                          );
+                        },
+                        childCount: state.items.length,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -109,3 +140,4 @@ class ShopTab extends ConsumerWidget {
     }
   }
 }
+

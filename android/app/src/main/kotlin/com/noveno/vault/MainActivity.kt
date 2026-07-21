@@ -1,4 +1,4 @@
-package com.example.vault_app
+package com.noveno.vault
 
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity

@@ -1,3 +1,5 @@
+﻿import 'package:go_router/go_router.dart';
+import '../../../core/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -337,7 +339,9 @@ class AssetCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Stack(
+              child: GestureDetector(
+                onTap: () => context.push(AppRoutes.assetDetail, extra: asset),
+                child: Stack(
               children: [
                 Positioned.fill(
                   child: Container(
@@ -368,6 +372,7 @@ class AssetCard extends ConsumerWidget {
                     ),
                   ),
               ],
+            ),
             ),
           ),
           Padding(
