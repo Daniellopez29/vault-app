@@ -15,7 +15,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final assets = await remoteDataSource.getUserAssets();
       return Right(assets);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -27,7 +27,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.addAsset(AssetModel.fromEntity(asset));
       return const Right(null);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -39,7 +39,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.updateAsset(AssetModel.fromEntity(asset));
       return const Right(null);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -51,7 +51,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.deleteAsset(assetId);
       return const Right(null);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -64,7 +64,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final profile = await remoteDataSource.getRestorerProfile(userId);
       return Right(profile);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -92,7 +92,29 @@ class ProfileRepositoryImpl implements ProfileRepository {
       );
       await remoteDataSource.saveRestorerProfile(model);
       return const Right(null);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> registerBusiness({
+    required String name,
+    required String type,
+    required String description,
+    required String location,
+  }) async {
+    try {
+      await remoteDataSource.registerBusiness(
+        name: name,
+        type: type,
+        description: description,
+        location: location,
+      );
+      return const Right(null);
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));

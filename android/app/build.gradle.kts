@@ -14,7 +14,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.vault_app"
+    namespace = "com.noveno.vault"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -24,7 +24,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.vault_app"
+        applicationId = "com.noveno.vault"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -64,4 +64,4 @@ kotlin {
 
 flutter {
     source = "../.."
-    }
+}

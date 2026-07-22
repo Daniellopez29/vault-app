@@ -8,7 +8,12 @@
     <application
         android:label="vault_app"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
+        <!-- El backend en desarrollo corre en HTTP plano (sin TLS) en la
+             red local; Android 9+ bloquea tráfico sin cifrar por defecto.
+             Antes de publicar la app de verdad, esto debe quitarse y el
+             backend debe servir HTTPS. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

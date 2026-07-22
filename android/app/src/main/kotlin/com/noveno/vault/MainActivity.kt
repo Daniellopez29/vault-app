@@ -1,11 +1,13 @@
-package com.example.vault_app
+package com.noveno.vault
 
 import android.view.WindowManager
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+// FlutterFragmentActivity (no FlutterActivity) porque flutter_stripe/stripe_android
+// necesita un FragmentManager de androidx para sus fragments internos (CardField, 3DS, etc).
+class MainActivity : FlutterFragmentActivity() {
     private val CHANNEL = "com.example.vault_app/security"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

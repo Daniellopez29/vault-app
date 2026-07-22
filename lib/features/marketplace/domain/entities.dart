@@ -1,6 +1,7 @@
-import 'package:equatable/equatable.dart';
+﻿import 'package:equatable/equatable.dart';
+import '../../subscription/domain/entities.dart';
 
-/// Artículo publicado en el marketplace (tienda).
+/// ArtÃ­culo publicado en el marketplace (tienda).
 class MarketplaceItemEntity extends Equatable {
   final String id;
   final String brand;
@@ -59,3 +60,35 @@ class PromoBannerEntity extends Equatable {
   @override
   List<Object?> get props => [id, sellerName, title, price, oldPrice, imageUrl];
 }
+/// Slides del carrusel del Shop. Un slide puede ser una promo de producto
+/// o un anuncio de suscripciÃ³n. Se usa sealed class para que el carrusel
+/// tenga que cubrir todos los tipos (el compilador obliga), evitando ifs
+/// sueltos y facilitando agregar tipos nuevos sin romper nada.
+///
+/// PromoBannerEntity NO se toca: PromoSlide solo la envuelve.
+sealed class CarouselSlide extends Equatable {
+  const CarouselSlide();
+}
+
+/// Slide que muestra una promociÃ³n de un producto (banner existente).
+class PromoSlide extends CarouselSlide {
+  final PromoBannerEntity banner;
+
+  const PromoSlide(this.banner);
+
+  @override
+  List<Object?> get props => [banner];
+}
+
+/// Slide que invita a contratar una suscripciÃ³n. No es un dato del backend:
+/// es un CTA fijo de la app. Lleva el tipo para saber a quÃ© suscripciÃ³n
+/// dirige (producto o negocio); el texto se resuelve desde SubscriptionCopy.
+class SubscriptionSlide extends CarouselSlide {
+  final SubscriptionType type;
+
+  const SubscriptionSlide(this.type);
+
+  @override
+  List<Object?> get props => [type];
+}
+

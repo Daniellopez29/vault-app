@@ -17,3 +17,10 @@ class ServerFailure extends Failure {
 class UnknownFailure extends Failure {
   const UnknownFailure([super.message = 'Ocurrió un error inesperado.']);
 }
+
+/// El backend rechazó el contenido por tóxico/ofensivo (HTTP 422) o porque
+/// el servicio de moderación no respondió (HTTP 503). La UI debe mostrar
+/// [message] tal cual y conservar lo que el usuario escribió, sin borrarlo.
+class ModerationFailure extends Failure {
+  const ModerationFailure([super.message = 'Tu contenido es demasiado ofensivo para publicarse.']);
+}

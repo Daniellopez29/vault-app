@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers.dart';
 import '../../../core/usecase.dart';
 import '../../home/domain/entities.dart';
 import '../data/datasources.dart';
@@ -8,7 +9,7 @@ import '../domain/usecases.dart';
 
 final favoritesRepositoryProvider = Provider<FavoritesRepository>((ref) {
   return FavoritesRepositoryImpl(
-    localDataSource: FavoritesLocalDataSourceImpl(),
+    remoteDataSource: FavoritesRemoteDataSourceImpl(ref.read(apiClientProvider)),
   );
 });
 
@@ -62,9 +63,8 @@ class FavoritesController extends StateNotifier<FavoritesState> {
 
   FavoritesController({
     required this._getSavedPosts,
-    required RemoveSavedPostUseCase removeSavedPost,
-  })  : _removeSavedPost = removeSavedPost,
-        super(const FavoritesState()) {
+    required this._removeSavedPost,
+  })  : super(const FavoritesState()) {
     loadSavedPosts();
   }
 

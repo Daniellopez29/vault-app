@@ -11,10 +11,4 @@ abstract class CommentsRepository {
     required String targetId,
     required String text,
   });
-
-  /// Da o quita like a un comentario; devuelve la lista actualizada del target.
-  Future<Either<Failure, List<CommentEntity>>> toggleLike({
-    required String targetId,
-    required String commentId,
-  });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/api_client.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../auth/presentation/providers.dart';
@@ -35,6 +36,31 @@ class SettingsPage extends ConsumerWidget {
                 label: 'Eliminar cuenta',
                 color: VaultColors.error,
                 onTap: () => _showDeleteAccountDialog(context, ref),
+              ),
+            ],
+          ),
+          _SettingsSection(
+            title: 'Negocio',
+            children: [
+              _SettingsTile(
+                icon: Icons.storefront_outlined,
+                label: 'Registra tu negocio',
+                onTap: () => context.push(AppRoutes.registerBusiness),
+              ),
+            ],
+          ),
+          _SettingsSection(
+            title: 'Avanzado',
+            children: [
+              _SettingsTile(
+                icon: Icons.dns_outlined,
+                label: 'Servidor',
+                trailing: Text(
+                  ApiConfig.baseUrl.replaceFirst('http://', '').replaceFirst('/api/v1', ''),
+                  style: tt.bodySmall,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: () => _showServerUrlDialog(context),
               ),
             ],
           ),
@@ -105,6 +131,66 @@ class SettingsPage extends ConsumerWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                       content: Text('Nombre actualizado correctamente')),
+                );
+              }
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Deja escribir manualmente la URL del backend -- necesario al probar
+  /// desde un celular físico: "localhost" ahí es el celular mismo, nunca
+  /// la computadora donde corre el API. Debe ser la IP LAN de esa máquina
+  /// (ambos dispositivos en la misma red Wi-Fi), p.ej. http://192.168.x.x:8080/api/v1
+  void _showServerUrlDialog(BuildContext context) {
+    final controller = TextEditingController(text: ApiConfig.baseUrl);
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Dirección del servidor'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Usa la IP local de la computadora donde corre el backend '
+              '(ambos en la misma red Wi-Fi), no "localhost".',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'URL base',
+                hintText: 'http://192.168.1.10:8080/api/v1',
+              ),
+              keyboardType: TextInputType.url,
+              autocorrect: false,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await ApiConfig.setOverride(null);
+              if (context.mounted) Navigator.of(context).pop();
+            },
+            child: const Text('Restablecer'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await ApiConfig.setOverride(controller.text.trim());
+              if (context.mounted) {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Servidor actualizado')),
                 );
               }
             },

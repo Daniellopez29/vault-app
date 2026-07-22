@@ -1,3 +1,4 @@
+import '../../../core/time_ago.dart';
 import '../domain/entities.dart';
 
 class CommentModel extends CommentEntity {
@@ -13,29 +14,20 @@ class CommentModel extends CommentEntity {
     super.parentId,
   });
 
+  /// Respuesta de GET/POST /api/v1/posts/{id}/comments del API Go. No hay
+  /// likes de comentarios en el backend (sin tabla comment_likes) -- queda
+  /// en false/0 y el like es solo estado local en la sesión.
   factory CommentModel.fromJson(Map<String, dynamic> json) {
     return CommentModel(
       id: json['id'] as String,
-      targetId: json['targetId'] as String,
-      authorName: json['authorName'] as String,
-      authorAvatarUrl: json['authorAvatarUrl'] as String? ?? '',
-      text: json['text'] as String,
-      timeAgo: json['timeAgo'] as String? ?? '',
-      likesCount: json['likesCount'] as int? ?? 0,
-      isLiked: json['isLiked'] as bool? ?? false,
-      parentId: json['parentId'] as String?,
+      targetId: json['post_id'] as String,
+      authorName: json['author_name'] as String? ?? '',
+      authorAvatarUrl: json['author_avatar_url'] as String? ?? '',
+      text: json['content'] as String? ?? '',
+      timeAgo: timeAgoFrom(json['created_at'] as String? ?? ''),
+      likesCount: 0,
+      isLiked: false,
+      parentId: null,
     );
   }
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'targetId': targetId,
-    'authorName': authorName,
-    'authorAvatarUrl': authorAvatarUrl,
-    'text': text,
-    'timeAgo': timeAgo,
-    'likesCount': likesCount,
-    'isLiked': isLiked,
-    'parentId': parentId,
-  };
 }

@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../auth/presentation/providers.dart';
+import '../../../core/providers.dart';
 import '../data/datasources.dart';
 import '../data/repositories.dart';
 import '../domain/entities.dart';
@@ -8,10 +8,7 @@ import '../domain/usecases.dart';
 
 final commentsRepositoryProvider = Provider<CommentsRepository>((ref) {
   return CommentsRepositoryImpl(
-    remoteDataSource: CommentsRemoteDataSourceImpl(),
-    // El nombre del autor sale de auth; aquí se resuelve el enganche.
-    currentAuthorName: () =>
-    ref.read(authControllerProvider).user?.fullName ?? 'Tú',
+    remoteDataSource: CommentsRemoteDataSourceImpl(ref.read(apiClientProvider)),
   );
 });
 
@@ -21,11 +18,6 @@ final getCommentsUseCaseProvider = Provider<GetCommentsUseCase>((ref) {
 
 final addCommentUseCaseProvider = Provider<AddCommentUseCase>((ref) {
   return AddCommentUseCase(ref.read(commentsRepositoryProvider));
-});
-
-final toggleCommentLikeUseCaseProvider =
-Provider<ToggleCommentLikeUseCase>((ref) {
-  return ToggleCommentLikeUseCase(ref.read(commentsRepositoryProvider));
 });
 
 enum CommentsStatus { initial, loading, loaded, error }
@@ -64,7 +56,6 @@ final commentsControllerProvider = StateNotifierProvider.family<
     targetId: targetId,
     getComments: ref.read(getCommentsUseCaseProvider),
     addComment: ref.read(addCommentUseCaseProvider),
-    toggleLike: ref.read(toggleCommentLikeUseCaseProvider),
   );
 });
 
@@ -72,15 +63,12 @@ class CommentsController extends StateNotifier<CommentsState> {
   final String _targetId;
   final GetCommentsUseCase _getComments;
   final AddCommentUseCase _addComment;
-  final ToggleCommentLikeUseCase _toggleLike;
 
   CommentsController({
     required this._targetId,
-    required GetCommentsUseCase getComments,
+    required this._getComments,
     required this._addComment,
-    required this._toggleLike,
-  })  : _getComments = getComments,
-        super(const CommentsState()) {
+  })  : super(const CommentsState()) {
     loadComments();
   }
 
@@ -99,8 +87,9 @@ class CommentsController extends StateNotifier<CommentsState> {
     _apply(result);
   }
 
-  Future<void> toggleLike(String commentId) async {
-    // Actualización optimista: el like se ve al instante.
+  /// El backend no tiene tabla de likes de comentarios: esto es puramente
+  /// estado local de la sesión, no se llama a la red ni se persiste.
+  void toggleLike(String commentId) {
     final optimistic = state.comments.map((c) {
       if (c.id != commentId) return c;
       return c.copyWith(
@@ -109,11 +98,6 @@ class CommentsController extends StateNotifier<CommentsState> {
       );
     }).toList();
     state = state.copyWith(comments: optimistic);
-
-    final result = await _toggleLike(
-      ToggleCommentLikeParams(targetId: _targetId, commentId: commentId),
-    );
-    _apply(result);
   }
 
   /// Aplica el resultado de un caso de uso al estado, en un solo lugar.

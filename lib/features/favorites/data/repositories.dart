@@ -5,16 +5,16 @@ import '../domain/repositories.dart';
 import 'datasources.dart';
 
 class FavoritesRepositoryImpl implements FavoritesRepository {
-  final FavoritesLocalDataSource localDataSource;
+  final FavoritesRemoteDataSource remoteDataSource;
 
-  const FavoritesRepositoryImpl({required this.localDataSource});
+  const FavoritesRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<Either<Failure, List<PostEntity>>> getSavedPosts() async {
     try {
-      final posts = await localDataSource.getSavedPosts();
+      final posts = await remoteDataSource.getSavedPosts();
       return Right(posts);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));
@@ -24,9 +24,9 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
   @override
   Future<Either<Failure, void>> removeSavedPost(String postId) async {
     try {
-      await localDataSource.removeSavedPost(postId);
+      await remoteDataSource.removeSavedPost(postId);
       return const Right(null);
-    } on ServerFailure catch (e) {
+    } on Failure catch (e) {
       return Left(e);
     } catch (e) {
       return Left(ServerFailure('Error inesperado: $e'));

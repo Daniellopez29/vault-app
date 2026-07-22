@@ -2,27 +2,37 @@ import '../../../../core/enums.dart';
 import '../domain/entities.dart';
 
 class UserModel extends UserEntity {
+  final String token;
+
   const UserModel({
     required super.id,
     required super.email,
     super.fullName,
     super.role,
+    super.avatarUrl,
+    this.token = '',
   });
 
-  factory UserModel.fromFirestore(Map<String, dynamic> data, String uid) {
+  /// Respuesta de POST /api/v1/auth/login y POST /api/v1/users del API Go.
+  factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: uid,
-      email: data['email'] as String? ?? '',
-      fullName: data['fullName'] as String?,
-      role: UserRole.fromValue(data['role'] as String? ?? 'general'),
+      id: json['id'] as String,
+      email: json['email'] as String? ?? '',
+      fullName: json['name'] as String?,
+      role: UserRole.fromValue(json['role'] as String? ?? 'usuario'),
+      avatarUrl: json['avatar_url'] as String? ?? '',
+      token: json['token'] as String? ?? '',
     );
   }
 
-  Map<String, dynamic> toFirestore() {
+  Map<String, dynamic> toStorageJson() {
     return {
+      'id': id,
       'email': email,
-      'fullName': fullName ?? '',
+      'name': fullName,
       'role': role.value,
+      'avatar_url': avatarUrl,
+      'token': token,
     };
   }
 }

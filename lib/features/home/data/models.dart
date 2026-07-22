@@ -1,3 +1,4 @@
+import '../../../core/time_ago.dart';
 import '../domain/entities.dart';
 
 class PostModel extends PostEntity {
@@ -15,35 +16,26 @@ class PostModel extends PostEntity {
     super.isSaved = false,
   });
 
+  /// Respuesta de GET/POST /api/v1/posts del API Go. El backend no separa
+  /// título/descripción (solo `content`) ni tiene "guardados" -- se dejan
+  /// vacío/false y esos campos quedan como estado local en la UI.
   factory PostModel.fromJson(Map<String, dynamic> json) {
+    final photos = json['photos'] as List<dynamic>? ?? const [];
+    final firstPhoto =
+        photos.isNotEmpty ? (photos.first as Map<String, dynamic>)['url'] as String? : null;
+
     return PostModel(
       id: json['id'] as String,
-      authorName: json['authorName'] as String,
-      authorAvatarUrl: json['authorAvatarUrl'] as String,
-      imageUrl: json['imageUrl'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      timeAgo: json['timeAgo'] as String,
-      likesCount: json['likesCount'] as int,
-      commentsCount: json['commentsCount'] as int,
-      isLiked: json['isLiked'] as bool? ?? false,
-      isSaved: json['isSaved'] as bool? ?? false,
+      authorName: json['author_name'] as String? ?? '',
+      authorAvatarUrl: json['author_avatar_url'] as String? ?? '',
+      imageUrl: firstPhoto ?? '',
+      title: '',
+      description: json['content'] as String? ?? '',
+      timeAgo: timeAgoFrom(json['created_at'] as String? ?? ''),
+      likesCount: json['likes_count'] as int? ?? 0,
+      commentsCount: json['comments_count'] as int? ?? 0,
+      isLiked: false,
+      isSaved: false,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'authorName': authorName,
-      'authorAvatarUrl': authorAvatarUrl,
-      'imageUrl': imageUrl,
-      'title': title,
-      'description': description,
-      'timeAgo': timeAgo,
-      'likesCount': likesCount,
-      'commentsCount': commentsCount,
-      'isLiked': isLiked,
-      'isSaved': isSaved,
-    };
   }
 }

@@ -45,51 +45,51 @@ class AssetModel extends AssetEntity {
     publishCaption: e.publishCaption,
   );
 
+  /// Respuesta de GET/POST/PUT /api/v1/assets del API Go. isForSale/
+  /// salePrice/saleDescription/isPublished/size no existen en la tabla real
+  /// -- quedan en sus valores por defecto (false/null/vacío) al leer.
   factory AssetModel.fromJson(Map<String, dynamic> json) {
+    final photos = json['photos'] as List<dynamic>? ?? const [];
+    final cover = photos.isNotEmpty
+        ? (photos.firstWhere(
+              (p) => (p as Map<String, dynamic>)['is_cover'] == true,
+              orElse: () => photos.first,
+            ) as Map<String, dynamic>)['url'] as String?
+        : null;
+
     return AssetModel(
       id: json['id'] as String,
-      category: AssetCategory.values.asNameMap()[json['category'] as String?] ??
-          AssetCategory.other,
-      brand: json['brand'] as String,
+      category: AssetCategory.fromValue(json['category'] as String? ?? ''),
+      brand: json['brand'] as String? ?? '',
       name: json['name'] as String,
-      imageUrl: json['imageUrl'] as String,
-      acquisitionDate: DateTime.parse(json['acquisitionDate'] as String),
-      originalPrice: (json['originalPrice'] as num).toDouble(),
-      origin: json['origin'] as String,
-      size: json['size'] as String,
-      condition: json['condition'] as String,
-      servicesCount: json['servicesCount'] as int,
-      restorationsCount: json['restorationsCount'] as int,
-      isVerified: json['isVerified'] as bool? ?? false,
+      imageUrl: cover ?? '',
+      acquisitionDate: json['purchase_date'] != null
+          ? DateTime.parse(json['purchase_date'] as String)
+          : DateTime.now(),
+      originalPrice: (json['purchase_value'] as num?)?.toDouble() ?? 0,
+      origin: json['store_origin'] as String? ?? '',
+      size: '',
+      condition: json['condition'] as String? ?? 'nuevo',
+      servicesCount: 0,
+      restorationsCount: 0,
+      isVerified: (json['blockchain_tx_id'] as String?)?.isNotEmpty ?? false,
       notes: json['notes'] as String?,
-      isForSale: json['isForSale'] as bool? ?? false,
-      salePrice: (json['salePrice'] as num?)?.toDouble(),
-      saleDescription: json['saleDescription'] as String?,
-      isPublished: json['isPublished'] as bool? ?? false,
-      publishCaption: json['publishCaption'] as String?,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'category': category.name,
-    'brand': brand,
+  /// Cuerpo para POST/PUT /api/v1/assets -- solo los campos que la tabla
+  /// real tiene. isForSale/salePrice/saleDescription/isPublished/size no
+  /// se envían porque el backend no los persiste.
+  Map<String, dynamic> toApiJson() => {
     'name': name,
-    'imageUrl': imageUrl,
-    'acquisitionDate': acquisitionDate.toIso8601String(),
-    'originalPrice': originalPrice,
-    'origin': origin,
-    'size': size,
+    'category': category.value,
+    'brand': brand,
+    'purchase_value': originalPrice,
     'condition': condition,
-    'servicesCount': servicesCount,
-    'restorationsCount': restorationsCount,
-    'isVerified': isVerified,
-    'notes': notes,
-    'isForSale': isForSale,
-    'salePrice': salePrice,
-    'saleDescription': saleDescription,
-    'isPublished': isPublished,
-    'publishCaption': publishCaption,
+    'purchase_date':
+        '${acquisitionDate.year.toString().padLeft(4, '0')}-${acquisitionDate.month.toString().padLeft(2, '0')}-${acquisitionDate.day.toString().padLeft(2, '0')}',
+    'store_origin': origin,
+    'notes': notes ?? '',
   };
 }
 

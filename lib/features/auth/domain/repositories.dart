@@ -27,4 +27,14 @@ abstract class AuthRepository {
   Future<Either<Failure, void>> deleteAccount();
   Future<Either<Failure, UserEntity>> updateDisplayName(String fullName);
   Future<Either<Failure, void>> updatePassword(String newPassword);
+
+  /// Cambia el rol del usuario en el backend (p.ej. al poner algo en venta,
+  /// o al registrar un negocio). No pide confirmación -- la decide quien
+  /// llama, aquí solo se persiste.
+  Future<Either<Failure, UserEntity>> updateRole(UserRole role);
+
+  Future<Either<Failure, UserEntity>> uploadProfilePhoto({
+    required List<int> bytes,
+    required String filename,
+  });
 }

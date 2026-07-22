@@ -1,3 +1,4 @@
+import '../../../core/api_client.dart';
 import '../../../core/error.dart';
 import 'models.dart';
 
@@ -8,17 +9,36 @@ abstract class ProfileRemoteDataSource {
   Future<void> deleteAsset(String assetId);
   Future<RestorerProfileModel?> getRestorerProfile(String userId);
   Future<void> saveRestorerProfile(RestorerProfileModel profile);
+  Future<void> registerBusiness({
+    required String name,
+    required String type,
+    required String description,
+    required String location,
+  });
 }
 
+/// [currentUserId] filtra GET /assets (que devuelve los de todos los
+/// usuarios) a solo los del dueño de la sesión -- el backend no tiene un
+/// endpoint "mis activos" todavía.
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
-  final List<AssetModel> _assets = [];
-  RestorerProfileModel? _restorerProfile;
+  final ApiClient _client;
+  final String? Function() _currentUserId;
+
+  ProfileRemoteDataSourceImpl(this._client, {required this._currentUserId});
 
   @override
   Future<List<AssetModel>> getUserAssets() async {
-    await Future.delayed(const Duration(milliseconds: 300));
     try {
-      return List.of(_assets);
+      final body = await _client.get('/assets', auth: false);
+      final list = body as List<dynamic>? ?? const [];
+      final userId = _currentUserId();
+      return list
+          .map((e) => e as Map<String, dynamic>)
+          .where((json) => userId == null || json['user_id'] == userId)
+          .map(AssetModel.fromJson)
+          .toList();
+    } on Failure {
+      rethrow;
     } catch (e) {
       throw ServerFailure('Error al cargar tus artículos: $e');
     }
@@ -26,9 +46,10 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   @override
   Future<void> addAsset(AssetModel asset) async {
-    await Future.delayed(const Duration(milliseconds: 200));
     try {
-      _assets.insert(0, asset);
+      await _client.post('/assets', body: asset.toApiJson());
+    } on Failure {
+      rethrow;
     } catch (e) {
       throw ServerFailure('Error al registrar el activo: $e');
     }
@@ -36,12 +57,19 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   @override
   Future<void> updateAsset(AssetModel asset) async {
-    await Future.delayed(const Duration(milliseconds: 200));
     try {
-      final index = _assets.indexWhere((a) => a.id == asset.id);
-      if (index >= 0) {
-        _assets[index] = asset;
+      await _client.put('/assets/${asset.id}', body: asset.toApiJson());
+
+      // "Publicar en el Feed" no es un campo de assets -- se traduce a un
+      // post real con asset_id, para que aparezca en el feed de todos.
+      if (asset.isPublished) {
+        await _client.post('/posts', body: {
+          'content': asset.publishCaption ?? '¡Mira mi ${asset.name}!',
+          'asset_id': asset.id,
+        });
       }
+    } on Failure {
+      rethrow;
     } catch (e) {
       throw ServerFailure('Error al actualizar el activo: $e');
     }
@@ -49,19 +77,44 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   @override
   Future<void> deleteAsset(String assetId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    _assets.removeWhere((a) => a.id == assetId);
+    try {
+      await _client.delete('/assets/$assetId');
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al eliminar el activo: $e');
+    }
   }
 
+  // El backend no tiene un concepto de "perfil de restaurador" (bio,
+  // especialidades, servicios, rating) -- solo `businesses`
+  // (nombre/tipo/descripción/ubicación). Conectar esto de verdad requiere
+  // decidir primero cómo se relacionan ambos conceptos; por ahora se deja
+  // sin conectar, igual que antes.
   @override
-  Future<RestorerProfileModel?> getRestorerProfile(String userId) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return _restorerProfile;
-  }
+  Future<RestorerProfileModel?> getRestorerProfile(String userId) async => null;
 
   @override
-  Future<void> saveRestorerProfile(RestorerProfileModel profile) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _restorerProfile = profile;
+  Future<void> saveRestorerProfile(RestorerProfileModel profile) async {}
+
+  @override
+  Future<void> registerBusiness({
+    required String name,
+    required String type,
+    required String description,
+    required String location,
+  }) async {
+    try {
+      await _client.post('/businesses', body: {
+        'name': name,
+        'type': type,
+        'description': description,
+        'location': location,
+      });
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al registrar el negocio: $e');
+    }
   }
 }

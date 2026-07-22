@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/dashed_border.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
 import '../domain/entities.dart';
@@ -15,6 +16,16 @@ extension _ConditionUI on _Condition {
       case _Condition.nuevo:     return 'Nuevo';
       case _Condition.usado:     return 'Usado';
       case _Condition.comoNuevo: return 'Como nuevo';
+    }
+  }
+
+  /// Debe coincidir con el CHECK constraint de `assets.condition` (init.sql):
+  /// nuevo/seminuevo/usado.
+  String get value {
+    switch (this) {
+      case _Condition.nuevo:     return 'nuevo';
+      case _Condition.usado:     return 'usado';
+      case _Condition.comoNuevo: return 'seminuevo';
     }
   }
 }
@@ -72,7 +83,7 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
       originalPrice: double.tryParse(_priceController.text.trim()) ?? 0,
       origin: _storeController.text.trim(),
       size: _sizeController.text.trim(),
-      condition: _condition.label,
+      condition: _condition.value,
       servicesCount: 0,
       restorationsCount: 0,
       isVerified: false,
@@ -246,18 +257,21 @@ class _AssetPhotoPicker extends StatelessWidget {
   Widget _slot(double size, {bool primary = false}) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: VaultColors.surface,
-          borderRadius: VaultRadius.cardBorder,
-          border: Border.all(color: VaultColors.divider),
-        ),
-        child: Icon(
-          Icons.photo_camera_outlined,
-          color: VaultColors.textSecondary,
-          size: primary ? VaultIconSize.lg : VaultIconSize.md,
+      child: DashedBorder(
+        color: VaultColors.divider,
+        borderRadius: VaultRadius.card,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: VaultColors.surface,
+            borderRadius: VaultRadius.cardBorder,
+          ),
+          child: Icon(
+            Icons.photo_camera_outlined,
+            color: VaultColors.textSecondary,
+            size: primary ? VaultIconSize.lg : VaultIconSize.md,
+          ),
         ),
       ),
     );
