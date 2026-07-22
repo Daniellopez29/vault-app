@@ -7,7 +7,7 @@ import '../../home/presentation/feed_tab.dart';
 import '../../profile/presentation/profile_tab.dart';
 import '../../reviews/presentation/reviews_tab.dart';
 import '../../services/presentation/services_tab.dart';
-import '../../marketplace/presentation/shop_tab.dart';
+import '../../marketplace/presentation/shop_view.dart';
 import '../../marketplace/presentation/seller_commerce_view.dart';
 import '../../cart/presentation/cart_tab.dart';
 import '../../auth/presentation/providers.dart';
@@ -30,14 +30,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     switch (role) {
       case UserRole.user:
         return const [
-          ShopTab(),
+          ShopView(),
           FeedTab(),
           CartTab(),
           ProfileTab(),
         ];
       case UserRole.seller:
         return const [
-          ShopTab(),
+          ShopView(),
           FeedTab(),
           SellerCommerceView(),
           ProfileTab(),
@@ -135,4 +135,5 @@ class _NavItem {
   final String label;
   const _NavItem({required this.icon, required this.label});
 }
+
 

@@ -1,4 +1,5 @@
-﻿import 'package:go_router/go_router.dart';
+﻿import 'assets_skeleton.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -211,10 +212,7 @@ class AssetsBody extends StatelessWidget {
     switch (state.status) {
       case ProfileAssetsStatus.initial:
       case ProfileAssetsStatus.loading:
-        return const Padding(
-          padding: EdgeInsets.all(VaultSpacing.xxl),
-          child: Center(child: CircularProgressIndicator()),
-        );
+        return const AssetsSkeleton();
       case ProfileAssetsStatus.error:
         return Padding(
           padding: const EdgeInsets.all(VaultSpacing.xl),

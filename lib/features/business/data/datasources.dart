@@ -1,10 +1,11 @@
-import '../../../core/api_client.dart';
+﻿import '../../../core/api_client.dart';
 import '../../../core/error.dart';
 import 'models.dart';
 
 abstract class BusinessRemoteDataSource {
   Future<BusinessModel?> getMyBusiness();
   Future<BusinessModel> updateBusiness(String id, BusinessModel business);
+  Future<List<BusinessModel>> getAllBusinesses();
 }
 
 /// [currentUserId] filtra `GET /businesses` (que devuelve los de todos los
@@ -46,6 +47,23 @@ class BusinessRemoteDataSourceImpl implements BusinessRemoteDataSource {
       rethrow;
     } catch (e) {
       throw ServerFailure('Error al actualizar tu negocio: $e');
+    }
+  }
+
+  /// Mismo endpoint que getMyBusiness, pero sin filtrar por usuario: es el
+  /// directorio público de negocios que ve cualquiera en el Shop.
+  @override
+  Future<List<BusinessModel>> getAllBusinesses() async {
+    try {
+      final body = await _client.get('/businesses', auth: false);
+      final list = body as List<dynamic>? ?? const [];
+      return list
+          .map((e) => BusinessModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al cargar los negocios: $e');
     }
   }
 }

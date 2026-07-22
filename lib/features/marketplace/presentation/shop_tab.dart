@@ -8,6 +8,7 @@ import '../../cart/domain/entities.dart';
 import '../../cart/presentation/providers.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
+import 'shop_skeleton.dart';
 import 'widgets.dart';
 
 class ShopTab extends ConsumerWidget {
@@ -37,7 +38,7 @@ class ShopTab extends ConsumerWidget {
       case ShopStatus.loading:
         return const Scaffold(
           backgroundColor: VaultColors.background,
-          body: Center(child: CircularProgressIndicator()),
+          body: ShopSkeleton(),
         );
 
       case ShopStatus.error:
@@ -140,4 +141,6 @@ class ShopTab extends ConsumerWidget {
     }
   }
 }
+
+
 

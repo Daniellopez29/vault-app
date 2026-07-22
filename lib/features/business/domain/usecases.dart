@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import '../../../core/error.dart';
 import '../../../core/usecase.dart';
 import 'entities.dart';
@@ -23,5 +23,19 @@ class UpdateBusinessUseCase implements UseCase<BusinessEntity, BusinessEntity> {
   @override
   Future<Either<Failure, BusinessEntity>> call(BusinessEntity business) {
     return repository.updateBusiness(business);
+  }
+}
+
+/// Trae el directorio completo de negocios registrados, para mostrarlos en
+/// el Shop.
+class GetAllBusinessesUseCase
+    implements UseCase<List<BusinessEntity>, NoParams> {
+  final BusinessRepository repository;
+
+  GetAllBusinessesUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, List<BusinessEntity>>> call(NoParams params) {
+    return repository.getAllBusinesses();
   }
 }

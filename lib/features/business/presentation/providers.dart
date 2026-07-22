@@ -97,3 +97,20 @@ final businessControllerProvider =
     ref.read(updateBusinessUseCaseProvider),
   );
 });
+
+// ─── Directorio público de negocios (Shop) ───
+
+final getAllBusinessesUseCaseProvider = Provider<GetAllBusinessesUseCase>((ref) {
+  return GetAllBusinessesUseCase(ref.read(businessRepositoryProvider));
+});
+
+/// Todos los negocios registrados, para el directorio del Shop.
+/// Es una carga simple de solo lectura, por eso un FutureProvider en vez de
+/// un StateNotifier: la UI lo consume con .when(loading/error/data).
+final allBusinessesProvider = FutureProvider<List<BusinessEntity>>((ref) async {
+  final result = await ref.read(getAllBusinessesUseCaseProvider)(const NoParams());
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (businesses) => businesses,
+  );
+});

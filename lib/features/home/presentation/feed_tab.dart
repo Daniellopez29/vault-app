@@ -1,9 +1,13 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
+import '../../../core/router.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/search_header.dart';
 import '../../comments/presentation/comments_sheet.dart';
 import '../domain/entities.dart';
+import 'feed_skeleton.dart';
 import 'providers.dart';
 
 class FeedTab extends ConsumerWidget {
@@ -16,7 +20,7 @@ class FeedTab extends ConsumerWidget {
     switch (state.status) {
       case FeedStatus.initial:
       case FeedStatus.loading:
-        return const Center(child: CircularProgressIndicator());
+        return const FeedSkeleton();
       case FeedStatus.error:
         return Center(
           child: Column(
@@ -32,25 +36,57 @@ class FeedTab extends ConsumerWidget {
           ),
         );
       case FeedStatus.loaded:
-        if (state.posts.isEmpty) {
-          return const Center(child: Text('Aún no hay publicaciones'));
-        }
+        final controller = ref.read(feedControllerProvider.notifier);
+        final posts = state.visiblePosts;
+
         return RefreshIndicator(
           onRefresh: () => ref.read(feedControllerProvider.notifier).loadFeed(),
-          child: ListView.builder(
-            padding: const EdgeInsets.all(VaultSpacing.md),
-            itemCount: state.posts.length,
-            itemBuilder: (context, index) {
-              final post = state.posts[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: VaultSpacing.lg),
-                child: PostCard(
-                  post: post,
-                  onLikeTap: () => ref.read(feedControllerProvider.notifier).toggleLike(post.id),
-                  onSaveTap: () => ref.read(feedControllerProvider.notifier).toggleSave(post.id),
+          child: CustomScrollView(
+            slivers: [
+              VaultSearchHeader(
+                query: state.searchQuery,
+                hintText: "Buscar publicaciones",
+                onQueryChanged: controller.search,
+                onNotificationsTap: () => context.push(AppRoutes.notifications),
+                onChatTap: () => context.push(AppRoutes.chat),
+              ),
+              if (posts.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(VaultSpacing.xl),
+                      child: Text(
+                        state.isSearching
+                            ? "No se encontraron publicaciones"
+                            : "Aún no hay publicaciones",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: VaultColors.textSecondary),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.all(VaultSpacing.md),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final post = posts[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: VaultSpacing.lg),
+                          child: PostCard(
+                            post: post,
+                            onLikeTap: () => controller.toggleLike(post.id),
+                            onSaveTap: () => controller.toggleSave(post.id),
+                          ),
+                        );
+                      },
+                      childCount: posts.length,
+                    ),
+                  ),
                 ),
-              );
-            },
+            ],
           ),
         );
     }
@@ -227,3 +263,4 @@ class _ActionStat extends StatelessWidget {
     );
   }
 }
+

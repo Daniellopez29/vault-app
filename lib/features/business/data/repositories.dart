@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import '../../../core/error.dart';
 import '../domain/entities.dart';
 import '../domain/repositories.dart';
@@ -39,6 +39,18 @@ class BusinessRepositoryImpl implements BusinessRepository {
       return Left(f);
     } catch (_) {
       return const Left(ServerFailure('Error al actualizar tu negocio.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<BusinessEntity>>> getAllBusinesses() async {
+    try {
+      final businesses = await remoteDataSource.getAllBusinesses();
+      return Right(businesses);
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (_) {
+      return const Left(ServerFailure('Error al cargar los negocios.'));
     }
   }
 }

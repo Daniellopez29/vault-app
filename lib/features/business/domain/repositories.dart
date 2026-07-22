@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import '../../../core/error.dart';
 import 'entities.dart';
 
@@ -7,4 +7,8 @@ abstract class BusinessRepository {
   Future<Either<Failure, BusinessEntity?>> getMyBusiness();
 
   Future<Either<Failure, BusinessEntity>> updateBusiness(BusinessEntity business);
+
+  /// Todos los negocios registrados en la plataforma, para el directorio
+  /// público del Shop.
+  Future<Either<Failure, List<BusinessEntity>>> getAllBusinesses();
 }
