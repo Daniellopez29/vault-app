@@ -8,6 +8,7 @@ import '../../cart/domain/entities.dart';
 import '../../cart/presentation/providers.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
+import '../../../core/widgets/search_header.dart';
 import 'shop_skeleton.dart';
 import 'widgets.dart';
 
@@ -79,8 +80,9 @@ class ShopTab extends ConsumerWidget {
                 ref.read(shopControllerProvider.notifier).loadShop(),
             child: CustomScrollView(
               slivers: [
-                ShopSearchHeader(
+                VaultSearchHeader(
                   query: state.searchQuery,
+                  hintText: 'Buscar productos',
                   onQueryChanged: controller.search,
                   onNotificationsTap: () => context.push(AppRoutes.notifications),
                   onChatTap: () => context.push(AppRoutes.chat),
@@ -141,6 +143,8 @@ class ShopTab extends ConsumerWidget {
     }
   }
 }
+
+
 
 
 

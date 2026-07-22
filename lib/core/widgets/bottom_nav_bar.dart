@@ -1,17 +1,26 @@
-import 'package:flutter/material.dart';
-import '../../../core/theme.dart';
+﻿import 'package:flutter/material.dart';
+import '../dimens.dart';
+import '../theme.dart';
 
+/// Un elemento de la barra de navegación inferior.
+/// Vive en core porque lo usan tanto el shell (que arma el nav por rol)
+/// como la propia barra.
 class NavItem {
   final IconData icon;
   final String label;
+
   const NavItem({required this.icon, required this.label});
 }
 
+/// Barra de navegación inferior de la app, con el botón "+" central.
+///
+/// El botón "+" no representa una página: por eso el índice del botón se
+/// convierte al índice de página saltándolo.
 class VaultBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTabSelected;
   final VoidCallback onAddPressed;
-  final List<dynamic> navItems;
+  final List<NavItem> navItems;
 
   const VaultBottomNavBar({
     super.key,
@@ -24,7 +33,7 @@ class VaultBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: VaultColors.surface,
         border: Border(
           top: BorderSide(color: VaultColors.divider),
@@ -33,7 +42,7 @@ class VaultBottomNavBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: VaultSpacing.sm),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: List.generate(navItems.length, (index) {
@@ -60,7 +69,11 @@ class _NavIcon extends StatelessWidget {
   final bool isActive;
   final VoidCallback onTap;
 
-  const _NavIcon({required this.icon, required this.isActive, required this.onTap});
+  const _NavIcon({
+    required this.icon,
+    required this.isActive,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +81,7 @@ class _NavIcon extends StatelessWidget {
       onPressed: onTap,
       icon: Icon(
         icon,
-        size: 26,
+        size: VaultIconSize.lg,
         color: isActive ? VaultColors.primary : VaultColors.textSecondary,
       ),
     );
@@ -77,6 +90,7 @@ class _NavIcon extends StatelessWidget {
 
 class _AddButton extends StatelessWidget {
   final VoidCallback onTap;
+
   const _AddButton({required this.onTap});
 
   @override
@@ -90,20 +104,12 @@ class _AddButton extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: VaultColors.primary, width: 1.5),
         ),
-        child: Icon(Icons.add, color: VaultColors.primary, size: 22),
+        child: const Icon(
+          Icons.add,
+          color: VaultColors.primary,
+          size: VaultIconSize.md,
+        ),
       ),
-    );
-  }
-}
-
-class PlaceholderView extends StatelessWidget {
-  final String title;
-  const PlaceholderView({super.key, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(title, style: Theme.of(context).textTheme.titleLarge),
     );
   }
 }

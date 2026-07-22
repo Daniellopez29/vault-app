@@ -11,7 +11,7 @@ import '../../marketplace/presentation/shop_view.dart';
 import '../../marketplace/presentation/seller_commerce_view.dart';
 import '../../cart/presentation/cart_tab.dart';
 import '../../auth/presentation/providers.dart';
-import '../../home/presentation/widgets.dart';
+import '../../../../core/widgets/bottom_nav_bar.dart';
 
 /// Shell principal de la app ya con sesión iniciada.
 /// Arma el IndexedStack de pestañas y el bottom nav según el rol.
@@ -59,39 +59,39 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  List<_NavItem> _buildNavItems(UserRole role) {
+  List<NavItem> _buildNavItems(UserRole role) {
     switch (role) {
       case UserRole.user:
         return const [
-          _NavItem(icon: Icons.storefront_outlined,   label: 'Shop'),
-          _NavItem(icon: Icons.home_outlined,         label: 'Feed'),
-          _NavItem(icon: Icons.add,                   label: ''),
-          _NavItem(icon: Icons.shopping_cart_outlined, label: 'Cart'),
-          _NavItem(icon: Icons.person_outline,        label: 'Perfil'),
+          NavItem(icon: Icons.storefront_outlined,   label: 'Shop'),
+          NavItem(icon: Icons.home_outlined,         label: 'Feed'),
+          NavItem(icon: Icons.add,                   label: ''),
+          NavItem(icon: Icons.shopping_cart_outlined, label: 'Cart'),
+          NavItem(icon: Icons.person_outline,        label: 'Perfil'),
         ];
       case UserRole.seller:
         return const [
-          _NavItem(icon: Icons.storefront_outlined,   label: 'Shop'),
-          _NavItem(icon: Icons.home_outlined,         label: 'Feed'),
-          _NavItem(icon: Icons.add,                   label: ''),
-          _NavItem(icon: Icons.sell_outlined,         label: 'Ventas'),
-          _NavItem(icon: Icons.person_outline,        label: 'Perfil'),
+          NavItem(icon: Icons.storefront_outlined,   label: 'Shop'),
+          NavItem(icon: Icons.home_outlined,         label: 'Feed'),
+          NavItem(icon: Icons.add,                   label: ''),
+          NavItem(icon: Icons.sell_outlined,         label: 'Ventas'),
+          NavItem(icon: Icons.person_outline,        label: 'Perfil'),
         ];
       case UserRole.restorer:
         return const [
-          _NavItem(icon: Icons.home_outlined,  label: 'Feed'),
-          _NavItem(icon: Icons.build_outlined, label: 'Servicios'),
-          _NavItem(icon: Icons.add,            label: ''),
-          _NavItem(icon: Icons.star_outline,   label: 'Reseñas'),
-          _NavItem(icon: Icons.person_outline, label: 'Perfil'),
+          NavItem(icon: Icons.home_outlined,  label: 'Feed'),
+          NavItem(icon: Icons.build_outlined, label: 'Servicios'),
+          NavItem(icon: Icons.add,            label: ''),
+          NavItem(icon: Icons.star_outline,   label: 'Reseñas'),
+          NavItem(icon: Icons.person_outline, label: 'Perfil'),
         ];
       case UserRole.service:
         return const [
-          _NavItem(icon: Icons.home_outlined,  label: 'Feed'),
-          _NavItem(icon: Icons.build_outlined, label: 'Servicios'),
-          _NavItem(icon: Icons.add,            label: ''),
-          _NavItem(icon: Icons.star_outline,   label: 'Reseñas'),
-          _NavItem(icon: Icons.person_outline, label: 'Perfil'),
+          NavItem(icon: Icons.home_outlined,  label: 'Feed'),
+          NavItem(icon: Icons.build_outlined, label: 'Servicios'),
+          NavItem(icon: Icons.add,            label: ''),
+          NavItem(icon: Icons.star_outline,   label: 'Reseñas'),
+          NavItem(icon: Icons.person_outline, label: 'Perfil'),
         ];
     }
   }
@@ -130,10 +130,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 }
 
-class _NavItem {
-  final IconData icon;
-  final String label;
-  const _NavItem({required this.icon, required this.label});
-}
+
 
 
