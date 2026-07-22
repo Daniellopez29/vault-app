@@ -1,5 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/enums.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/usecase.dart';
 import '../../auth/presentation/providers.dart';
@@ -53,7 +52,7 @@ final registerBusinessUseCaseProvider = Provider<RegisterBusinessUseCase>((ref) 
   return RegisterBusinessUseCase(ref.read(profileRepositoryProvider));
 });
 
-// ─── ASSETS STATE ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ ASSETS STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 enum ProfileAssetsStatus { initial, loading, loaded, error }
 
@@ -80,7 +79,7 @@ class ProfileAssetsState {
     );
   }
 
-  /// Conteo de activos por categoría (para el header del Perfil).
+  /// Conteo de activos por categorÃ­a (para el header del Perfil).
   Map<String, int> get categoryCounts {
     final counts = <String, int>{};
     for (final asset in assets) {
@@ -104,10 +103,6 @@ StateNotifierProvider<ProfileAssetsController, ProfileAssetsState>((ref) {
     deleteAssetUseCase: ref.read(deleteAssetUseCaseProvider),
     setAssetForSaleUseCase: ref.read(setAssetForSaleUseCaseProvider),
     setAssetPublishedUseCase: ref.read(setAssetPublishedUseCaseProvider),
-    // Al poner algo en venta por primera vez, se sube de rol a "Vendedor"
-    // (solo si el usuario todavía es el rol base "usuario").
-    onMarkedForSale: () =>
-        ref.read(authControllerProvider.notifier).upgradeRoleIfBase(UserRole.seller),
   );
 });
 
@@ -117,7 +112,6 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
   final DeleteAssetUseCase _deleteAsset;
   final SetAssetForSaleUseCase _setForSale;
   final SetAssetPublishedUseCase _setPublished;
-  final Future<void> Function() _onMarkedForSale;
 
   ProfileAssetsController({
     required GetUserAssetsUseCase getUserAssetsUseCase,
@@ -125,7 +119,6 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
     required DeleteAssetUseCase deleteAssetUseCase,
     required SetAssetForSaleUseCase setAssetForSaleUseCase,
     required SetAssetPublishedUseCase setAssetPublishedUseCase,
-    required this._onMarkedForSale,
   })  : _getUserAssets = getUserAssetsUseCase,
         _addAsset = addAssetUseCase,
         _deleteAsset = deleteAssetUseCase,
@@ -169,7 +162,7 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
     );
   }
 
-  /// Pone o quita un activo de venta. Actualización optimista: el cambio
+  /// Pone o quita un activo de venta. ActualizaciÃ³n optimista: el cambio
   /// se refleja en pantalla al instante, y si falla, recarga el estado real.
   Future<void> setForSale(
       AssetEntity asset, {
@@ -192,12 +185,10 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
     result.fold((failure) {
       state = state.copyWith(errorMessage: failure.message);
       loadAssets();
-    }, (_) {
-      if (forSale) _onMarkedForSale();
-    });
+    }, (_) {});
   }
 
-  /// Publica o despublica un activo en el Feed (actualización optimista).
+  /// Publica o despublica un activo en el Feed (actualizaciÃ³n optimista).
   Future<void> setPublished(
       AssetEntity asset, {
         required bool published,
@@ -217,7 +208,7 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
     }, (_) {});
   }
 
-  /// Reemplaza un activo en la lista por su versión actualizada, en un solo lugar.
+  /// Reemplaza un activo en la lista por su versiÃ³n actualizada, en un solo lugar.
   void _patchAsset(AssetEntity updated) {
     final assets = [
       for (final a in state.assets) a.id == updated.id ? updated : a,
@@ -226,7 +217,7 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
   }
 }
 
-// ─── RESTORER PROFILE STATE ───────────────────────────────────────────────────
+// â”€â”€â”€ RESTORER PROFILE STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 enum RestorerProfileStatus { initial, loading, loaded, empty, error }
 
@@ -301,3 +292,6 @@ class RestorerProfileController
     );
   }
 }
+
+
+

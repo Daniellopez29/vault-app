@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
@@ -12,7 +12,7 @@ class ReviewsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final userId = ref.watch(authControllerProvider).user?.id;
     if (userId == null) {
-      return const Center(child: Text('Inicia sesión para ver tus reseñas'));
+      return const Center(child: Text('Inicia sesiÃ³n para ver tus reseÃ±as'));
     }
 
     final state = ref.watch(reviewsControllerProvider(userId));
@@ -27,7 +27,7 @@ class ReviewsTab extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(state.errorMessage ?? 'Error al cargar tus reseñas'),
+              Text(state.errorMessage ?? 'Error al cargar tus reseÃ±as'),
               const SizedBox(height: VaultSpacing.md),
               TextButton(
                 onPressed: () =>
@@ -43,14 +43,19 @@ class ReviewsTab extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.star_outline, size: 64, color: VaultColors.textSecondary),
-                const SizedBox(height: 16),
-                Text('Mis Reseñas', style: tt.headlineMedium),
-                const SizedBox(height: 8),
-                Text(
-                  'Aquí verás las valoraciones\nque tus clientes te han dejado',
-                  textAlign: TextAlign.center,
-                  style: tt.bodyMedium,
+                const Icon(Icons.star_outline,
+                    size: VaultIconSize.xl, color: VaultColors.textSecondary),
+                const SizedBox(height: VaultSpacing.lg),
+                Text('Aun no tienes resenas', style: tt.titleLarge),
+                const SizedBox(height: VaultSpacing.sm),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.xl),
+                  child: Text(
+                    'Cuando vendas un articulo o prestes un servicio, las '
+                    'valoraciones que recibas apareceran aqui.',
+                    textAlign: TextAlign.center,
+                    style: tt.bodyMedium?.copyWith(color: VaultColors.textSecondary),
+                  ),
                 ),
               ],
             ),
@@ -109,3 +114,4 @@ class ReviewsTab extends ConsumerWidget {
     }
   }
 }
+

@@ -13,6 +13,11 @@ import '../features/profile/presentation/register_business_page.dart';
 import '../features/legal/presentation/legal_page.dart';
 import '../features/notifications/presentation/notifications_page.dart';
 import '../features/chat/presentation/chat_page.dart';
+import '../features/stats/presentation/stats_page.dart';
+import '../features/marketplace/presentation/seller_commerce_view.dart';
+import '../features/services/presentation/services_tab.dart';
+import '../features/reviews/presentation/reviews_tab.dart';
+import 'widgets/titled_page.dart';
 import '../features/subscription/domain/entities.dart';
 import '../features/subscription/presentation/subscription_page.dart';
 import '../features/subscription/presentation/subscription_checkout_page.dart';
@@ -47,6 +52,10 @@ abstract class AppRoutes {
   static const notifications = '/notifications';
   static const chat          = '/chat';
   static const subscription  = '/subscription';
+  static const stats         = '/stats';
+  static const commerce      = '/commerce';
+  static const services      = '/services';
+  static const reviews       = '/reviews';
   static const subscriptionCheckout = '/subscription-checkout';
   static const assetDetail = '/asset-detail';
 }
@@ -128,6 +137,28 @@ final appRouter = GoRouter(
       builder: (context, state) => const NotificationsPage(),
     ),
     GoRoute(
+      path: AppRoutes.stats,
+      builder: (context, state) => const StatsPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.commerce,
+      builder: (context, state) => const SellerCommerceView(),
+    ),
+    GoRoute(
+      path: AppRoutes.services,
+      builder: (context, state) => const TitledPage(
+        title: 'Servicios',
+        child: ServicesTab(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.reviews,
+      builder: (context, state) => const TitledPage(
+        title: 'Reseñas',
+        child: ReviewsTab(),
+      ),
+    ),
+    GoRoute(
       path: AppRoutes.chat,
       builder: (context, state) => const ChatPage(),
     ),
@@ -139,5 +170,9 @@ final appRouter = GoRouter(
     ),
   ],
 );
+
+
+
+
 
 

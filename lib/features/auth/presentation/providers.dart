@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -295,18 +295,8 @@ class AuthController extends StateNotifier<AuthState> {
     );
   }
 
-  /// Sube de rol solo si el usuario todavía tiene el rol base ("usuario").
-  /// No degrada ni pisa un rol de negocio (restaurador/servicio) que ya
-  /// haya elegido explícitamente. Falla en silencio -- es un efecto
-  /// secundario de otra acción (poner algo en venta), no debe interrumpir
-  /// ese flujo si el backend no responde.
-  Future<void> upgradeRoleIfBase(UserRole role) async {
-    if (state.user?.role != UserRole.user) return;
-    final result = await _updateRoleUseCase(role);
-    result.fold((_) {}, (user) => state = state.copyWith(user: user));
-  }
 
-  /// Fuerza el rol, sin la condición de [upgradeRoleIfBase]. Se usa cuando
+  /// Cambia el rol del usuario. Solo se llama cuando
   /// el usuario eligió explícitamente (p.ej. al registrar un negocio con
   /// una categoría específica), no como efecto secundario.
   Future<bool> updateRole(UserRole role) async {
@@ -323,3 +313,4 @@ class AuthController extends StateNotifier<AuthState> {
     );
   }
 }
+

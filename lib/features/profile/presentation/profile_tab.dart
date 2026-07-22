@@ -1,3 +1,4 @@
+﻿import '../../../core/dimens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../auth/presentation/providers.dart';
 import '../../favorites/presentation/favorites_tab.dart';
+import 'profile_actions.dart';
 import 'providers.dart';
 import 'widgets.dart';
 
@@ -59,7 +61,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
           ],
         ),
       ),
-      // Solo tiene sentido agregar un activo desde la pestaña "Mis Activos"
+      // Solo tiene sentido agregar un activo desde la pestaÃ±a "Mis Activos"
       // -- en "Guardados" no se muestra.
       floatingActionButton: _tabController.index == 0
           ? FloatingActionButton(
@@ -86,10 +88,16 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
                     role: authState.user?.role ?? UserRole.user,
                   ),
                 ),
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: VaultSpacing.lg),
+                    child: ProfileActions(),
+                  ),
+                ),
                 SliverToBoxAdapter(
                   child: AssetsBody(ref: ref, state: assetsState),
                 ),
-                // Deja espacio para que el FAB no tape el último activo.
+                // Deja espacio para que el FAB no tape el Ãºltimo activo.
                 const SliverToBoxAdapter(child: SizedBox(height: 72)),
               ],
             ),
@@ -100,3 +108,5 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
     );
   }
 }
+
+
