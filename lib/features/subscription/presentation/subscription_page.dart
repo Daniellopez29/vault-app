@@ -76,7 +76,10 @@ class SubscriptionPage extends ConsumerWidget {
                   ElevatedButton.icon(
                     onPressed: state.selected == null
                         ? null
-                        : () => context.push(AppRoutes.paymentMethod),
+                        : () => context.push(
+                              AppRoutes.subscriptionCheckout,
+                              extra: state.selected,
+                            ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: VaultColors.accent,
                       foregroundColor: Colors.white,

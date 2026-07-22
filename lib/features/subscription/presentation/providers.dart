@@ -1,4 +1,6 @@
 ﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
+import '../../../core/providers.dart';
 import '../data/datasources.dart';
 import '../data/repositories.dart';
 import '../domain/entities.dart';
@@ -6,12 +8,19 @@ import '../domain/repositories.dart';
 import '../domain/usecases.dart';
 
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
-  return SubscriptionRepositoryImpl(dataSource: SubscriptionMockDataSource());
+  return SubscriptionRepositoryImpl(
+    dataSource: SubscriptionRemoteDataSource(ref.read(paymentApiClientProvider)),
+  );
 });
 
 final getSubscriptionPlansUseCaseProvider =
     Provider<GetSubscriptionPlansUseCase>((ref) {
   return GetSubscriptionPlansUseCase(ref.read(subscriptionRepositoryProvider));
+});
+
+final createSubscriptionUseCaseProvider =
+    Provider<CreateSubscriptionUseCase>((ref) {
+  return CreateSubscriptionUseCase(ref.read(subscriptionRepositoryProvider));
 });
 
 enum PlansStatus { loading, loaded, error }
@@ -81,4 +90,72 @@ class PlansController extends StateNotifier<PlansState> {
 final plansControllerProvider = StateNotifierProvider.family<PlansController,
     PlansState, SubscriptionType>((ref, type) {
   return PlansController(ref.read(getSubscriptionPlansUseCaseProvider), type);
+});
+
+enum CheckoutStatus { idle, submitting, success, error }
+
+class CheckoutState {
+  final CheckoutStatus status;
+  final String? errorMessage;
+
+  const CheckoutState({this.status = CheckoutStatus.idle, this.errorMessage});
+
+  CheckoutState copyWith({CheckoutStatus? status, String? errorMessage}) {
+    return CheckoutState(status: status ?? this.status, errorMessage: errorMessage);
+  }
+}
+
+typedef CheckoutParams = ({String planId, String email});
+
+/// Captura la tarjeta con el CardField de Stripe, crea un PaymentMethod del
+/// lado del cliente (los datos de la tarjeta nunca llegan a `payment/`) y
+/// manda su id junto con el plan a `POST /subscriptions`.
+class SubscriptionCheckoutController extends StateNotifier<CheckoutState> {
+  final CreateSubscriptionUseCase _createSubscription;
+  final CheckoutParams params;
+
+  SubscriptionCheckoutController(this._createSubscription, this.params)
+      : super(const CheckoutState());
+
+  Future<void> pay() async {
+    state = state.copyWith(status: CheckoutStatus.submitting, errorMessage: null);
+    try {
+      final paymentMethod = await stripe.Stripe.instance.createPaymentMethod(
+        params: const stripe.PaymentMethodParams.card(
+          paymentMethodData: stripe.PaymentMethodData(),
+        ),
+      );
+      final result = await _createSubscription(CreateSubscriptionParams(
+        planId: params.planId,
+        email: params.email,
+        paymentMethodId: paymentMethod.id,
+      ));
+      result.fold(
+        (failure) => state = state.copyWith(
+          status: CheckoutStatus.error,
+          errorMessage: failure.message,
+        ),
+        (_) => state = state.copyWith(status: CheckoutStatus.success),
+      );
+    } on stripe.StripeError catch (e) {
+      state = state.copyWith(
+        status: CheckoutStatus.error,
+        errorMessage: 'No se pudo procesar la tarjeta: ${e.message}',
+      );
+    } catch (e) {
+      state = state.copyWith(
+        status: CheckoutStatus.error,
+        errorMessage: 'Error inesperado al procesar el pago: $e',
+      );
+    }
+  }
+}
+
+final subscriptionCheckoutControllerProvider = StateNotifierProvider.autoDispose
+    .family<SubscriptionCheckoutController, CheckoutState, CheckoutParams>(
+        (ref, params) {
+  return SubscriptionCheckoutController(
+    ref.read(createSubscriptionUseCaseProvider),
+    params,
+  );
 });

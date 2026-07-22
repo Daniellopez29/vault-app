@@ -15,6 +15,7 @@ import '../features/notifications/presentation/notifications_page.dart';
 import '../features/chat/presentation/chat_page.dart';
 import '../features/subscription/domain/entities.dart';
 import '../features/subscription/presentation/subscription_page.dart';
+import '../features/subscription/presentation/subscription_checkout_page.dart';
 import '../features/shell/presentation/home_page.dart';
 import '../features/profile/presentation/asset_detail_page.dart';
 import '../features/profile/domain/entities.dart';
@@ -46,6 +47,7 @@ abstract class AppRoutes {
   static const notifications = '/notifications';
   static const chat          = '/chat';
   static const subscription  = '/subscription';
+  static const subscriptionCheckout = '/subscription-checkout';
   static const assetDetail = '/asset-detail';
 }
 
@@ -91,6 +93,12 @@ final appRouter = GoRouter(
       path: AppRoutes.subscription,
       builder: (context, state) => SubscriptionPage(
         type: state.extra as SubscriptionType,
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.subscriptionCheckout,
+      builder: (context, state) => SubscriptionCheckoutPage(
+        plan: state.extra as SubscriptionPlan,
       ),
     ),
     GoRoute(

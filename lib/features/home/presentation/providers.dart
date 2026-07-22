@@ -118,11 +118,27 @@ class FeedController extends StateNotifier<FeedState> {
   }
 
   Future<void> toggleSave(String postId) async {
+    final wasSaved = state.posts.firstWhere((p) => p.id == postId).isSaved;
+
+    // Actualización optimista.
     state = state.copyWith(
       posts: state.posts
           .map((p) => p.id == postId ? p.copyWith(isSaved: !p.isSaved) : p)
           .toList(),
     );
-    await _toggleSave(postId);
+
+    final result = await _toggleSave(postId, wasSaved);
+    result.fold(
+      (failure) {
+        // Revierte si el backend lo rechazó.
+        state = state.copyWith(
+          posts: state.posts
+              .map((p) => p.id == postId ? p.copyWith(isSaved: wasSaved) : p)
+              .toList(),
+          errorMessage: failure.message,
+        );
+      },
+      (_) {},
+    );
   }
 }

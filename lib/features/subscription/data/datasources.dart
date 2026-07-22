@@ -1,100 +1,56 @@
-﻿import '../domain/entities.dart';
+import '../../../core/api_client.dart';
+import '../../../core/error.dart';
+import '../domain/entities.dart';
 import 'models.dart';
 
-/// Fuente de datos de planes. Hoy devuelve datos mock; mañana será una
-/// llamada a la API. Aislado aquí para que el cambio a backend real toque
-/// SOLO este archivo.
 abstract class SubscriptionDataSource {
   Future<List<SubscriptionPlanModel>> getPlans(SubscriptionType type);
+
+  Future<SubscriptionStatusModel> createSubscription({
+    required String planId,
+    required String email,
+    required String paymentMethodId,
+  });
 }
 
-class SubscriptionMockDataSource implements SubscriptionDataSource {
+/// `payment/` vende 3 planes fijos (básico/pro/premium), sin distinguir por
+/// tipo de anuncio -- `type` solo se conserva en la firma para no romper al
+/// resto de la app (copy/entrada de pantalla), pero ya no filtra la lista.
+class SubscriptionRemoteDataSource implements SubscriptionDataSource {
+  final ApiClient _client;
+
+  SubscriptionRemoteDataSource(this._client);
+
   @override
   Future<List<SubscriptionPlanModel>> getPlans(SubscriptionType type) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final all = type == SubscriptionType.product
-        ? _productPlans
-        : _businessPlans;
-    return all.map(SubscriptionPlanModel.fromMap).toList();
+    try {
+      final body = await _client.get('/subscriptions/plans', auth: false);
+      final list = body as List<dynamic>? ?? const [];
+      return list.map((e) => SubscriptionPlanModel.fromJson(e as Map<String, dynamic>)).toList();
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al cargar los planes: $e');
+    }
   }
 
-  /// Planes para destacar productos.
-  static const List<Map<String, dynamic>> _productPlans = [
-    {
-      'id': 'prod_monthly',
-      'type': 'product',
-      'name': 'Mensual',
-      'price': 99.0,
-      'durationDays': 30,
-      'benefits': [
-        'Tus productos aparecen primero',
-        'Insignia de destacado',
-        'Soporte prioritario',
-      ],
-    },
-    {
-      'id': 'prod_quarterly',
-      'type': 'product',
-      'name': 'Trimestral',
-      'price': 249.0,
-      'durationDays': 90,
-      'benefits': [
-        'Todo lo del plan mensual',
-        'Ahorro del 16%',
-        'Estadísticas de visibilidad',
-      ],
-    },
-    {
-      'id': 'prod_yearly',
-      'type': 'product',
-      'name': 'Anual',
-      'price': 899.0,
-      'durationDays': 365,
-      'benefits': [
-        'Todo lo del plan trimestral',
-        'Ahorro del 24%',
-        'Máxima prioridad todo el año',
-      ],
-    },
-  ];
-
-  /// Planes para publicitar el negocio.
-  static const List<Map<String, dynamic>> _businessPlans = [
-    {
-      'id': 'biz_monthly',
-      'type': 'business',
-      'name': 'Mensual',
-      'price': 149.0,
-      'durationDays': 30,
-      'benefits': [
-        'Tu negocio en la vitrina destacada',
-        'Perfil verificado',
-        'Alcance ampliado',
-      ],
-    },
-    {
-      'id': 'biz_quarterly',
-      'type': 'business',
-      'name': 'Trimestral',
-      'price': 399.0,
-      'durationDays': 90,
-      'benefits': [
-        'Todo lo del plan mensual',
-        'Ahorro del 11%',
-        'Reporte mensual de clientes',
-      ],
-    },
-    {
-      'id': 'biz_yearly',
-      'type': 'business',
-      'name': 'Anual',
-      'price': 1399.0,
-      'durationDays': 365,
-      'benefits': [
-        'Todo lo del plan trimestral',
-        'Ahorro del 22%',
-        'Publicidad destacada todo el año',
-      ],
-    },
-  ];
+  @override
+  Future<SubscriptionStatusModel> createSubscription({
+    required String planId,
+    required String email,
+    required String paymentMethodId,
+  }) async {
+    try {
+      final body = await _client.post('/subscriptions', body: {
+        'plan_id': planId,
+        'email': email,
+        'payment_method_id': paymentMethodId,
+      });
+      return SubscriptionStatusModel.fromJson(body as Map<String, dynamic>);
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al crear la suscripción: $e');
+    }
+  }
 }

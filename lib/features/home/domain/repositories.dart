@@ -9,9 +9,9 @@ abstract class HomeRepository {
   /// backend expone POST/DELETE separados, no un solo "toggle".
   Future<Either<Failure, void>> toggleLike(String postId, bool currentlyLiked);
 
-  /// No hay tabla de "guardados" en el backend; queda como estado local
-  /// de la sesión (no persiste entre reinicios de la app).
-  Future<Either<Failure, void>> toggleSave(String postId);
+  /// [currentlySaved] decide si se llama a guardar o quitar-guardado --
+  /// mismo patrón que [toggleLike] (POST/DELETE separados en el backend).
+  Future<Either<Failure, void>> toggleSave(String postId, bool currentlySaved);
 
   /// Crea un post con texto y, opcionalmente, una o más fotos. El texto es
   /// obligatorio para el backend aunque haya fotos (CreatePostRequest lo

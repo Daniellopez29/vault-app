@@ -34,9 +34,9 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Either<Failure, void>> toggleSave(String postId) async {
+  Future<Either<Failure, void>> toggleSave(String postId, bool currentlySaved) async {
     try {
-      await remoteDataSource.toggleSave(postId);
+      await remoteDataSource.toggleSave(postId, currentlySaved);
       return const Right(null);
     } on Failure catch (e) {
       return Left(e);

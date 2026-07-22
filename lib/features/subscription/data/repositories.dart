@@ -22,4 +22,24 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       return const Left(ServerFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, SubscriptionStatus>> createSubscription({
+    required String planId,
+    required String email,
+    required String paymentMethodId,
+  }) async {
+    try {
+      final status = await dataSource.createSubscription(
+        planId: planId,
+        email: email,
+        paymentMethodId: paymentMethodId,
+      );
+      return Right(status);
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (_) {
+      return const Left(ServerFailure());
+    }
+  }
 }

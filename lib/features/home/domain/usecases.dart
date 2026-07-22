@@ -27,8 +27,8 @@ class ToggleSaveUseCase {
   final HomeRepository repository;
   ToggleSaveUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(String postId) {
-    return repository.toggleSave(postId);
+  Future<Either<Failure, void>> call(String postId, bool currentlySaved) {
+    return repository.toggleSave(postId, currentlySaved);
   }
 }
 

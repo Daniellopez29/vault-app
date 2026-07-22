@@ -9,4 +9,13 @@ abstract class SubscriptionRepository {
   Future<Either<Failure, List<SubscriptionPlan>>> getPlans(
     SubscriptionType type,
   );
+
+  /// Contrata [planId] pagando con un PaymentMethod ya creado del lado del
+  /// cliente (ver [SubscriptionCheckoutController]) -- el backend nunca ve
+  /// los datos de la tarjeta, solo este id.
+  Future<Either<Failure, SubscriptionStatus>> createSubscription({
+    required String planId,
+    required String email,
+    required String paymentMethodId,
+  });
 }

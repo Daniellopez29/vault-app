@@ -1,63 +1,46 @@
-﻿import '../domain/entities.dart';
+import '../../../core/api_client.dart';
+import '../../../core/error.dart';
 import 'models.dart';
 
-/// Fuente de datos del mantenimiento. Hoy es mock en memoria; mañana será el
-/// Maintenance Service. Aislado aquí para que el cambio a backend toque SOLO
-/// este archivo.
 abstract class MaintenanceDataSource {
   Future<List<MaintenanceEntryModel>> getEntriesForAsset(String assetId);
   Future<List<MaintenanceEntryModel>> addEntry(MaintenanceEntryModel entry);
 }
 
-class MaintenanceMockDataSource implements MaintenanceDataSource {
-  // Almacén en memoria: assetId -> lista de entradas. Se pierde al reiniciar
-  // (es mock). Precargado con ejemplos para algunos activos.
-  final Map<String, List<MaintenanceEntryModel>> _store = {};
+/// Consume `api/`'s `maintenance-logs` (ya desplegado y expuesto vía el
+/// gateway). `GET` es público, `POST` requiere el owner del asset.
+class MaintenanceRemoteDataSource implements MaintenanceDataSource {
+  final ApiClient _client;
 
-  MaintenanceMockDataSource() {
-    _seed();
-  }
+  MaintenanceRemoteDataSource(this._client);
 
   @override
   Future<List<MaintenanceEntryModel>> getEntriesForAsset(String assetId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    final list = _store[assetId] ?? [];
-    // Más recientes primero.
-    final sorted = [...list]..sort((a, b) => b.date.compareTo(a.date));
-    return sorted;
+    try {
+      final body = await _client
+          .get('/maintenance-logs', query: {'asset_id': assetId}, auth: false);
+      final list = body as List<dynamic>? ?? const [];
+      final entries = list
+          .map((e) => MaintenanceEntryModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+      entries.sort((a, b) => b.date.compareTo(a.date));
+      return entries;
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al cargar el mantenimiento: $e');
+    }
   }
 
   @override
-  Future<List<MaintenanceEntryModel>> addEntry(
-    MaintenanceEntryModel entry,
-  ) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    final list = _store.putIfAbsent(entry.assetId, () => []);
-    list.add(entry);
-    final sorted = [...list]..sort((a, b) => b.date.compareTo(a.date));
-    _store[entry.assetId] = sorted;
-    return sorted;
-  }
-
-  /// Datos de ejemplo para que el historial no salga vacío en la demo.
-  void _seed() {
-    _store['1'] = [
-      MaintenanceEntryModel(
-        id: 'm1',
-        assetId: '1',
-        type: MaintenanceType.cleaning,
-        date: DateTime.now().subtract(const Duration(days: 30)),
-        description: 'Limpieza profunda de suela y malla.',
-        cost: 150,
-      ),
-      MaintenanceEntryModel(
-        id: 'm2',
-        assetId: '1',
-        type: MaintenanceType.restoration,
-        date: DateTime.now().subtract(const Duration(days: 90)),
-        description: 'Restauración de color y reforzado de costuras.',
-        cost: 480,
-      ),
-    ];
+  Future<List<MaintenanceEntryModel>> addEntry(MaintenanceEntryModel entry) async {
+    try {
+      await _client.post('/maintenance-logs', body: entry.toRequestJson());
+      return getEntriesForAsset(entry.assetId);
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al agregar el mantenimiento: $e');
+    }
   }
 }

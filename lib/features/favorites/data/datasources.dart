@@ -1,21 +1,25 @@
+import '../../../core/api_client.dart';
 import '../../../core/error.dart';
-import '../../home/data/fixtures.dart';
 import '../../home/data/models.dart';
 
-abstract class FavoritesLocalDataSource {
+abstract class FavoritesRemoteDataSource {
   Future<List<PostModel>> getSavedPosts();
   Future<void> removeSavedPost(String postId);
 }
 
-class FavoritesLocalDataSourceImpl implements FavoritesLocalDataSource {
-  // Posts guardados en memoria — se reemplazará por base de datos real
-  final List<PostModel> _savedPosts = List.of(HomeFeedFixtures.mockPosts);
+class FavoritesRemoteDataSourceImpl implements FavoritesRemoteDataSource {
+  final ApiClient _client;
+
+  FavoritesRemoteDataSourceImpl(this._client);
 
   @override
   Future<List<PostModel>> getSavedPosts() async {
-    await Future.delayed(const Duration(milliseconds: 300));
     try {
-      return List.of(_savedPosts);
+      final body = await _client.get('/posts/saved');
+      final list = body as List<dynamic>? ?? const [];
+      return list.map((e) => PostModel.fromJson(e as Map<String, dynamic>)).toList();
+    } on Failure {
+      rethrow;
     } catch (e) {
       throw ServerFailure('Error al cargar favoritos: $e');
     }
@@ -23,7 +27,12 @@ class FavoritesLocalDataSourceImpl implements FavoritesLocalDataSource {
 
   @override
   Future<void> removeSavedPost(String postId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    _savedPosts.removeWhere((p) => p.id == postId);
+    try {
+      await _client.delete('/posts/$postId/saves');
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al quitar de favoritos: $e');
+    }
   }
 }

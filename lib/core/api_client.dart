@@ -45,11 +45,52 @@ class ApiConfig {
   }
 }
 
+/// `payment/` (Stripe: suscripciones, ads, órdenes) es un servicio Go
+/// separado de `api/`, desplegado en Railway como `steadfast-kindness` y
+/// ruteado por el mismo gateway que `api/` -- `gateway/nginx.conf` manda
+/// `/api/v1/subscriptions`, `/ads`, `/connect` y `/orders` para allá, así
+/// que el default es el mismo host que [ApiConfig]. El override en
+/// Configuración sigue sirviendo para apuntar a un `payment/` corriendo
+/// localmente (`PORT=8005` por default) mientras se depura algo.
+class PaymentApiConfig {
+  static const _overrideKey = 'vault_payment_api_base_url';
+
+  static const _productionDefault =
+      'https://humorous-nurturing-production-9cd4.up.railway.app/api/v1';
+
+  static String? _override;
+
+  static String get baseUrl {
+    if (_override != null && _override!.isNotEmpty) return _override!;
+    return _productionDefault;
+  }
+
+  static Future<void> loadOverride() async {
+    final prefs = await SharedPreferences.getInstance();
+    _override = prefs.getString(_overrideKey);
+  }
+
+  static Future<void> setOverride(String? url) async {
+    _override = (url == null || url.trim().isEmpty) ? null : url.trim();
+    final prefs = await SharedPreferences.getInstance();
+    if (_override == null) {
+      await prefs.remove(_overrideKey);
+    } else {
+      await prefs.setString(_overrideKey, _override!);
+    }
+  }
+}
+
 /// Cliente HTTP central: agrega el token de sesión, decodifica JSON y
 /// traduce códigos de estado a los [Failure] que ya entiende el resto de
 /// la app (dartz Either en los repositorios).
 class ApiClient {
   final http.Client _http;
+
+  /// Si es `null`, usa [ApiConfig.baseUrl] (el backend de `api/`). Pásalo
+  /// para apuntar a otro servicio, p.ej. [PaymentApiConfig.baseUrl] para
+  /// `payment/`.
+  final String? _baseUrlOverride;
 
   /// Sin esto, un servidor inalcanzable (IP equivocada, backend caído,
   /// firewall que descarta paquetes en silencio) deja el Future de la
@@ -57,9 +98,11 @@ class ApiClient {
   /// siempre en vez de mostrar un error.
   static const _requestTimeout = Duration(seconds: 15);
 
-  ApiClient({http.Client? httpClient}) : _http = httpClient ?? http.Client();
+  ApiClient({http.Client? httpClient, String? baseUrlOverride})
+      : _http = httpClient ?? http.Client(),
+        _baseUrlOverride = baseUrlOverride;
 
-  String get baseUrl => ApiConfig.baseUrl;
+  String get baseUrl => _baseUrlOverride ?? ApiConfig.baseUrl;
 
   static const _tokenKey = 'vault_auth_token';
 

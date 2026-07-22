@@ -6,7 +6,7 @@ import 'models.dart';
 abstract class HomeRemoteDataSource {
   Future<List<PostModel>> getFeedPosts();
   Future<void> toggleLike(String postId, bool currentlyLiked);
-  Future<void> toggleSave(String postId);
+  Future<void> toggleSave(String postId, bool currentlySaved);
   Future<void> createPost({required String content, required List<PostImageUpload> images});
 }
 
@@ -44,9 +44,18 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<void> toggleSave(String postId) async {
-    // No existe tabla de "guardados" en el backend. La UI mantiene el
-    // estado local; aquí no hay nada que persistir.
+  Future<void> toggleSave(String postId, bool currentlySaved) async {
+    try {
+      if (currentlySaved) {
+        await _client.delete('/posts/$postId/saves');
+      } else {
+        await _client.post('/posts/$postId/saves');
+      }
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al guardar la publicación: $e');
+    }
   }
 
   @override

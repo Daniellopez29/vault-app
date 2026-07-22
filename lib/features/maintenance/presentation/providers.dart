@@ -1,14 +1,13 @@
 ﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers.dart';
 import '../data/datasources.dart';
 import '../data/repositories.dart';
 import '../domain/entities.dart';
 import '../domain/repositories.dart';
 import '../domain/usecases.dart';
 
-// Datasource mock compartido (una sola instancia, para que las entradas
-// agregadas en memoria persistan durante la sesión).
 final _maintenanceDataSourceProvider = Provider<MaintenanceDataSource>((ref) {
-  return MaintenanceMockDataSource();
+  return MaintenanceRemoteDataSource(ref.read(apiClientProvider));
 });
 
 final maintenanceRepositoryProvider = Provider<MaintenanceRepository>((ref) {
