@@ -54,6 +54,7 @@ class PaymentMethodModel extends PaymentMethodEntity {
     required super.id,
     required super.type,
     required super.label,
+    super.description,
   });
 
   factory PaymentMethodModel.fromJson(Map<String, dynamic> json) =>

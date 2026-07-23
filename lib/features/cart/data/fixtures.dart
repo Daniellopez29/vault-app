@@ -6,19 +6,22 @@ import 'models.dart';
 abstract class CartFixtures {
   static List<PaymentMethodModel> get mockPaymentMethods => const [
     PaymentMethodModel(
-      id: 'pm1',
-      type: PaymentType.visa,
-      label: '****** 2334',
+      id: 'pm_card',
+      type: PaymentType.card,
+      label: 'Tarjeta',
+      description: 'Débito o crédito',
     ),
     PaymentMethodModel(
-      id: 'pm2',
-      type: PaymentType.maestro,
-      label: '****** 3774',
+      id: 'pm_transfer',
+      type: PaymentType.transfer,
+      label: 'Transferencia',
+      description: 'Te compartimos los datos bancarios',
     ),
     PaymentMethodModel(
-      id: 'pm3',
-      type: PaymentType.paypal,
-      label: 'abc@gmail.com',
+      id: 'pm_cash',
+      type: PaymentType.cash,
+      label: 'Efectivo',
+      description: 'Paga en establecimiento',
     ),
   ];
 }

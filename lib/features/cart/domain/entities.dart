@@ -35,21 +35,23 @@ class CartItemEntity extends Equatable {
 
 /// Tipo de método de pago. El ícono y el nombre derivan de aquí,
 /// sin hardcodeo disperso por los widgets.
-enum PaymentType { visa, maestro, paypal }
+enum PaymentType { card, transfer, cash }
 
 class PaymentMethodEntity extends Equatable {
   final String id;
   final PaymentType type;
-  final String label; // número enmascarado o correo
+  final String label;
+  final String description;
 
   const PaymentMethodEntity({
     required this.id,
     required this.type,
     required this.label,
+    this.description = '',
   });
 
   @override
-  List<Object?> get props => [id, type, label];
+  List<Object?> get props => [id, type, label, description];
 }
 
 /// Resumen de costos de la orden. La tarifa de uso se calcula con una tasa

@@ -1,4 +1,4 @@
-﻿import 'package:go_router/go_router.dart';
+import 'package:go_router/go_router.dart';
 import '../core/enums.dart';
 import '../features/auth/presentation/pages.dart';
 import '../features/home/presentation/create_post_page.dart';
@@ -14,6 +14,10 @@ import '../features/legal/presentation/legal_page.dart';
 import '../features/notifications/presentation/notifications_page.dart';
 import '../features/chat/presentation/chat_page.dart';
 import '../features/stats/presentation/stats_page.dart';
+import '../features/addresses/presentation/addresses_page.dart';
+import '../features/addresses/presentation/checkout_address_page.dart';
+import '../features/cart/presentation/payment_instructions_page.dart';
+import '../features/cart/domain/entities.dart';
 import '../features/marketplace/presentation/product_detail_page.dart';
 import '../features/marketplace/domain/entities.dart';
 import '../features/marketplace/presentation/seller_commerce_view.dart';
@@ -60,6 +64,9 @@ abstract class AppRoutes {
   static const commerce      = '/commerce';
   static const services      = '/services';
   static const specialists   = '/specialists';
+  static const addresses     = '/addresses';
+  static const checkoutAddress = '/checkout-address';
+  static const paymentInstructions = '/payment-instructions';
   static const reviews       = '/reviews';
   static const subscriptionCheckout = '/subscription-checkout';
   static const assetDetail = '/asset-detail';
@@ -154,6 +161,20 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.commerce,
       builder: (context, state) => const SellerCommerceView(),
+    ),
+    GoRoute(
+      path: AppRoutes.addresses,
+      builder: (context, state) => const AddressesPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.checkoutAddress,
+      builder: (context, state) => const CheckoutAddressPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.paymentInstructions,
+      builder: (context, state) => PaymentInstructionsPage(
+        type: state.extra as PaymentType,
+      ),
     ),
     GoRoute(
       path: AppRoutes.specialists,

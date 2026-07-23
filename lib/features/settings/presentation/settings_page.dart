@@ -39,6 +39,16 @@ class SettingsPage extends ConsumerWidget {
               ),
             ],
           ),
+            _SettingsSection(
+              title: 'Compras',
+              children: [
+                _SettingsTile(
+                  icon: Icons.location_on_outlined,
+                  label: 'Direcciones de envío',
+                  onTap: () => context.push(AppRoutes.addresses),
+                ),
+              ],
+            ),
           _SettingsSection(
             title: 'Negocio',
             children: [

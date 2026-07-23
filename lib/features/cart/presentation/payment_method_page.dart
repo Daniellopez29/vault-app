@@ -10,9 +10,9 @@ import 'providers.dart';
 /// Ícono representativo de cada tipo de pago. Único lugar que lo decide.
 IconData _iconFor(PaymentType type) {
   switch (type) {
-    case PaymentType.visa:    return Icons.credit_card;
-    case PaymentType.maestro: return Icons.credit_card;
-    case PaymentType.paypal:  return Icons.account_balance_wallet_outlined;
+    case PaymentType.card:     return Icons.credit_card;
+    case PaymentType.transfer: return Icons.account_balance;
+    case PaymentType.cash:     return Icons.payments_outlined;
   }
 }
 
@@ -25,6 +25,7 @@ class PaymentMethodPage extends ConsumerStatefulWidget {
 
 class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
   String? _selectedId;
+  PaymentType? _selectedType;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +65,10 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                   ),
                   data: (methods) {
                     // Preselecciona el primero si aún no hay selección.
-                    _selectedId ??= methods.isNotEmpty ? methods.first.id : null;
+                    if (_selectedId == null && methods.isNotEmpty) {
+                      _selectedId = methods.first.id;
+                      _selectedType = methods.first.type;
+                    }
                     return ListView.separated(
                       itemCount: methods.length,
                       separatorBuilder: (_, _) =>
@@ -74,8 +78,10 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                         return _PaymentTile(
                           method: method,
                           selected: method.id == _selectedId,
-                          onTap: () =>
-                              setState(() => _selectedId = method.id),
+                          onTap: () => setState(() {
+                            _selectedId = method.id;
+                            _selectedType = method.type;
+                          }),
                         );
                       },
                     );
@@ -84,7 +90,9 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
               ),
               const SizedBox(height: VaultSpacing.md),
               ElevatedButton.icon(
-                onPressed: _selectedId == null ? null : _onPay,
+                onPressed: _selectedType == null
+                    ? null
+                    : () => _onPay(_selectedType!),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: VaultColors.accent,
                   foregroundColor: Colors.white,
@@ -110,10 +118,20 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
     );
   }
 
-  void _onPay() {
-    // Puro front: navega al resumen de la orden. El cobro real llega con FastAPI.
-    context.push(AppRoutes.orderSuccess);
+  /// Segun el metodo elegido: la tarjeta ira por Stripe (pendiente), y
+  /// transferencia y efectivo muestran sus instrucciones de pago.
+  void _onPay(PaymentType type) {
+    if (type == PaymentType.card) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('El pago con tarjeta se procesa con Stripe'),
+        ),
+      );
+      return;
+    }
+    context.push(AppRoutes.paymentInstructions, extra: type);
   }
+
 }
 
 class _PaymentTile extends StatelessWidget {
@@ -151,7 +169,19 @@ class _PaymentTile extends StatelessWidget {
             Icon(_iconFor(method.type), color: VaultColors.primary),
             const SizedBox(width: VaultSpacing.md),
             Expanded(
-              child: Text(method.label, style: tt.titleMedium),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(method.label, style: tt.titleMedium),
+                  if (method.description.isNotEmpty)
+                    Text(
+                      method.description,
+                      style: tt.labelSmall?.copyWith(
+                        color: VaultColors.textSecondary,
+                      ),
+                    ),
+                ],
+              ),
             ),
             Icon(
               selected

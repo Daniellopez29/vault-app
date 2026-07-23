@@ -144,7 +144,7 @@ class _CartContent extends ConsumerWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => context.push(AppRoutes.paymentMethod),
+                      onPressed: () => context.push(AppRoutes.checkoutAddress),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: VaultColors.accent,
                         side: const BorderSide(color: VaultColors.accent),
