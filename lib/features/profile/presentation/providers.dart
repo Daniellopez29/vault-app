@@ -1,8 +1,9 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/usecase.dart';
 import '../../auth/presentation/providers.dart';
 import '../data/datasources.dart';
+import '../data/restorer_local_datasource.dart';
 import '../data/repositories.dart';
 import '../domain/entities.dart';
 import '../domain/repositories.dart';
@@ -14,6 +15,7 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
       ref.read(apiClientProvider),
       currentUserId: () => ref.read(authControllerProvider).user?.id,
     ),
+    localDataSource: RestorerProfileLocalDataSourceImpl(),
   );
 });
 
@@ -291,7 +293,73 @@ class RestorerProfileController
           (_) => loadProfile(),
     );
   }
+
+  /// Agrega un servicio al perfil. Si el usuario aun no tiene perfil de
+  /// especialista, se crea uno al vuelo con este primer servicio.
+  ///
+  /// El backend guarda el perfil completo (no servicios sueltos), por eso
+  /// se reconstruye entero preservando los demas campos.
+  Future<void> addService(RestorerServiceEntity service) async {
+    final current = state.profile;
+    await saveProfile(RestorerProfileEntity(
+      userId: _userId,
+      bio: current?.bio ?? '',
+      specialties: current?.specialties ?? const [],
+      services: [...?current?.services, service],
+      rating: current?.rating ?? 0,
+      reviewsCount: current?.reviewsCount ?? 0,
+    ));
+  }
+
+  /// Reemplaza un servicio existente conservando su id.
+  Future<void> updateService(RestorerServiceEntity service) async {
+    final current = state.profile;
+    if (current == null) return;
+    await saveProfile(RestorerProfileEntity(
+      userId: _userId,
+      bio: current.bio,
+      specialties: current.specialties,
+      services: current.services
+          .map((s) => s.id == service.id ? service : s)
+          .toList(),
+      rating: current.rating,
+      reviewsCount: current.reviewsCount,
+    ));
+  }
+
+  /// Quita un servicio por id y guarda el perfil actualizado.
+  Future<void> removeService(String serviceId) async {
+    final current = state.profile;
+    if (current == null) return;
+    await saveProfile(RestorerProfileEntity(
+      userId: _userId,
+      bio: current.bio,
+      specialties: current.specialties,
+      services: current.services.where((s) => s.id != serviceId).toList(),
+      rating: current.rating,
+      reviewsCount: current.reviewsCount,
+    ));
+  }
 }
 
 
 
+
+
+// ─── Directorio publico de servicios ───
+
+final getAllRestorerProfilesUseCaseProvider =
+    Provider<GetAllRestorerProfilesUseCase>((ref) {
+  return GetAllRestorerProfilesUseCase(ref.read(profileRepositoryProvider));
+});
+
+/// Todos los especialistas con servicios publicados, para que cualquiera
+/// pueda buscar quien ofrece que.
+final allRestorerProfilesProvider =
+    FutureProvider<List<RestorerProfileEntity>>((ref) async {
+  final result = await ref.read(getAllRestorerProfilesUseCaseProvider)();
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (profiles) => profiles,
+  );
+});

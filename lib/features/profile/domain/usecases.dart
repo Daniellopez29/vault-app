@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import '../../../core/error.dart';
 import '../../../core/usecase.dart';
 import 'entities.dart';
@@ -30,7 +30,7 @@ class DeleteAssetUseCase {
 }
 
 /// Pone o quita un activo de venta. Al poner en venta guarda precio y
-/// descripción; al quitar, los limpia. La regla de negocio vive aquí.
+/// descripciÃ³n; al quitar, los limpia. La regla de negocio vive aquÃ­.
 class SetAssetForSaleUseCase {
   final ProfileRepository repository;
   const SetAssetForSaleUseCase(this.repository);
@@ -46,7 +46,7 @@ class SetAssetForSaleUseCase {
 }
 
 /// Publica o despublica un activo en el Feed. Al publicar guarda el caption;
-/// al despublicar, lo limpia. La regla de negocio vive aquí.
+/// al despublicar, lo limpia. La regla de negocio vive aquÃ­.
 class SetAssetPublishedUseCase {
   final ProfileRepository repository;
   const SetAssetPublishedUseCase(this.repository);
@@ -74,6 +74,15 @@ class SaveRestorerProfileUseCase {
 
   Future<Either<Failure, void>> call(RestorerProfileEntity profile) =>
       repository.saveRestorerProfile(profile);
+}
+
+/// Trae el directorio de especialistas con servicios publicados.
+class GetAllRestorerProfilesUseCase {
+  final ProfileRepository repository;
+  const GetAllRestorerProfilesUseCase(this.repository);
+
+  Future<Either<Failure, List<RestorerProfileEntity>>> call() =>
+      repository.getAllRestorerProfiles();
 }
 
 class RegisterBusinessUseCase {

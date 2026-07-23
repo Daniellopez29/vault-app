@@ -18,6 +18,7 @@ import '../features/marketplace/presentation/product_detail_page.dart';
 import '../features/marketplace/domain/entities.dart';
 import '../features/marketplace/presentation/seller_commerce_view.dart';
 import '../features/services/presentation/services_tab.dart';
+import '../features/services/presentation/services_directory_page.dart';
 import '../features/reviews/presentation/reviews_tab.dart';
 import 'widgets/titled_page.dart';
 import '../features/subscription/domain/entities.dart';
@@ -58,6 +59,7 @@ abstract class AppRoutes {
   static const productDetail = '/product-detail';
   static const commerce      = '/commerce';
   static const services      = '/services';
+  static const specialists   = '/specialists';
   static const reviews       = '/reviews';
   static const subscriptionCheckout = '/subscription-checkout';
   static const assetDetail = '/asset-detail';
@@ -154,6 +156,13 @@ final appRouter = GoRouter(
       builder: (context, state) => const SellerCommerceView(),
     ),
     GoRoute(
+      path: AppRoutes.specialists,
+      builder: (context, state) => const TitledPage(
+        title: 'Especialistas',
+        child: ServicesDirectoryPage(),
+      ),
+    ),
+    GoRoute(
       path: AppRoutes.services,
       builder: (context, state) => const TitledPage(
         title: 'Servicios',
@@ -179,6 +188,8 @@ final appRouter = GoRouter(
     ),
   ],
 );
+
+
 
 
 

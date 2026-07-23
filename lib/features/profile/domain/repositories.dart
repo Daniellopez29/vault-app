@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import '../../../core/error.dart';
 import 'entities.dart';
 
@@ -9,6 +9,10 @@ abstract class ProfileRepository {
   Future<Either<Failure, void>> deleteAsset(String assetId);
   Future<Either<Failure, RestorerProfileEntity?>> getRestorerProfile(String userId);
   Future<Either<Failure, void>> saveRestorerProfile(RestorerProfileEntity profile);
+
+  /// Todos los perfiles de especialista con servicios publicados, para el
+  /// directorio publico: quien ofrece que.
+  Future<Either<Failure, List<RestorerProfileEntity>>> getAllRestorerProfiles();
 
   /// Registra el negocio del usuario (tabla `businesses`: name/type/
   /// description/location). [type] debe ser 'restaurador' o 'servicio'.

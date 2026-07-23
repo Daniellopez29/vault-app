@@ -1,66 +1,49 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
 
-/// Accesos a las secciones propias del usuario, dentro del Perfil.
+/// Accesos rapidos a las secciones propias del usuario, dentro del Perfil.
 ///
-/// Viven aquí (y no en el nav) para que la navegación principal sea igual
-/// para todos los roles. Cualquiera puede vender u ofrecer servicios, así
-/// que los accesos se muestran a todos.
+/// Se presentan como una fila compacta para no competir con el contenido
+/// principal (los activos). Viven aqui y no en el nav para que la navegacion
+/// principal sea igual para todos los roles.
 class ProfileActions extends StatelessWidget {
   const ProfileActions({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(color: VaultColors.divider),
+          bottom: BorderSide(color: VaultColors.divider),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: VaultSpacing.md),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Text('Mi actividad', style: tt.titleMedium),
-          const SizedBox(height: VaultSpacing.sm),
-          Container(
-            decoration: BoxDecoration(
-              color: VaultColors.surface,
-              borderRadius: VaultRadius.cardBorder,
-              border: Border.all(color: VaultColors.divider),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                _ActionRow(
-                  icon: Icons.storefront_outlined,
-                  label: 'Comercio',
-                  subtitle: 'Tus productos en venta y tu negocio',
-                  onTap: () => context.push(AppRoutes.commerce),
-                ),
-                const Divider(height: 1, color: VaultColors.divider),
-                _ActionRow(
-                  icon: Icons.build_outlined,
-                  label: 'Servicios',
-                  subtitle: 'Servicios que ofreces',
-                  onTap: () => context.push(AppRoutes.services),
-                ),
-                const Divider(height: 1, color: VaultColors.divider),
-                _ActionRow(
-                  icon: Icons.star_outline,
-                  label: 'Reseñas',
-                  subtitle: 'Valoraciones que has recibido',
-                  onTap: () => context.push(AppRoutes.reviews),
-                ),
-                const Divider(height: 1, color: VaultColors.divider),
-                _ActionRow(
-                  icon: Icons.insights_outlined,
-                  label: 'Estadísticas',
-                  subtitle: 'Resumen de tu colección',
-                  onTap: () => context.push(AppRoutes.stats),
-                ),
-              ],
-            ),
+          _QuickAction(
+            icon: Icons.sell_outlined,
+            label: 'Comercio',
+            onTap: () => context.push(AppRoutes.commerce),
+          ),
+          _QuickAction(
+            icon: Icons.build_outlined,
+            label: 'Servicios',
+            onTap: () => context.push(AppRoutes.services),
+          ),
+          _QuickAction(
+            icon: Icons.star_outline,
+            label: 'Reseñas',
+            onTap: () => context.push(AppRoutes.reviews),
+          ),
+          _QuickAction(
+            icon: Icons.insights_outlined,
+            label: 'Datos',
+            onTap: () => context.push(AppRoutes.stats),
           ),
         ],
       ),
@@ -68,52 +51,38 @@ class ProfileActions extends StatelessWidget {
   }
 }
 
-class _ActionRow extends StatelessWidget {
+class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String subtitle;
   final VoidCallback onTap;
 
-  const _ActionRow({
+  const _QuickAction({
     required this.icon,
     required this.label,
-    required this.subtitle,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(VaultRadius.sm),
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: VaultSpacing.md,
-          vertical: VaultSpacing.md,
+          vertical: VaultSpacing.xs,
         ),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: VaultColors.primary, size: VaultIconSize.md),
-            const SizedBox(width: VaultSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: tt.titleSmall),
-                  Text(
-                    subtitle,
-                    style: tt.labelSmall?.copyWith(
-                      color: VaultColors.textSecondary,
-                    ),
-                  ),
-                ],
+            Icon(icon, size: VaultIconSize.lg, color: VaultColors.primary),
+            const SizedBox(height: VaultSpacing.xs),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: VaultColors.textSecondary,
               ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              color: VaultColors.textSecondary,
-              size: VaultIconSize.md,
             ),
           ],
         ),

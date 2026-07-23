@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
 import '../../business/presentation/businesses_tab.dart';
+import '../../services/presentation/services_directory_page.dart';
 import 'shop_tab.dart';
 
 /// Contenedor del Shop con dos apartados deslizables:
@@ -15,7 +16,7 @@ class ShopView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: VaultColors.background,
         appBar: AppBar(
@@ -30,6 +31,7 @@ class ShopView extends StatelessWidget {
             tabs: [
               Tab(text: 'Productos'),
               Tab(text: 'Negocios'),
+              Tab(text: 'Especialistas'),
             ],
           ),
         ),
@@ -37,9 +39,11 @@ class ShopView extends StatelessWidget {
           children: [
             ShopTab(),
             BusinessesTab(),
+            ServicesDirectoryPage(),
           ],
         ),
       ),
     );
   }
 }
+

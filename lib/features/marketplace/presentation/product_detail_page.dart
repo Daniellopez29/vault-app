@@ -6,6 +6,7 @@ import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../cart/domain/entities.dart';
 import '../../cart/presentation/providers.dart';
+import '../../comments/presentation/comments_sheet.dart';
 import '../domain/entities.dart';
 
 /// Detalle de un producto del marketplace.
@@ -67,6 +68,15 @@ class ProductDetailPage extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.all(VaultSpacing.md),
             child: _ProductInfo(item: item),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              VaultSpacing.md,
+              0,
+              VaultSpacing.md,
+              VaultSpacing.lg,
+            ),
+            child: _OpinionsSection(productId: item.id),
           ),
         ],
       ),
@@ -461,6 +471,69 @@ class _BarAction extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+
+/// Acceso a las opiniones del producto. Reutiliza la feature de comentarios,
+/// que trabaja sobre un targetId generico: aqui ese objetivo es el producto.
+class _OpinionsSection extends StatelessWidget {
+  final String productId;
+
+  const _OpinionsSection({required this.productId});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Opiniones', style: tt.titleMedium),
+        const SizedBox(height: VaultSpacing.sm),
+        InkWell(
+          onTap: () => showCommentsSheet(context, targetId: productId),
+          borderRadius: BorderRadius.circular(VaultRadius.card),
+          child: Container(
+            padding: const EdgeInsets.all(VaultSpacing.md),
+            decoration: BoxDecoration(
+              color: VaultColors.surface,
+              borderRadius: VaultRadius.cardBorder,
+              border: Border.all(color: VaultColors.divider),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.chat_bubble_outline,
+                  color: VaultColors.primary,
+                  size: VaultIconSize.md,
+                ),
+                const SizedBox(width: VaultSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Ver opiniones', style: tt.titleSmall),
+                      Text(
+                        'Lee lo que opinan otros o deja la tuya',
+                        style: tt.labelSmall?.copyWith(
+                          color: VaultColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  color: VaultColors.textSecondary,
+                  size: VaultIconSize.md,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

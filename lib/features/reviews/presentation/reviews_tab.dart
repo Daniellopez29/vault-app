@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
@@ -46,13 +46,13 @@ class ReviewsTab extends ConsumerWidget {
                 const Icon(Icons.star_outline,
                     size: VaultIconSize.xl, color: VaultColors.textSecondary),
                 const SizedBox(height: VaultSpacing.lg),
-                Text('Aun no tienes resenas', style: tt.titleLarge),
+                Text('Aún no tienes reseñas', style: tt.titleLarge),
                 const SizedBox(height: VaultSpacing.sm),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.xl),
                   child: Text(
-                    'Cuando vendas un articulo o prestes un servicio, las '
-                    'valoraciones que recibas apareceran aqui.',
+                    'Cuando vendas un artículo o prestes un servicio, las '
+                    'valoraciones que recibas aparecerán aquí.',
                     textAlign: TextAlign.center,
                     style: tt.bodyMedium?.copyWith(color: VaultColors.textSecondary),
                   ),

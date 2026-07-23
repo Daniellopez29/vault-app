@@ -402,7 +402,12 @@ class _SettingsTile extends StatelessWidget {
     return ListTile(
       leading: Icon(icon, color: tileColor, size: 22),
       title: Text(label, style: tt.bodyLarge?.copyWith(color: tileColor)),
-      trailing: trailing ??
+      trailing: trailing != null
+          ? ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 160),
+              child: trailing,
+            )
+          :
           (onTap != null
               ? Icon(Icons.chevron_right,
               color: VaultColors.textSecondary, size: 20)
