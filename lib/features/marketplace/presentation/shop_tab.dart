@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
@@ -10,7 +10,8 @@ import '../domain/entities.dart';
 import 'providers.dart';
 import '../../../core/widgets/search_header.dart';
 import 'shop_skeleton.dart';
-import 'widgets.dart';
+import 'marketplace_card.dart';
+import 'promo_carousel.dart';
 
 class ShopTab extends ConsumerWidget {
   const ShopTab({super.key});

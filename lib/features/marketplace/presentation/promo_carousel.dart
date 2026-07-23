@@ -1,178 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/router.dart';
 import '../../subscription/domain/entities.dart';
 import '../domain/entities.dart';
-
-/// Muestra la imagen de red si es una URL real; si aÃºn es un asset mock
-/// (los datos de prueba no estÃ¡n empaquetados), cae a un placeholder.
-class _ItemImage extends StatelessWidget {
-  final String imageUrl;
-
-  const _ItemImage({required this.imageUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    final isPlaceholder = imageUrl.isEmpty || imageUrl.startsWith('assets/');
-
-    if (isPlaceholder) {
-      return Container(
-        color: VaultColors.background,
-        alignment: Alignment.center,
-        child: Icon(
-          Icons.image_outlined,
-          size: VaultIconSize.xl,
-          color: VaultColors.textSecondary,
-        ),
-      );
-    }
-
-    return Image.network(
-      imageUrl,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) => Container(
-        color: VaultColors.background,
-        alignment: Alignment.center,
-        child: Icon(
-          Icons.broken_image_outlined,
-          size: VaultIconSize.xl,
-          color: VaultColors.textSecondary,
-        ),
-      ),
-    );
-  }
-}
-
-/// Tarjeta de un artÃ­culo del marketplace (grid de 2 columnas).
-class MarketplaceCard extends StatelessWidget {
-  final MarketplaceItemEntity item;
-  final VoidCallback onCartTap;
-
-  const MarketplaceCard({
-    super.key,
-    required this.item,
-    required this.onCartTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: VaultColors.surface,
-        borderRadius: VaultRadius.cardBorder,
-        border: Border.all(color: VaultColors.divider),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              const SizedBox(height: 120, width: double.infinity),
-              Positioned.fill(child: _ItemImage(imageUrl: item.imageUrl)),
-              if (item.isVerified)
-                const Positioned(
-                  top: VaultSpacing.sm,
-                  right: VaultSpacing.sm,
-                  child: Icon(
-                    Icons.verified_user,
-                    color: VaultColors.accent,
-                    size: VaultIconSize.md,
-                  ),
-                ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              VaultSpacing.sm,
-              VaultSpacing.sm,
-              VaultSpacing.sm,
-              VaultSpacing.xs,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.star,
-                        size: VaultIconSize.sm, color: VaultColors.accent),
-                    const SizedBox(width: VaultSpacing.xs),
-                    Text(item.rating.toStringAsFixed(1), style: tt.titleMedium),
-                  ],
-                ),
-                InkWell(
-                  onTap: onCartTap,
-                  child: const Icon(
-                    Icons.shopping_cart_outlined,
-                    size: VaultIconSize.md,
-                    color: VaultColors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              VaultSpacing.sm,
-              0,
-              VaultSpacing.sm,
-              VaultSpacing.sm,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.brand,
-                  style: tt.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  item.title,
-                  style: tt.bodyMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: VaultSpacing.xs),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Origen: ${item.origin}',
-                            style: tt.labelSmall,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text('Talla: ${item.size}', style: tt.labelSmall),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: VaultSpacing.xs),
-                    Text(
-                      '\$${item.price.toStringAsFixed(0)}',
-                      style: tt.titleLarge?.copyWith(
-                        color: VaultColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
+import 'item_image.dart';
 /// Carrusel de banners promocionales con indicadores de pÃ¡gina.
 class PromoCarousel extends StatefulWidget {
   final List<CarouselSlide> slides;
@@ -337,7 +170,7 @@ class _PromoCard extends StatelessWidget {
             height: double.infinity,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(VaultRadius.button),
-              child: _ItemImage(imageUrl: banner.imageUrl),
+              child: ItemImage(imageUrl: banner.imageUrl),
             ),
           ),
         ],
