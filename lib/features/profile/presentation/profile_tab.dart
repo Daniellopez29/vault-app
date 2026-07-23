@@ -65,6 +65,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
       // -- en "Guardados" no se muestra.
       floatingActionButton: _tabController.index == 0
           ? FloatingActionButton(
+              heroTag: 'profile_fab',
               onPressed: () => context.push(AppRoutes.registerAsset),
               tooltip: 'Agregar activo',
               child: const Icon(Icons.add),
@@ -108,5 +109,6 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
     );
   }
 }
+
 
 

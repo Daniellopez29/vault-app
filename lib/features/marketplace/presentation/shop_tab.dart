@@ -68,6 +68,7 @@ class ShopTab extends ConsumerWidget {
         return Scaffold(
           backgroundColor: VaultColors.background,
           floatingActionButton: FloatingActionButton(
+            heroTag: 'shop_fab',
             backgroundColor: VaultColors.primary,
             onPressed: () => context.push(AppRoutes.cart),
             child: Icon(
@@ -127,9 +128,15 @@ class ShopTab extends ConsumerWidget {
                       delegate: SliverChildBuilderDelegate(
                             (context, index) {
                           final item = state.items[index];
-                          return MarketplaceCard(
-                            item: item,
-                            onCartTap: () => _addToCart(context, ref, item),
+                          return GestureDetector(
+                            onTap: () => context.push(
+                              AppRoutes.productDetail,
+                              extra: item,
+                            ),
+                            child: MarketplaceCard(
+                              item: item,
+                              onCartTap: () => _addToCart(context, ref, item),
+                            ),
                           );
                         },
                         childCount: state.items.length,
@@ -143,6 +150,8 @@ class ShopTab extends ConsumerWidget {
     }
   }
 }
+
+
 
 
 

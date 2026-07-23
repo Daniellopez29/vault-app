@@ -14,6 +14,8 @@ import '../features/legal/presentation/legal_page.dart';
 import '../features/notifications/presentation/notifications_page.dart';
 import '../features/chat/presentation/chat_page.dart';
 import '../features/stats/presentation/stats_page.dart';
+import '../features/marketplace/presentation/product_detail_page.dart';
+import '../features/marketplace/domain/entities.dart';
 import '../features/marketplace/presentation/seller_commerce_view.dart';
 import '../features/services/presentation/services_tab.dart';
 import '../features/reviews/presentation/reviews_tab.dart';
@@ -53,6 +55,7 @@ abstract class AppRoutes {
   static const chat          = '/chat';
   static const subscription  = '/subscription';
   static const stats         = '/stats';
+  static const productDetail = '/product-detail';
   static const commerce      = '/commerce';
   static const services      = '/services';
   static const reviews       = '/reviews';
@@ -141,6 +144,12 @@ final appRouter = GoRouter(
       builder: (context, state) => const StatsPage(),
     ),
     GoRoute(
+      path: AppRoutes.productDetail,
+      builder: (context, state) => ProductDetailPage(
+        item: state.extra as MarketplaceItemEntity,
+      ),
+    ),
+    GoRoute(
       path: AppRoutes.commerce,
       builder: (context, state) => const SellerCommerceView(),
     ),
@@ -170,6 +179,7 @@ final appRouter = GoRouter(
     ),
   ],
 );
+
 
 
 
