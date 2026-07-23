@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
+import '../domain/entities.dart';
 import 'providers.dart';
 import 'widgets.dart';
 
 /// Abre el bottom sheet de comentarios para un post o artículo.
-/// [targetId] es el mismo id que se usa en [commentsControllerProvider].
-Future<void> showCommentsSheet(BuildContext context, {required String targetId}) {
+/// [target] es el mismo que se usa en [commentsControllerProvider].
+Future<void> showCommentsSheet(BuildContext context, {required CommentsTarget target}) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -15,18 +16,18 @@ Future<void> showCommentsSheet(BuildContext context, {required String targetId})
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(VaultRadius.card)),
     ),
-    builder: (_) => CommentsSheet(targetId: targetId),
+    builder: (_) => CommentsSheet(target: target),
   );
 }
 
 class CommentsSheet extends ConsumerWidget {
-  final String targetId;
+  final CommentsTarget target;
 
-  const CommentsSheet({super.key, required this.targetId});
+  const CommentsSheet({super.key, required this.target});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(commentsControllerProvider(targetId));
+    final state = ref.watch(commentsControllerProvider(target));
 
     return DraggableScrollableSheet(
       initialChildSize: 0.75,
@@ -55,14 +56,14 @@ class CommentsSheet extends ConsumerWidget {
             const Divider(height: 1, color: VaultColors.divider),
             Expanded(
               child: _CommentsBody(
-                targetId: targetId,
+                target: target,
                 state: state,
                 scrollController: scrollController,
               ),
             ),
             CommentInputBar(
               onSend: (text) => ref
-                  .read(commentsControllerProvider(targetId).notifier)
+                  .read(commentsControllerProvider(target).notifier)
                   .addComment(text),
             ),
           ],
@@ -73,12 +74,12 @@ class CommentsSheet extends ConsumerWidget {
 }
 
 class _CommentsBody extends ConsumerWidget {
-  final String targetId;
+  final CommentsTarget target;
   final CommentsState state;
   final ScrollController scrollController;
 
   const _CommentsBody({
-    required this.targetId,
+    required this.target,
     required this.state,
     required this.scrollController,
   });
@@ -98,7 +99,7 @@ class _CommentsBody extends ConsumerWidget {
               const SizedBox(height: VaultSpacing.md),
               TextButton(
                 onPressed: () => ref
-                    .read(commentsControllerProvider(targetId).notifier)
+                    .read(commentsControllerProvider(target).notifier)
                     .loadComments(),
                 child: const Text('Reintentar'),
               ),
@@ -125,7 +126,7 @@ class _CommentsBody extends ConsumerWidget {
             return CommentTile(
               comment: comment,
               onLike: () => ref
-                  .read(commentsControllerProvider(targetId).notifier)
+                  .read(commentsControllerProvider(target).notifier)
                   .toggleLike(comment.id),
             );
           },

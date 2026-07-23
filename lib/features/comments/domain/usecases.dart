@@ -8,8 +8,8 @@ class GetCommentsUseCase {
   final CommentsRepository repository;
   const GetCommentsUseCase(this.repository);
 
-  Future<Either<Failure, List<CommentEntity>>> call(String targetId) =>
-      repository.getComments(targetId);
+  Future<Either<Failure, List<CommentEntity>>> call(CommentsTarget target) =>
+      repository.getComments(target);
 }
 
 class AddCommentUseCase {
@@ -17,15 +17,15 @@ class AddCommentUseCase {
   const AddCommentUseCase(this.repository);
 
   Future<Either<Failure, List<CommentEntity>>> call(AddCommentParams params) =>
-      repository.addComment(targetId: params.targetId, text: params.text);
+      repository.addComment(target: params.target, text: params.text);
 }
 
 class AddCommentParams extends Equatable {
-  final String targetId;
+  final CommentsTarget target;
   final String text;
 
-  const AddCommentParams({required this.targetId, required this.text});
+  const AddCommentParams({required this.target, required this.text});
 
   @override
-  List<Object?> get props => [targetId, text];
+  List<Object?> get props => [target, text];
 }

@@ -12,6 +12,8 @@ class MarketplaceItemEntity extends Equatable {
   final double price;
   final double rating;
   final bool isVerified;
+  final String sellerId;
+  final String sellerName;
 
   const MarketplaceItemEntity({
     required this.id,
@@ -22,6 +24,8 @@ class MarketplaceItemEntity extends Equatable {
     required this.size,
     required this.price,
     required this.rating,
+    required this.sellerId,
+    required this.sellerName,
     this.isVerified = false,
   });
 
@@ -36,6 +40,8 @@ class MarketplaceItemEntity extends Equatable {
     price,
     rating,
     isVerified,
+    sellerId,
+    sellerName,
   ];
 }
 

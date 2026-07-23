@@ -10,15 +10,15 @@ class CommentsRepositoryImpl implements CommentsRepository {
   CommentsRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, List<CommentEntity>>> getComments(String targetId) =>
-      _guard(() => remoteDataSource.getComments(targetId));
+  Future<Either<Failure, List<CommentEntity>>> getComments(CommentsTarget target) =>
+      _guard(() => remoteDataSource.getComments(target));
 
   @override
   Future<Either<Failure, List<CommentEntity>>> addComment({
-    required String targetId,
+    required CommentsTarget target,
     required String text,
   }) =>
-      _guard(() => remoteDataSource.addComment(targetId: targetId, text: text));
+      _guard(() => remoteDataSource.addComment(target: target, text: text));
 
   /// Centraliza el try/catch → Either para getComments/addComment.
   Future<Either<Failure, List<CommentEntity>>> _guard(

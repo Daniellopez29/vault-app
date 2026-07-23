@@ -1,6 +1,6 @@
 ﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers.dart';
 import '../../../core/usecase.dart';
-import '../../profile/domain/entities.dart';
 import '../../profile/presentation/providers.dart';
 import '../../subscription/domain/entities.dart';
 import '../data/datasources.dart';
@@ -11,7 +11,7 @@ import '../domain/usecases.dart';
 
 final marketplaceRepositoryProvider = Provider<MarketplaceRepository>((ref) {
   return MarketplaceRepositoryImpl(
-    remoteDataSource: MarketplaceRemoteDataSourceImpl(),
+    remoteDataSource: MarketplaceRemoteDataSourceImpl(ref.read(apiClientProvider)),
   );
 });
 
@@ -63,11 +63,11 @@ StateNotifierProvider<ShopController, ShopState>((ref) {
   final controller = ShopController(
     ref.read(getMarketplaceItemsUseCaseProvider),
     ref.read(getPromoBannersUseCaseProvider),
-    ref,
   );
-  // Cuando cambian los activos en venta del inventario, el Shop se recombina.
+  // Cuando el usuario pone/quita uno de sus activos en venta, el backend ya
+  // lo refleja en GET /assets -- basta con recargar el Shop desde cero.
   ref.listen(profileAssetsControllerProvider, (previous, next) {
-    controller.refreshForSale();
+    controller.loadShop();
   });
   return controller;
 });
@@ -75,13 +75,11 @@ StateNotifierProvider<ShopController, ShopState>((ref) {
 class ShopController extends StateNotifier<ShopState> {
   final GetMarketplaceItemsUseCase _getItems;
   final GetPromoBannersUseCase _getBanners;
-  final Ref _ref;
 
-  // Catálogo mock cacheado, para no volver a pedirlo al recombinar.
-  List<MarketplaceItemEntity> _mockItems = const [];
+  // Catálogo cacheado, para no volver a pedirlo al filtrar por búsqueda.
+  List<MarketplaceItemEntity> _items = const [];
 
-  ShopController(this._getItems, this._getBanners, this._ref)
-      : super(const ShopState()) {
+  ShopController(this._getItems, this._getBanners) : super(const ShopState()) {
     loadShop();
   }
 
@@ -97,7 +95,7 @@ class ShopController extends StateNotifier<ShopState> {
         errorMessage: failure.message,
       ),
           (items) {
-        _mockItems = items;
+        _items = items;
         final banners = bannersResult.fold(
               (_) => <PromoBannerEntity>[],
               (list) => list,
@@ -121,16 +119,8 @@ class ShopController extends StateNotifier<ShopState> {
     ];
   }
 
-  /// Recombina activos en venta + mock, sin volver a pedir el mock
-  /// (se llama cuando el usuario pone/quita algo de venta).
-  void refreshForSale() {
-    if (state.status != ShopStatus.loaded) return;
-    state = state.copyWith(items: _visibleItems());
-  }
-
   /// Actualiza el texto de búsqueda y recalcula los productos visibles.
-  /// Filtrado 100% local sobre la lista ya cargada; cuando exista backend,
-  /// solo cambia el datasource, no esta lógica de presentación.
+  /// Filtrado 100% local sobre la lista ya cargada.
   void search(String query) {
     state = state.copyWith(
       searchQuery: query,
@@ -141,44 +131,15 @@ class ShopController extends StateNotifier<ShopState> {
   /// Limpia la búsqueda y muestra el catálogo completo de nuevo.
   void clearSearch() => search('');
 
-  /// Lista final que ve la UI: combina tus activos en venta + el mock,
-  /// y aplica el filtro de búsqueda por título o marca.
+  /// Lista final que ve la UI: aplica el filtro de búsqueda por título o marca.
   List<MarketplaceItemEntity> _visibleItems({String? query}) {
     final effectiveQuery = (query ?? state.searchQuery).trim().toLowerCase();
-    final combined = _combinedItems();
+    if (effectiveQuery.isEmpty) return _items;
 
-    if (effectiveQuery.isEmpty) return combined;
-
-    return combined.where((item) {
+    return _items.where((item) {
       final title = item.title.toLowerCase();
       final brand = item.brand.toLowerCase();
       return title.contains(effectiveQuery) || brand.contains(effectiveQuery);
     }).toList();
-  }
-
-  /// Tus activos en venta primero, luego el catálogo mock.
-  List<MarketplaceItemEntity> _combinedItems() {
-    final forSale = _ref
-        .read(profileAssetsControllerProvider)
-        .assets
-        .where((asset) => asset.isForSale)
-        .map(_assetToItem)
-        .toList();
-    return [...forSale, ..._mockItems];
-  }
-
-  /// Convierte un activo del inventario en un producto del Shop.
-  MarketplaceItemEntity _assetToItem(AssetEntity asset) {
-    return MarketplaceItemEntity(
-      id: asset.id,
-      brand: asset.brand,
-      title: asset.name,
-      imageUrl: asset.imageUrl,
-      origin: asset.origin,
-      size: asset.size,
-      price: asset.salePrice ?? 0,
-      rating: 0,
-      isVerified: asset.isVerified,
-    );
   }
 }

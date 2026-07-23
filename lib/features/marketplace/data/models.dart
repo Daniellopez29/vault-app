@@ -10,35 +10,36 @@ class MarketplaceItemModel extends MarketplaceItemEntity {
     required super.size,
     required super.price,
     required super.rating,
+    required super.sellerId,
+    required super.sellerName,
     super.isVerified = false,
   });
 
+  /// Respuesta de GET /api/v1/assets del API Go (solo items con
+  /// is_for_sale=true llegan aquí, ver [MarketplaceRemoteDataSourceImpl]).
+  /// No hay rating de vendedor individual en el backend -- queda en 0.
   factory MarketplaceItemModel.fromJson(Map<String, dynamic> json) {
+    final photos = json['photos'] as List<dynamic>? ?? const [];
+    final cover = photos.isNotEmpty
+        ? (photos.firstWhere(
+              (p) => (p as Map<String, dynamic>)['is_cover'] == true,
+              orElse: () => photos.first,
+            ) as Map<String, dynamic>)['url'] as String?
+        : null;
+
     return MarketplaceItemModel(
       id: json['id'] as String,
-      brand: json['brand'] as String,
-      title: json['title'] as String,
-      imageUrl: json['imageUrl'] as String,
-      origin: json['origin'] as String,
-      size: json['size'] as String,
-      price: (json['price'] as num).toDouble(),
-      rating: (json['rating'] as num).toDouble(),
-      isVerified: json['isVerified'] as bool? ?? false,
+      brand: json['brand'] as String? ?? '',
+      title: json['name'] as String? ?? '',
+      imageUrl: cover ?? '',
+      origin: json['store_origin'] as String? ?? '',
+      size: json['size'] as String? ?? '',
+      price: (json['sale_price'] as num?)?.toDouble() ?? 0,
+      rating: 0,
+      isVerified: (json['blockchain_tx_id'] as String?)?.isNotEmpty ?? false,
+      sellerId: json['user_id'] as String,
+      sellerName: json['seller_name'] as String? ?? '',
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'brand': brand,
-      'title': title,
-      'imageUrl': imageUrl,
-      'origin': origin,
-      'size': size,
-      'price': price,
-      'rating': rating,
-      'isVerified': isVerified,
-    };
   }
 }
 

@@ -7,6 +7,7 @@ import 'core/router.dart';
 import 'core/stripe_config.dart';
 import 'core/theme.dart';
 import 'features/auth/presentation/providers.dart';
+import 'features/chat/presentation/providers.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -18,6 +19,7 @@ void main() async {
   // Configuración (celular físico en otra red, IP distinta, etc).
   await ApiConfig.loadOverride();
   await PaymentApiConfig.loadOverride();
+  await RealtimeConfig.loadOverride();
   Stripe.publishableKey = StripeConfig.publishableKey;
   await Stripe.instance.applySettings();
   runApp(const ProviderScope(child: VaultApp()));
@@ -35,6 +37,16 @@ class VaultApp extends ConsumerWidget {
       if (previous?.status == AuthStatus.authenticated &&
           next.status != AuthStatus.authenticated) {
         appRouter.go(AppRoutes.login);
+      }
+
+      // Genera (si hace falta) y registra la llave pública del chat E2EE en
+      // cuanto hay sesión -- fire-and-forget: si falla, el chat de esta
+      // sesión simplemente no funcionará hasta el próximo login, no debe
+      // bloquear el flujo de autenticación.
+      if (previous?.status != AuthStatus.authenticated &&
+          next.status == AuthStatus.authenticated &&
+          next.user != null) {
+        ref.read(ensurePublicKeyRegisteredUseCaseProvider)(next.user!.id);
       }
     });
 

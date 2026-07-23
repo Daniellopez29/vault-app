@@ -15,17 +15,25 @@ abstract class EncryptionService {
   /// seguro; la pública se comparte con el servidor.
   Future<Either<Failure, KeyPairEntity>> generateKeyPair();
 
-  /// Cifra un mensaje para un receptor usando SU llave pública.
-  /// Devuelve el contenido cifrado (AES + llave AES cifrada con RSA + IV).
+  /// Cifra un mensaje para DOS destinatarios de la misma llave AES: el
+  /// receptor real (con [recipientPublicKey]) y el propio emisor (con
+  /// [senderPublicKey], para poder releer su propio envío más tarde).
+  /// cipherText/iv son los mismos para ambos -- solo cambia cómo se
+  /// envuelve la llave AES.
   Future<Either<Failure, EncryptedMessageEntity>> encryptMessage({
     required String plainText,
     required String recipientPublicKey,
+    required String senderPublicKey,
   });
 
-  /// Descifra un mensaje usando la llave privada propia.
-  /// Devuelve el texto plano (solo existe en memoria, aquí).
+  /// Descifra con la llave privada propia. [encryptedAesKey] debe ser la
+  /// envoltura correcta para esa privada -- el llamador decide cuál de las
+  /// dos (`encryptedAesKey` o `encryptedAesKeySender`) corresponde según si
+  /// el mensaje es ajeno o propio (ver ChatRepositoryImpl).
   Future<Either<Failure, String>> decryptMessage({
-    required EncryptedMessageEntity encryptedMessage,
+    required String cipherText,
+    required String encryptedAesKey,
+    required String iv,
     required String ownPrivateKey,
   });
 }

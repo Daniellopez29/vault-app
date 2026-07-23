@@ -48,33 +48,35 @@ class CommentsState {
   }
 }
 
-/// Un controller por target (post o artículo). El `.family` recibe el targetId,
-/// así el Feed y el Marketplace usan la misma lógica apuntando a cosas distintas.
+/// Un controller por target (post o artículo). El `.family` recibe el
+/// CommentsTarget completo (id + tipo), así el Feed y el Marketplace usan
+/// la misma lógica apuntando a recursos distintos del backend.
 final commentsControllerProvider = StateNotifierProvider.family<
-    CommentsController, CommentsState, String>((ref, targetId) {
+    CommentsController, CommentsState, CommentsTarget>((ref, target) {
   return CommentsController(
-    targetId: targetId,
+    target: target,
     getComments: ref.read(getCommentsUseCaseProvider),
     addComment: ref.read(addCommentUseCaseProvider),
   );
 });
 
 class CommentsController extends StateNotifier<CommentsState> {
-  final String _targetId;
+  final CommentsTarget _target;
   final GetCommentsUseCase _getComments;
   final AddCommentUseCase _addComment;
 
   CommentsController({
-    required this._targetId,
+    required CommentsTarget target,
     required this._getComments,
     required this._addComment,
-  })  : super(const CommentsState()) {
+  })  : _target = target,
+        super(const CommentsState()) {
     loadComments();
   }
 
   Future<void> loadComments() async {
     state = state.copyWith(status: CommentsStatus.loading);
-    final result = await _getComments(_targetId);
+    final result = await _getComments(_target);
     _apply(result);
   }
 
@@ -82,7 +84,7 @@ class CommentsController extends StateNotifier<CommentsState> {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
     final result = await _addComment(
-      AddCommentParams(targetId: _targetId, text: trimmed),
+      AddCommentParams(target: _target, text: trimmed),
     );
     _apply(result);
   }

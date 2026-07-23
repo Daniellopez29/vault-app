@@ -199,7 +199,7 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.chat,
-      builder: (context, state) => const ChatPage(),
+      builder: (context, state) => ChatPage(args: state.extra as ChatPageArgs),
     ),
     GoRoute(
       path: AppRoutes.assetDetail,

@@ -23,13 +23,20 @@ class ConversationEntity extends Equatable {
 enum MessageStatus { sent, delivered, read }
 
 /// Un mensaje de la conversación. Lo que se guarda y viaja es
-/// encryptedContent; el texto plano solo existe en memoria al cifrar/descifrar.
+/// encryptedContent; [plainText] lo resuelve el repositorio al descifrar
+/// con la llave privada propia -- y por diseño del esquema híbrido
+/// (la llave AES solo se cifra con la pública del RECEPTOR), un mensaje que
+/// YO envié no lo puedo volver a descifrar con mi propia privada: para esos
+/// [plainText] queda en `null` salvo que se haya mandado en esta misma
+/// sesión (ver ChatRepositoryImpl.sendMessage), que ya conoce el texto sin
+/// necesidad de descifrar nada.
 class MessageEntity extends Equatable {
   final String id;
   final String senderId;
   final EncryptedMessageEntity encryptedContent;
   final DateTime timestamp;
   final MessageStatus status;
+  final String? plainText;
 
   const MessageEntity({
     required this.id,
@@ -37,11 +44,12 @@ class MessageEntity extends Equatable {
     required this.encryptedContent,
     required this.timestamp,
     this.status = MessageStatus.sent,
+    this.plainText,
   });
 
   @override
   List<Object?> get props =>
-      [id, senderId, encryptedContent, timestamp, status];
+      [id, senderId, encryptedContent, timestamp, status, plainText];
 }
 
 /// El par de llaves del usuario. La privada NUNCA sale del dispositivo;
@@ -62,22 +70,30 @@ class KeyPairEntity extends Equatable {
 /// El contenido cifrado de un mensaje (esquema híbrido RSA + AES).
 /// - cipherText: mensaje cifrado con AES.
 /// - encryptedAesKey: la llave AES cifrada con la pública RSA del receptor.
+/// - encryptedAesKeySender: la MISMA llave AES, cifrada además con la
+///   pública RSA del propio emisor -- sin esto, quien envía un mensaje no
+///   podría releerlo después (su privada no destraba una llave cifrada
+///   para la pública del receptor). cipherText/iv son los mismos para
+///   ambas envolturas, solo cambia cuál llave RSA se usó para cifrar la AES.
 /// - iv: vector de inicialización del AES (aleatorio por mensaje).
 /// Es lo único que existe en tránsito y en el servidor.
 class EncryptedMessageEntity extends Equatable {
   final String cipherText;
   final String encryptedAesKey;
+  final String encryptedAesKeySender;
   final String iv;
 
   const EncryptedMessageEntity({
     required this.cipherText,
     required this.encryptedAesKey,
+    required this.encryptedAesKeySender,
     required this.iv,
   });
 
   Map<String, dynamic> toMap() => {
         'cipherText': cipherText,
         'encryptedAesKey': encryptedAesKey,
+        'encryptedAesKeySender': encryptedAesKeySender,
         'iv': iv,
       };
 
@@ -85,10 +101,11 @@ class EncryptedMessageEntity extends Equatable {
     return EncryptedMessageEntity(
       cipherText: map['cipherText'] as String,
       encryptedAesKey: map['encryptedAesKey'] as String,
+      encryptedAesKeySender: map['encryptedAesKeySender'] as String,
       iv: map['iv'] as String,
     );
   }
 
   @override
-  List<Object?> get props => [cipherText, encryptedAesKey, iv];
+  List<Object?> get props => [cipherText, encryptedAesKey, encryptedAesKeySender, iv];
 }

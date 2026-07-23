@@ -9,6 +9,7 @@ abstract class ProfileRemoteDataSource {
   Future<void> deleteAsset(String assetId);
   Future<RestorerProfileModel?> getRestorerProfile(String userId);
   Future<void> saveRestorerProfile(RestorerProfileModel profile);
+  Future<List<RestorerProfileModel>> getAllRestorerProfiles();
   Future<void> registerBusiness({
     required String name,
     required String type,
@@ -86,16 +87,56 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     }
   }
 
-  // El backend no tiene un concepto de "perfil de restaurador" (bio,
-  // especialidades, servicios, rating) -- solo `businesses`
-  // (nombre/tipo/descripción/ubicación). Conectar esto de verdad requiere
-  // decidir primero cómo se relacionan ambos conceptos; por ahora se deja
-  // sin conectar, igual que antes.
+  /// GET /restorerprofiles/{userId} devuelve 404 ("el perfil no existe")
+  /// cuando el usuario aún no tiene uno -- se traduce a `null`, que es lo
+  /// que la UI ya espera (`RestorerProfileStatus.empty`).
   @override
-  Future<RestorerProfileModel?> getRestorerProfile(String userId) async => null;
+  Future<RestorerProfileModel?> getRestorerProfile(String userId) async {
+    try {
+      final body = await _client.get('/restorerprofiles/$userId', auth: false);
+      return RestorerProfileModel.fromJson(body as Map<String, dynamic>);
+    } on Failure {
+      return null;
+    } catch (e) {
+      throw ServerFailure('Error al cargar tu perfil de restaurador: $e');
+    }
+  }
 
   @override
-  Future<void> saveRestorerProfile(RestorerProfileModel profile) async {}
+  Future<void> saveRestorerProfile(RestorerProfileModel profile) async {
+    try {
+      await _client.put('/restorerprofiles/${profile.userId}', body: {
+        'bio': profile.bio,
+        'specialties': profile.specialties,
+        'services': profile.services
+            .map((s) => {
+                  'title': s.title,
+                  'description': s.description,
+                  'price': s.price,
+                })
+            .toList(),
+      });
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al guardar tu perfil de restaurador: $e');
+    }
+  }
+
+  @override
+  Future<List<RestorerProfileModel>> getAllRestorerProfiles() async {
+    try {
+      final body = await _client.get('/restorerprofiles', auth: false);
+      final list = body as List<dynamic>? ?? const [];
+      return list
+          .map((e) => RestorerProfileModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al cargar el directorio de especialistas: $e');
+    }
+  }
 
   @override
   Future<void> registerBusiness({

@@ -3,19 +3,13 @@ import '../../../core/error.dart';
 import '../domain/entities.dart';
 import '../domain/repositories.dart';
 import 'datasources.dart';
-import 'restorer_local_datasource.dart';
 import 'models.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileRemoteDataSource remoteDataSource;
 
-  /// TEMPORAL: el backend aun no persiste el perfil de especialista, asi que
-  /// se guarda en el dispositivo. Cuando exista el endpoint, se elimina.
-  final RestorerProfileLocalDataSource localDataSource;
-
   const ProfileRepositoryImpl({
     required this.remoteDataSource,
-    required this.localDataSource,
   });
 
   @override
@@ -70,8 +64,6 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, RestorerProfileEntity?>> getRestorerProfile(
       String userId) async {
     try {
-      final local = await localDataSource.read(userId);
-      if (local != null) return Right(local);
       final profile = await remoteDataSource.getRestorerProfile(userId);
       return Right(profile);
     } on Failure catch (e) {
@@ -100,7 +92,6 @@ class ProfileRepositoryImpl implements ProfileRepository {
         rating: profile.rating,
         reviewsCount: profile.reviewsCount,
       );
-      await localDataSource.write(model);
       await remoteDataSource.saveRestorerProfile(model);
       return const Right(null);
     } on Failure catch (e) {
@@ -136,13 +127,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, List<RestorerProfileEntity>>>
       getAllRestorerProfiles() async {
     try {
-      // TEMPORAL: se leen los perfiles guardados en el dispositivo. Cuando
-      // el backend exponga el endpoint, esto pasa a remoteDataSource.
-      final profiles = await localDataSource.readAll();
-      // Solo tiene sentido listar a quienes publicaron algo.
-      final withServices =
-          profiles.where((p) => p.services.isNotEmpty).toList();
-      return Right(withServices);
+      final profiles = await remoteDataSource.getAllRestorerProfiles();
+      return Right(profiles);
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {

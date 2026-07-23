@@ -81,6 +81,39 @@ class PaymentApiConfig {
   }
 }
 
+/// URL del WebSocket de `realtime/` (notificaciones + chat). El gateway
+/// (`gateway/nginx.conf` en el repo backend) ya rutea `location /ws` al
+/// servicio `realtime` desplegado, en el mismo host que [ApiConfig] -- no
+/// es un servicio nuevo que haya que exponer aparte.
+class RealtimeConfig {
+  static const _overrideKey = 'vault_realtime_ws_url';
+
+  static String? _override;
+
+  /// Deriva `wss://<mismo host>/ws` a partir de [ApiConfig.baseUrl]
+  /// (quitando el sufijo `/api/v1` y cambiando el esquema a `wss`).
+  static String get wsUrl {
+    if (_override != null && _override!.isNotEmpty) return _override!;
+    final base = ApiConfig.baseUrl.replaceFirst(RegExp(r'/api/v1/?$'), '');
+    return '${base.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://')}/ws';
+  }
+
+  static Future<void> loadOverride() async {
+    final prefs = await SharedPreferences.getInstance();
+    _override = prefs.getString(_overrideKey);
+  }
+
+  static Future<void> setOverride(String? url) async {
+    _override = (url == null || url.trim().isEmpty) ? null : url.trim();
+    final prefs = await SharedPreferences.getInstance();
+    if (_override == null) {
+      await prefs.remove(_overrideKey);
+    } else {
+      await prefs.setString(_overrideKey, _override!);
+    }
+  }
+}
+
 /// Cliente HTTP central: agrega el token de sesión, decodifica JSON y
 /// traduce códigos de estado a los [Failure] que ya entiende el resto de
 /// la app (dartz Either en los repositorios).
@@ -205,6 +238,23 @@ class ApiClient {
     try {
       final response = await _http
           .put(
+            _uri(path),
+            headers: await _headers(withAuth: auth),
+            body: body != null ? jsonEncode(body) : null,
+          )
+          .timeout(_requestTimeout, onTimeout: _throwTimeout);
+      return _handle(response);
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('No se pudo conectar con el servidor: $e');
+    }
+  }
+
+  Future<dynamic> patch(String path, {Object? body, bool auth = true}) async {
+    try {
+      final response = await _http
+          .patch(
             _uri(path),
             headers: await _headers(withAuth: auth),
             body: body != null ? jsonEncode(body) : null,

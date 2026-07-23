@@ -41,9 +41,11 @@ class RsaEncryptionService implements EncryptionService {
   Future<Either<Failure, EncryptedMessageEntity>> encryptMessage({
     required String plainText,
     required String recipientPublicKey,
+    required String senderPublicKey,
   }) async {
     try {
-      // Llave AES e IV nuevos y aleatorios para ESTE mensaje.
+      // Llave AES e IV nuevos y aleatorios para ESTE mensaje -- se
+      // reutilizan para ambas envolturas RSA de abajo.
       final aesKey = enc.Key.fromSecureRandom(32); // AES-256
       final iv = enc.IV.fromSecureRandom(16);
       final encrypter = enc.Encrypter(enc.AES(aesKey, mode: enc.AESMode.cbc));
@@ -51,13 +53,18 @@ class RsaEncryptionService implements EncryptionService {
       // Ciframos el texto con AES.
       final cipherText = encrypter.encrypt(plainText, iv: iv).base64;
 
-      // Ciframos la llave AES con la pública RSA del receptor.
-      final recipientKey = RSAPublicKey.fromString(recipientPublicKey);
-      final encryptedAesKey = recipientKey.encrypt(aesKey.base64);
+      // Ciframos la llave AES con la pública RSA del receptor, y por
+      // separado con la propia -- así el emisor también puede releer su
+      // mensaje después.
+      final encryptedAesKey =
+          RSAPublicKey.fromString(recipientPublicKey).encrypt(aesKey.base64);
+      final encryptedAesKeySender =
+          RSAPublicKey.fromString(senderPublicKey).encrypt(aesKey.base64);
 
       return Right(EncryptedMessageEntity(
         cipherText: cipherText,
         encryptedAesKey: encryptedAesKey,
+        encryptedAesKeySender: encryptedAesKeySender,
         iv: iv.base64,
       ));
     } catch (_) {
@@ -67,20 +74,22 @@ class RsaEncryptionService implements EncryptionService {
 
   @override
   Future<Either<Failure, String>> decryptMessage({
-    required EncryptedMessageEntity encryptedMessage,
+    required String cipherText,
+    required String encryptedAesKey,
+    required String iv,
     required String ownPrivateKey,
   }) async {
     try {
       final privateKey = RSAPrivateKey.fromString(ownPrivateKey);
 
       // Recuperamos la llave AES con la privada RSA.
-      final aesKeyBase64 = privateKey.decrypt(encryptedMessage.encryptedAesKey);
+      final aesKeyBase64 = privateKey.decrypt(encryptedAesKey);
       final aesKey = enc.Key.fromBase64(aesKeyBase64);
-      final iv = enc.IV.fromBase64(encryptedMessage.iv);
+      final ivObj = enc.IV.fromBase64(iv);
       final encrypter = enc.Encrypter(enc.AES(aesKey, mode: enc.AESMode.cbc));
 
       // Con esa llave AES, desciframos el texto.
-      final plainText = encrypter.decrypt64(encryptedMessage.cipherText, iv: iv);
+      final plainText = encrypter.decrypt64(cipherText, iv: ivObj);
       return Right(plainText);
     } catch (_) {
       return const Left(ServerFailure('Error al descifrar el mensaje.'));

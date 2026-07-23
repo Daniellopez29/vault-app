@@ -3,7 +3,6 @@ import '../../../core/providers.dart';
 import '../../../core/usecase.dart';
 import '../../auth/presentation/providers.dart';
 import '../data/datasources.dart';
-import '../data/restorer_local_datasource.dart';
 import '../data/repositories.dart';
 import '../domain/entities.dart';
 import '../domain/repositories.dart';
@@ -15,7 +14,6 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
       ref.read(apiClientProvider),
       currentUserId: () => ref.read(authControllerProvider).user?.id,
     ),
-    localDataSource: RestorerProfileLocalDataSourceImpl(),
   );
 });
 

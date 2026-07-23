@@ -5,6 +5,7 @@ import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/search_header.dart';
+import '../../comments/domain/entities.dart';
 import '../../comments/presentation/comments_sheet.dart';
 import '../domain/entities.dart';
 import 'feed_skeleton.dart';
@@ -215,7 +216,10 @@ class _PostCardState extends State<PostCard> {
                   icon: Icons.chat_bubble_outline,
                   count: post.commentsCount,
                   color: VaultColors.textPrimary,
-                  onTap: () => showCommentsSheet(context, targetId: post.id),
+                  onTap: () => showCommentsSheet(
+                    context,
+                    target: CommentsTarget(id: post.id, type: CommentTargetType.post),
+                  ),
                 ),
                 const SizedBox(width: VaultSpacing.lg),
                 IconButton(

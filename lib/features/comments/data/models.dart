@@ -14,13 +14,16 @@ class CommentModel extends CommentEntity {
     super.parentId,
   });
 
-  /// Respuesta de GET/POST /api/v1/posts/{id}/comments del API Go. No hay
-  /// likes de comentarios en el backend (sin tabla comment_likes) -- queda
-  /// en false/0 y el like es solo estado local en la sesión.
-  factory CommentModel.fromJson(Map<String, dynamic> json) {
+  /// Respuesta de GET/POST /api/v1/posts/{id}/comments o
+  /// /api/v1/assets/{id}/comments del API Go. [targetId] se recibe como
+  /// parámetro (ya lo conoce el llamador) en vez de leerse del JSON, porque
+  /// la key del padre cambia según el origen (`post_id` vs `asset_id`). No
+  /// hay likes de comentarios en el backend (sin tabla comment_likes) --
+  /// queda en false/0 y el like es solo estado local en la sesión.
+  factory CommentModel.fromJson(Map<String, dynamic> json, {required String targetId}) {
     return CommentModel(
       id: json['id'] as String,
-      targetId: json['post_id'] as String,
+      targetId: targetId,
       authorName: json['author_name'] as String? ?? '',
       authorAvatarUrl: json['author_avatar_url'] as String? ?? '',
       text: json['content'] as String? ?? '',

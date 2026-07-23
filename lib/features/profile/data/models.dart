@@ -45,9 +45,9 @@ class AssetModel extends AssetEntity {
     publishCaption: e.publishCaption,
   );
 
-  /// Respuesta de GET/POST/PUT /api/v1/assets del API Go. isForSale/
-  /// salePrice/saleDescription/isPublished/size no existen en la tabla real
-  /// -- quedan en sus valores por defecto (false/null/vacío) al leer.
+  /// Respuesta de GET/POST/PUT /api/v1/assets del API Go. isPublished no
+  /// existe en la tabla (se traduce a un post real, ver `updateAsset` en
+  /// datasources.dart) -- se queda en su default (false) al leer.
   factory AssetModel.fromJson(Map<String, dynamic> json) {
     final photos = json['photos'] as List<dynamic>? ?? const [];
     final cover = photos.isNotEmpty
@@ -68,18 +68,21 @@ class AssetModel extends AssetEntity {
           : DateTime.now(),
       originalPrice: (json['purchase_value'] as num?)?.toDouble() ?? 0,
       origin: json['store_origin'] as String? ?? '',
-      size: '',
+      size: json['size'] as String? ?? '',
       condition: json['condition'] as String? ?? 'nuevo',
       servicesCount: 0,
       restorationsCount: 0,
       isVerified: (json['blockchain_tx_id'] as String?)?.isNotEmpty ?? false,
       notes: json['notes'] as String?,
+      isForSale: json['is_for_sale'] as bool? ?? false,
+      salePrice: (json['sale_price'] as num?)?.toDouble(),
+      saleDescription: json['sale_description'] as String?,
     );
   }
 
   /// Cuerpo para POST/PUT /api/v1/assets -- solo los campos que la tabla
-  /// real tiene. isForSale/salePrice/saleDescription/isPublished/size no
-  /// se envían porque el backend no los persiste.
+  /// real tiene. isPublished no se envía aquí porque se traduce a un post
+  /// real (ver `updateAsset` en datasources.dart).
   Map<String, dynamic> toApiJson() => {
     'name': name,
     'category': category.value,
@@ -90,6 +93,10 @@ class AssetModel extends AssetEntity {
         '${acquisitionDate.year.toString().padLeft(4, '0')}-${acquisitionDate.month.toString().padLeft(2, '0')}-${acquisitionDate.day.toString().padLeft(2, '0')}',
     'store_origin': origin,
     'notes': notes ?? '',
+    'size': size,
+    'is_for_sale': isForSale,
+    'sale_price': salePrice,
+    'sale_description': saleDescription ?? '',
   };
 }
 
@@ -128,32 +135,18 @@ class RestorerProfileModel extends RestorerProfileEntity {
     super.reviewsCount,
   });
 
+  /// Respuesta de GET/PUT /api/v1/restorerprofiles/{userId} del API Go
+  /// (snake_case).
   factory RestorerProfileModel.fromJson(Map<String, dynamic> json) {
     return RestorerProfileModel(
-      userId: json['userId'] as String,
-      bio: json['bio'] as String,
-      specialties: List<String>.from(json['specialties'] as List),
-      services: (json['services'] as List)
+      userId: json['user_id'] as String,
+      bio: json['bio'] as String? ?? '',
+      specialties: List<String>.from(json['specialties'] as List? ?? const []),
+      services: (json['services'] as List<dynamic>? ?? const [])
           .map((s) => RestorerServiceModel.fromJson(s as Map<String, dynamic>))
           .toList(),
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
-      reviewsCount: json['reviewsCount'] as int? ?? 0,
+      reviewsCount: json['reviews_count'] as int? ?? 0,
     );
   }
-
-  Map<String, dynamic> toJson() => {
-    'userId': userId,
-    'bio': bio,
-    'specialties': specialties,
-    'services': services
-        .map((s) => RestorerServiceModel(
-      id: s.id,
-      title: s.title,
-      description: s.description,
-      price: s.price,
-    ).toJson())
-        .toList(),
-    'rating': rating,
-    'reviewsCount': reviewsCount,
-  };
 }

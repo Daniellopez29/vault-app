@@ -1,13 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers.dart';
 import '../data/datasources.dart';
 import '../data/repositories.dart';
 import '../domain/entities.dart';
 import '../domain/repositories.dart';
 
-// Datasource compartido: una sola instancia para que lo agregado persista
-// durante la sesion (es mock en memoria).
 final _addressesDataSourceProvider = Provider<AddressesDataSource>((ref) {
-  return AddressesMockDataSource();
+  return AddressesRemoteDataSourceImpl(ref.read(apiClientProvider));
 });
 
 final addressesRepositoryProvider = Provider<AddressesRepository>((ref) {

@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
+import '../../auth/presentation/providers.dart';
 import '../../cart/domain/entities.dart';
 import '../../cart/presentation/providers.dart';
+import '../../chat/presentation/chat_page.dart';
+import '../../comments/domain/entities.dart';
 import '../../comments/presentation/comments_sheet.dart';
 import '../domain/entities.dart';
 
@@ -45,6 +48,9 @@ class ProductDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentUserId = ref.watch(authControllerProvider).user?.id;
+    final isOwnItem = currentUserId != null && currentUserId == item.sellerId;
+
     return Scaffold(
       backgroundColor: VaultColors.background,
       appBar: AppBar(
@@ -81,7 +87,15 @@ class ProductDetailPage extends ConsumerWidget {
         ],
       ),
       bottomNavigationBar: _BuyBar(
-        onChatTap: () => context.push(AppRoutes.chat),
+        onChatTap: isOwnItem
+            ? null
+            : () => context.push(
+                  AppRoutes.chat,
+                  extra: ChatPageArgs(
+                    recipientId: item.sellerId,
+                    recipientName: item.sellerName,
+                  ),
+                ),
         onCartTap: () => _addToCart(context, ref),
         onBuyTap: () => _buyNow(context, ref),
       ),
@@ -363,9 +377,10 @@ class _SpecRow extends StatelessWidget {
   }
 }
 
-/// Barra inferior fija con las acciones de compra.
+/// Barra inferior fija con las acciones de compra. [onChatTap] es `null`
+/// cuando el producto es propio -- no tiene sentido contactarte a ti mismo.
 class _BuyBar extends StatelessWidget {
-  final VoidCallback onChatTap;
+  final VoidCallback? onChatTap;
   final VoidCallback onCartTap;
   final VoidCallback onBuyTap;
 
@@ -388,12 +403,14 @@ class _BuyBar extends StatelessWidget {
           padding: const EdgeInsets.all(VaultSpacing.md),
           child: Row(
             children: [
-              _BarAction(
-                icon: Icons.chat_bubble_outline,
-                label: 'Chat',
-                onTap: onChatTap,
-              ),
-              const SizedBox(width: VaultSpacing.sm),
+              if (onChatTap != null) ...[
+                _BarAction(
+                  icon: Icons.chat_bubble_outline,
+                  label: 'Chat',
+                  onTap: onChatTap!,
+                ),
+                const SizedBox(width: VaultSpacing.sm),
+              ],
               OutlinedButton.icon(
                 onPressed: onCartTap,
                 style: OutlinedButton.styleFrom(
@@ -493,7 +510,10 @@ class _OpinionsSection extends StatelessWidget {
         Text('Opiniones', style: tt.titleMedium),
         const SizedBox(height: VaultSpacing.sm),
         InkWell(
-          onTap: () => showCommentsSheet(context, targetId: productId),
+          onTap: () => showCommentsSheet(
+            context,
+            target: CommentsTarget(id: productId, type: CommentTargetType.asset),
+          ),
           borderRadius: BorderRadius.circular(VaultRadius.card),
           child: Container(
             padding: const EdgeInsets.all(VaultSpacing.md),
