@@ -171,6 +171,8 @@ class RestorerProfileEntity extends Equatable {
   final List<RestorerServiceEntity> services;
   final double rating;
   final int reviewsCount;
+  final String name;
+  final String avatarUrl;
 
   const RestorerProfileEntity({
     required this.userId,
@@ -179,9 +181,11 @@ class RestorerProfileEntity extends Equatable {
     required this.services,
     this.rating = 0.0,
     this.reviewsCount = 0,
+    this.name = '',
+    this.avatarUrl = '',
   });
 
   @override
   List<Object?> get props =>
-      [userId, bio, specialties, services, rating, reviewsCount];
+      [userId, bio, specialties, services, rating, reviewsCount, name, avatarUrl];
 }

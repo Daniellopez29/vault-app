@@ -25,6 +25,10 @@ final updateBusinessUseCaseProvider = Provider<UpdateBusinessUseCase>((ref) {
   return UpdateBusinessUseCase(ref.read(businessRepositoryProvider));
 });
 
+final uploadBusinessPhotoUseCaseProvider = Provider<UploadBusinessPhotoUseCase>((ref) {
+  return UploadBusinessPhotoUseCase(ref.read(businessRepositoryProvider));
+});
+
 enum BusinessStatus { loading, loaded, error }
 
 class BusinessState {
@@ -55,8 +59,10 @@ class BusinessState {
 class BusinessController extends StateNotifier<BusinessState> {
   final GetMyBusinessUseCase _getMyBusiness;
   final UpdateBusinessUseCase _updateBusiness;
+  final UploadBusinessPhotoUseCase _uploadPhoto;
 
-  BusinessController(this._getMyBusiness, this._updateBusiness) : super(const BusinessState()) {
+  BusinessController(this._getMyBusiness, this._updateBusiness, this._uploadPhoto)
+      : super(const BusinessState()) {
     load();
   }
 
@@ -88,6 +94,27 @@ class BusinessController extends StateNotifier<BusinessState> {
       },
     );
   }
+
+  Future<bool> uploadPhoto({required List<int> bytes, required String filename}) async {
+    final current = state.business;
+    if (current == null) return false;
+
+    final result = await _uploadPhoto(UploadBusinessPhotoParams(
+      businessId: current.id,
+      bytes: bytes,
+      filename: filename,
+    ));
+    return result.fold(
+      (failure) {
+        state = state.copyWith(errorMessage: failure.message);
+        return false;
+      },
+      (updated) {
+        state = state.copyWith(status: BusinessStatus.loaded, business: updated);
+        return true;
+      },
+    );
+  }
 }
 
 final businessControllerProvider =
@@ -95,6 +122,7 @@ final businessControllerProvider =
   return BusinessController(
     ref.read(getMyBusinessUseCaseProvider),
     ref.read(updateBusinessUseCaseProvider),
+    ref.read(uploadBusinessPhotoUseCaseProvider),
   );
 });
 

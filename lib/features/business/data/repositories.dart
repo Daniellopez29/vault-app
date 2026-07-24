@@ -32,6 +32,8 @@ class BusinessRepositoryImpl implements BusinessRepository {
         description: business.description,
         location: business.location,
         isVerified: business.isVerified,
+        specialties: business.specialties,
+        photos: business.photos,
       );
       final updated = await remoteDataSource.updateBusiness(business.id, model);
       return Right(updated);
@@ -51,6 +53,22 @@ class BusinessRepositoryImpl implements BusinessRepository {
       return Left(f);
     } catch (_) {
       return const Left(ServerFailure('Error al cargar los negocios.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, BusinessEntity>> uploadPhoto(
+    String id, {
+    required List<int> bytes,
+    required String filename,
+  }) async {
+    try {
+      final updated = await remoteDataSource.uploadPhoto(id, bytes: bytes, filename: filename);
+      return Right(updated);
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (_) {
+      return const Left(ServerFailure('Error al subir la foto.'));
     }
   }
 }

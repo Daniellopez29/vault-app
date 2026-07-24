@@ -1,5 +1,6 @@
 import '../../../core/api_client.dart';
 import '../../../core/error.dart';
+import '../domain/entities.dart';
 import 'models.dart';
 
 abstract class ProfileRemoteDataSource {

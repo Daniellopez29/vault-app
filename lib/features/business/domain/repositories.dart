@@ -11,4 +11,10 @@ abstract class BusinessRepository {
   /// Todos los negocios registrados en la plataforma, para el directorio
   /// público del Shop.
   Future<Either<Failure, List<BusinessEntity>>> getAllBusinesses();
+
+  Future<Either<Failure, BusinessEntity>> uploadPhoto(
+    String id, {
+    required List<int> bytes,
+    required String filename,
+  });
 }

@@ -39,3 +39,27 @@ class GetAllBusinessesUseCase
     return repository.getAllBusinesses();
   }
 }
+
+class UploadBusinessPhotoParams {
+  final String businessId;
+  final List<int> bytes;
+  final String filename;
+
+  const UploadBusinessPhotoParams({
+    required this.businessId,
+    required this.bytes,
+    required this.filename,
+  });
+}
+
+class UploadBusinessPhotoUseCase
+    implements UseCase<BusinessEntity, UploadBusinessPhotoParams> {
+  final BusinessRepository repository;
+
+  UploadBusinessPhotoUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, BusinessEntity>> call(UploadBusinessPhotoParams params) {
+    return repository.uploadPhoto(params.businessId, bytes: params.bytes, filename: params.filename);
+  }
+}

@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
-/// El negocio del usuario actual. `api/` no tiene campos de horarios ni
-/// fotos todavía (ver `Business` entity en Go) -- solo nombre, tipo,
-/// descripción y ubicación.
+/// El negocio del usuario actual. `api/` no tiene campo de horarios todavía
+/// (ver `Business` entity en Go) -- nombre, tipo, descripción, ubicación y
+/// fotos.
 class BusinessEntity extends Equatable {
   final String id;
   final String name;
@@ -12,6 +12,10 @@ class BusinessEntity extends Equatable {
   final bool isVerified;
   final List<String> specialties;
 
+  /// URLs de las fotos ya subidas, en el orden en que se guardaron. La
+  /// primera es la portada (ver `businesses_tab.dart`).
+  final List<String> photos;
+
   const BusinessEntity({
     required this.id,
     required this.name,
@@ -20,6 +24,7 @@ class BusinessEntity extends Equatable {
     required this.location,
     required this.isVerified,
     this.specialties = const [],
+    this.photos = const [],
   });
 
   BusinessEntity copyWith({String? location, List<String>? specialties}) {
@@ -31,10 +36,11 @@ class BusinessEntity extends Equatable {
       location: location ?? this.location,
       isVerified: isVerified,
       specialties: specialties ?? this.specialties,
+      photos: photos,
     );
   }
 
   @override
   List<Object?> get props =>
-      [id, name, types, description, location, isVerified, specialties];
+      [id, name, types, description, location, isVerified, specialties, photos];
 }

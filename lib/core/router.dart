@@ -199,7 +199,19 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.chat,
-      builder: (context, state) => ChatPage(args: state.extra as ChatPageArgs),
+      builder: (context, state) {
+        // Defensa por si algo navega aquí sin pasar el destinatario (no
+        // debería pasar -- todos los botones de "Contactar" ya lo hacen --
+        // pero es mejor un mensaje claro que una pantalla roja con "Null").
+        final args = state.extra;
+        if (args is! ChatPageArgs) {
+          return const TitledPage(
+            title: 'Chat',
+            child: Center(child: Text('No se especificó con quién chatear.')),
+          );
+        }
+        return ChatPage(args: args);
+      },
     ),
     GoRoute(
       path: AppRoutes.assetDetail,

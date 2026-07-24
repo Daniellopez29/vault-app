@@ -133,6 +133,8 @@ class RestorerProfileModel extends RestorerProfileEntity {
     required super.services,
     super.rating,
     super.reviewsCount,
+    super.name,
+    super.avatarUrl,
   });
 
   /// Respuesta de GET/PUT /api/v1/restorerprofiles/{userId} del API Go
@@ -147,6 +149,8 @@ class RestorerProfileModel extends RestorerProfileEntity {
           .toList(),
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       reviewsCount: json['reviews_count'] as int? ?? 0,
+      name: json['name'] as String? ?? '',
+      avatarUrl: json['avatar_url'] as String? ?? '',
     );
   }
 }

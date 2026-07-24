@@ -87,7 +87,9 @@ class ShopTab extends ConsumerWidget {
                   hintText: 'Buscar productos',
                   onQueryChanged: controller.search,
                   onNotificationsTap: () => context.push(AppRoutes.notifications),
-                  onChatTap: () => context.push(AppRoutes.chat),
+                  onChatTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Lista de mensajes (próximamente)')),
+                  ),
                 ),
                 if (!isSearching)
                   SliverToBoxAdapter(

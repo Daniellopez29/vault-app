@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
+import '../../marketplace/presentation/item_image.dart';
 import '../../subscription/domain/entities.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
@@ -111,6 +113,30 @@ class _AdminViewState extends ConsumerState<_AdminView> {
   late final TextEditingController _locationController =
       TextEditingController(text: widget.business.location);
   bool _saving = false;
+  bool _uploadingPhoto = false;
+
+  Future<void> _addPhoto() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1600,
+      imageQuality: 85,
+    );
+    if (picked == null || !mounted) return;
+
+    setState(() => _uploadingPhoto = true);
+    final bytes = await picked.readAsBytes();
+    final ok = await ref.read(businessControllerProvider.notifier).uploadPhoto(
+          bytes: bytes,
+          filename: picked.name,
+        );
+
+    if (!mounted) return;
+    setState(() => _uploadingPhoto = false);
+    if (!ok) {
+      final error = ref.read(businessControllerProvider).errorMessage ?? 'No se pudo subir la foto';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
 
   @override
   void didUpdateWidget(covariant _AdminView oldWidget) {
@@ -164,17 +190,41 @@ class _AdminViewState extends ConsumerState<_AdminView> {
             height: 96,
             child: Row(
               children: [
-                Expanded(child: _imagePlaceholder()),
+                Expanded(
+                  child: widget.business.photos.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(VaultRadius.sm),
+                          child: ItemImage(imageUrl: widget.business.photos[0]),
+                        )
+                      : _imagePlaceholder(),
+                ),
                 const SizedBox(width: VaultSpacing.sm),
-                Expanded(child: _imagePlaceholder()),
+                Expanded(
+                  child: widget.business.photos.length > 1
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(VaultRadius.sm),
+                          child: ItemImage(imageUrl: widget.business.photos[1]),
+                        )
+                      : _imagePlaceholder(),
+                ),
                 const SizedBox(width: VaultSpacing.sm),
-                Expanded(child: _imagePlaceholder(isAdd: true)),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _uploadingPhoto ? null : _addPhoto,
+                    child: _uploadingPhoto
+                        ? const Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : _imagePlaceholder(isAdd: true),
+                  ),
+                ),
               ],
             ),
           ),
-          // Pendiente: `api/`'s Business entity no tiene campo de fotos --
-          // hace falta agregar la columna/endpoint antes de poder subir algo.
-          note: "Próximamente: el backend aún no admite fotos de negocio.",
         ),
         _section(
           title: "Dirección",

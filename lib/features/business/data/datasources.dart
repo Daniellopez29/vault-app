@@ -6,6 +6,7 @@ abstract class BusinessRemoteDataSource {
   Future<BusinessModel?> getMyBusiness();
   Future<BusinessModel> updateBusiness(String id, BusinessModel business);
   Future<List<BusinessModel>> getAllBusinesses();
+  Future<BusinessModel> uploadPhoto(String id, {required List<int> bytes, required String filename});
 }
 
 /// [currentUserId] filtra `GET /businesses` (que devuelve los de todos los
@@ -64,6 +65,23 @@ class BusinessRemoteDataSourceImpl implements BusinessRemoteDataSource {
       rethrow;
     } catch (e) {
       throw ServerFailure('Error al cargar los negocios: $e');
+    }
+  }
+
+  @override
+  Future<BusinessModel> uploadPhoto(String id, {required List<int> bytes, required String filename}) async {
+    try {
+      final body = await _client.postMultipart(
+        '/businesses/$id/photos',
+        bytes: bytes,
+        filename: filename,
+        fieldName: 'image',
+      );
+      return BusinessModel.fromJson(body as Map<String, dynamic>);
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al subir la foto: $e');
     }
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
+import '../../marketplace/presentation/item_image.dart';
 import '../domain/entities.dart';
 import 'asset_sheets.dart';
 import 'providers.dart';
@@ -149,14 +150,7 @@ class AssetCard extends ConsumerWidget {
                 child: Stack(
               children: [
                 Positioned.fill(
-                  child: Container(
-                    color: VaultColors.background,
-                    child: Center(
-                      child: Icon(Icons.image_outlined,
-                          size: VaultIconSize.lg,
-                          color: VaultColors.textSecondary),
-                    ),
-                  ),
+                  child: ItemImage(imageUrl: asset.imageUrl),
                 ),
                 if (asset.isPublished)
                   Positioned(

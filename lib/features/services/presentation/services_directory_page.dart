@@ -5,6 +5,8 @@ import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/skeleton.dart';
+import '../../auth/presentation/providers.dart';
+import '../../chat/presentation/chat_page.dart';
 import '../../profile/domain/entities.dart';
 import '../../profile/presentation/providers.dart';
 
@@ -67,14 +69,16 @@ class ServicesDirectoryPage extends ConsumerWidget {
 }
 
 /// Tarjeta de un especialista con los servicios que ofrece.
-class _SpecialistCard extends StatelessWidget {
+class _SpecialistCard extends ConsumerWidget {
   final RestorerProfileEntity profile;
 
   const _SpecialistCard({required this.profile});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final tt = Theme.of(context).textTheme;
+    final currentUserId = ref.watch(authControllerProvider).user?.id;
+    final isSelf = currentUserId != null && currentUserId == profile.userId;
 
     return Container(
       margin: const EdgeInsets.only(bottom: VaultSpacing.md),
@@ -129,15 +133,22 @@ class _SpecialistCard extends StatelessWidget {
                   ],
                 ),
               ),
-              TextButton.icon(
-                onPressed: () => context.push(AppRoutes.chat),
-                style: TextButton.styleFrom(
-                  foregroundColor: VaultColors.primary,
+              if (!isSelf)
+                TextButton.icon(
+                  onPressed: () => context.push(
+                    AppRoutes.chat,
+                    extra: ChatPageArgs(
+                      recipientId: profile.userId,
+                      recipientName: profile.name.isNotEmpty ? profile.name : 'Especialista',
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: VaultColors.primary,
+                  ),
+                  icon: const Icon(Icons.chat_bubble_outline,
+                      size: VaultIconSize.sm),
+                  label: const Text('Contactar'),
                 ),
-                icon: const Icon(Icons.chat_bubble_outline,
-                    size: VaultIconSize.sm),
-                label: const Text('Contactar'),
-              ),
             ],
           ),
           if (profile.bio.isNotEmpty) ...[

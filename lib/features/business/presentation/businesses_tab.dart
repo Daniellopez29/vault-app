@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/skeleton.dart';
+import '../../marketplace/presentation/item_image.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
 
@@ -89,17 +90,22 @@ class _BusinessCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: VaultColors.background,
-              borderRadius: BorderRadius.circular(VaultRadius.sm),
-            ),
-            child: const Icon(
-              Icons.storefront_outlined,
-              color: VaultColors.primary,
-              size: VaultIconSize.lg,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(VaultRadius.sm),
+            child: SizedBox(
+              width: 52,
+              height: 52,
+              child: business.photos.isNotEmpty
+                  ? ItemImage(imageUrl: business.photos.first)
+                  : Container(
+                      color: VaultColors.background,
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.storefront_outlined,
+                        color: VaultColors.primary,
+                        size: VaultIconSize.lg,
+                      ),
+                    ),
             ),
           ),
           const SizedBox(width: VaultSpacing.md),

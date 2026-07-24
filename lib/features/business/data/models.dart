@@ -9,9 +9,11 @@ class BusinessModel extends BusinessEntity {
     required super.location,
     required super.isVerified,
     super.specialties,
+    super.photos,
   });
 
   factory BusinessModel.fromJson(Map<String, dynamic> json) {
+    final photosJson = json['photos'] as List<dynamic>? ?? const [];
     return BusinessModel(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -20,6 +22,7 @@ class BusinessModel extends BusinessEntity {
       location: json['location'] as String? ?? '',
       isVerified: json['is_verified'] as bool? ?? false,
       specialties: List<String>.from(json['specialties'] as List? ?? const []),
+      photos: photosJson.map((p) => (p as Map<String, dynamic>)['url'] as String).toList(),
     );
   }
 
