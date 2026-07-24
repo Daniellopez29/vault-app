@@ -9,10 +9,19 @@ class AddressesRepositoryImpl implements AddressesRepository {
 
   AddressesRepositoryImpl({required this.dataSource});
 
+  // El datasource devuelve List<AddressModel>; Dart preserva ese tipo en
+  // tiempo de ejecución aunque la firma diga List<AddressEntity> (los
+  // genéricos son covariantes). Eso rompía firstWhere(orElse: ...) en
+  // checkout_address_page.dart con "type '() => AddressEntity' is not a
+  // subtype of type '(() => AddressModel)?'". List.of(...) construye una
+  // lista nueva con el tipo declarado real.
+  List<AddressEntity> _asEntities(List<AddressEntity> addresses) =>
+      List<AddressEntity>.of(addresses);
+
   @override
   Future<Either<Failure, List<AddressEntity>>> getAddresses() async {
     try {
-      return Right(await dataSource.getAddresses());
+      return Right(_asEntities(await dataSource.getAddresses()));
     } catch (_) {
       return const Left(ServerFailure('Error al cargar tus direcciones.'));
     }
@@ -22,7 +31,7 @@ class AddressesRepositoryImpl implements AddressesRepository {
   Future<Either<Failure, List<AddressEntity>>> addAddress(
       AddressEntity address) async {
     try {
-      return Right(await dataSource.addAddress(address));
+      return Right(_asEntities(await dataSource.addAddress(address)));
     } catch (_) {
       return const Left(ServerFailure('Error al guardar la direccion.'));
     }
@@ -32,7 +41,7 @@ class AddressesRepositoryImpl implements AddressesRepository {
   Future<Either<Failure, List<AddressEntity>>> deleteAddress(
       String addressId) async {
     try {
-      return Right(await dataSource.deleteAddress(addressId));
+      return Right(_asEntities(await dataSource.deleteAddress(addressId)));
     } catch (_) {
       return const Left(ServerFailure('Error al eliminar la direccion.'));
     }
@@ -42,7 +51,7 @@ class AddressesRepositoryImpl implements AddressesRepository {
   Future<Either<Failure, List<AddressEntity>>> setDefault(
       String addressId) async {
     try {
-      return Right(await dataSource.setDefault(addressId));
+      return Right(_asEntities(await dataSource.setDefault(addressId)));
     } catch (_) {
       return const Left(ServerFailure('Error al actualizar la direccion.'));
     }

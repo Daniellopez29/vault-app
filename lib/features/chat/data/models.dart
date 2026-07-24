@@ -38,3 +38,26 @@ class ChatMessageModel extends MessageEntity {
     }
   }
 }
+
+/// Respuesta de GET /conversations del API Go.
+class ConversationSummaryModel extends ConversationSummaryEntity {
+  const ConversationSummaryModel({
+    required super.otherUserId,
+    required super.otherUserName,
+    required super.otherUserAvatarUrl,
+    required super.lastMessage,
+    required super.unreadCount,
+  });
+
+  factory ConversationSummaryModel.fromJson(Map<String, dynamic> json) {
+    return ConversationSummaryModel(
+      otherUserId: json['other_user_id'] as String,
+      otherUserName: json['other_user_name'] as String? ?? '',
+      otherUserAvatarUrl: json['other_user_avatar_url'] as String? ?? '',
+      lastMessage: ChatMessageModel.fromJson(
+        json['last_message'] as Map<String, dynamic>,
+      ),
+      unreadCount: json['unread_count'] as int? ?? 0,
+    );
+  }
+}

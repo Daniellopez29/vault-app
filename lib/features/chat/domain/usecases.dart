@@ -19,6 +19,14 @@ class GetConversationUseCase {
       repository.getConversation(otherUserId);
 }
 
+class GetConversationsUseCase {
+  final ChatRepository repository;
+  const GetConversationsUseCase(this.repository);
+
+  Future<Either<Failure, List<ConversationSummaryEntity>>> call() =>
+      repository.getConversations();
+}
+
 class SendMessageUseCase {
   final ChatRepository repository;
   const SendMessageUseCase(this.repository);

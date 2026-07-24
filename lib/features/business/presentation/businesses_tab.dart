@@ -1,8 +1,12 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
+import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/skeleton.dart';
+import '../../auth/presentation/providers.dart';
+import '../../chat/presentation/chat_page.dart';
 import '../../marketplace/presentation/item_image.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
@@ -70,14 +74,16 @@ class BusinessesTab extends ConsumerWidget {
 
 /// Tarjeta de un negocio. La entidad no tiene imágenes todavía (el backend
 /// no las expone), por eso se representa con un ícono y sus datos.
-class _BusinessCard extends StatelessWidget {
+class _BusinessCard extends ConsumerWidget {
   final BusinessEntity business;
 
   const _BusinessCard({required this.business});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final tt = Theme.of(context).textTheme;
+    final currentUserId = ref.watch(authControllerProvider).user?.id;
+    final isSelf = currentUserId != null && currentUserId == business.userId;
 
     return Container(
       margin: const EdgeInsets.only(bottom: VaultSpacing.md),
@@ -96,7 +102,7 @@ class _BusinessCard extends StatelessWidget {
               width: 52,
               height: 52,
               child: business.photos.isNotEmpty
-                  ? ItemImage(imageUrl: business.photos.first)
+                  ? ItemImage(imageUrl: business.photos.first.url)
                   : Container(
                       color: VaultColors.background,
                       alignment: Alignment.center,
@@ -167,6 +173,28 @@ class _BusinessCard extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                ],
+                if (!isSelf) ...[
+                  const SizedBox(height: VaultSpacing.xs),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => context.push(
+                        AppRoutes.chat,
+                        extra: ChatPageArgs(
+                          recipientId: business.userId,
+                          recipientName: business.name,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: VaultColors.primary,
+                        padding: EdgeInsets.zero,
+                      ),
+                      icon: const Icon(Icons.chat_bubble_outline,
+                          size: VaultIconSize.sm),
+                      label: const Text('Contactar'),
+                    ),
                   ),
                 ],
               ],

@@ -63,3 +63,22 @@ class UploadBusinessPhotoUseCase
     return repository.uploadPhoto(params.businessId, bytes: params.bytes, filename: params.filename);
   }
 }
+
+class DeleteBusinessPhotoParams {
+  final String businessId;
+  final String photoId;
+
+  const DeleteBusinessPhotoParams({required this.businessId, required this.photoId});
+}
+
+class DeleteBusinessPhotoUseCase
+    implements UseCase<BusinessEntity, DeleteBusinessPhotoParams> {
+  final BusinessRepository repository;
+
+  DeleteBusinessPhotoUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, BusinessEntity>> call(DeleteBusinessPhotoParams params) {
+    return repository.deletePhoto(params.businessId, params.photoId);
+  }
+}

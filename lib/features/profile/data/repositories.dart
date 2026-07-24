@@ -16,7 +16,13 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, List<AssetEntity>>> getUserAssets() async {
     try {
       final assets = await remoteDataSource.getUserAssets();
-      return Right(assets);
+      // List<AssetEntity>.of(...) construye una lista con el tipo declarado
+      // real -- si se devuelve la List<AssetModel> tal cual, Dart preserva
+      // ese tipo reificado en tiempo de ejecución, y cualquier firstWhere
+      // (orElse: ...) sobre `state.assets` más adelante puede tronar con
+      // "type '() => AssetEntity' is not a subtype of type '(() =>
+      // AssetModel)?'" (mismo bug que ya se dio con las direcciones).
+      return Right(List<AssetEntity>.of(assets));
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {
@@ -41,6 +47,46 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.updateAsset(AssetModel.fromEntity(asset));
       return const Right(null);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AssetEntity>> editAsset(AssetEntity asset) async {
+    try {
+      final updated = await remoteDataSource.editAsset(AssetModel.fromEntity(asset));
+      return Right(updated);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AssetEntity>> uploadAssetPhoto(
+    String assetId, {
+    required List<int> bytes,
+    required String filename,
+  }) async {
+    try {
+      final updated = await remoteDataSource.uploadAssetPhoto(assetId, bytes: bytes, filename: filename);
+      return Right(updated);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AssetEntity>> deleteAssetPhoto(String assetId, String photoId) async {
+    try {
+      final updated = await remoteDataSource.deleteAssetPhoto(assetId, photoId);
+      return Right(updated);
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {

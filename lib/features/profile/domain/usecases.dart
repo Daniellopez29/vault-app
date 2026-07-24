@@ -29,6 +29,37 @@ class DeleteAssetUseCase {
       repository.deleteAsset(assetId);
 }
 
+/// Edita los datos del activo (nombre, marca, categoría, etc.) -- no toca
+/// su estado de venta/publicación, esos los maneja SetAssetForSaleUseCase/
+/// SetAssetPublishedUseCase.
+class EditAssetUseCase {
+  final ProfileRepository repository;
+  const EditAssetUseCase(this.repository);
+
+  Future<Either<Failure, AssetEntity>> call(AssetEntity asset) =>
+      repository.editAsset(asset);
+}
+
+class UploadAssetPhotoUseCase {
+  final ProfileRepository repository;
+  const UploadAssetPhotoUseCase(this.repository);
+
+  Future<Either<Failure, AssetEntity>> call(
+    String assetId, {
+    required List<int> bytes,
+    required String filename,
+  }) =>
+      repository.uploadAssetPhoto(assetId, bytes: bytes, filename: filename);
+}
+
+class DeleteAssetPhotoUseCase {
+  final ProfileRepository repository;
+  const DeleteAssetPhotoUseCase(this.repository);
+
+  Future<Either<Failure, AssetEntity>> call(String assetId, String photoId) =>
+      repository.deleteAssetPhoto(assetId, photoId);
+}
+
 /// Pone o quita un activo de venta. Al poner en venta guarda precio y
 /// descripciÃ³n; al quitar, los limpia. La regla de negocio vive aquÃ­.
 class SetAssetForSaleUseCase {

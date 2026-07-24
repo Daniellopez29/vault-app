@@ -40,6 +40,9 @@ final getConversationUseCaseProvider =
 final sendMessageUseCaseProvider =
     Provider((ref) => SendMessageUseCase(ref.read(chatRepositoryProvider)));
 
+final getConversationsUseCaseProvider =
+    Provider((ref) => GetConversationsUseCase(ref.read(chatRepositoryProvider)));
+
 enum ConversationStatus { initial, loading, loaded, error }
 
 class ConversationState {
@@ -132,6 +135,83 @@ class ConversationController extends StateNotifier<ConversationState> {
     result.fold(
       (failure) => state = state.copyWith(errorMessage: failure.message),
       (message) => state = state.copyWith(messages: [...state.messages, message]),
+    );
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+}
+
+// ─── BANDEJA DE CONVERSACIONES ──────────────────────────────────────────────
+
+enum ConversationsStatus { initial, loading, loaded, error }
+
+class ConversationsState {
+  final ConversationsStatus status;
+  final List<ConversationSummaryEntity> conversations;
+  final String? errorMessage;
+
+  const ConversationsState({
+    this.status = ConversationsStatus.initial,
+    this.conversations = const [],
+    this.errorMessage,
+  });
+
+  ConversationsState copyWith({
+    ConversationsStatus? status,
+    List<ConversationSummaryEntity>? conversations,
+    String? errorMessage,
+  }) {
+    return ConversationsState(
+      status: status ?? this.status,
+      conversations: conversations ?? this.conversations,
+      errorMessage: errorMessage,
+    );
+  }
+}
+
+final conversationsControllerProvider =
+    StateNotifierProvider<ConversationsController, ConversationsState>((ref) {
+  return ConversationsController(
+    repository: ref.read(chatRepositoryProvider),
+    getConversations: ref.read(getConversationsUseCaseProvider),
+  );
+});
+
+/// Carga la bandeja una vez y se refresca cada vez que llega un mensaje
+/// nuevo por WebSocket (de cualquier conversación) -- así el orden y el
+/// contador de no leídos se mantienen al día sin que el usuario haga pull
+/// to refresh manualmente.
+class ConversationsController extends StateNotifier<ConversationsState> {
+  final ChatRepository _repository;
+  final GetConversationsUseCase _getConversations;
+  StreamSubscription<MessageEntity>? _subscription;
+
+  ConversationsController({
+    required ChatRepository repository,
+    required GetConversationsUseCase getConversations,
+  })  : _repository = repository,
+        _getConversations = getConversations,
+        super(const ConversationsState()) {
+    load();
+    _subscription = _repository.incomingMessages().listen((_) => load());
+  }
+
+  Future<void> load() async {
+    state = state.copyWith(status: ConversationsStatus.loading);
+    final result = await _getConversations();
+    result.fold(
+      (failure) => state = state.copyWith(
+        status: ConversationsStatus.error,
+        errorMessage: failure.message,
+      ),
+      (conversations) => state = state.copyWith(
+        status: ConversationsStatus.loaded,
+        conversations: conversations,
+      ),
     );
   }
 

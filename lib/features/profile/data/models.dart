@@ -16,6 +16,7 @@ class AssetModel extends AssetEntity {
     required super.restorationsCount,
     super.isVerified = false,
     super.notes,
+    super.photos,
     super.isForSale = false,
     super.salePrice,
     super.saleDescription,
@@ -38,6 +39,7 @@ class AssetModel extends AssetEntity {
     restorationsCount: e.restorationsCount,
     isVerified: e.isVerified,
     notes: e.notes,
+    photos: e.photos,
     isForSale: e.isForSale,
     salePrice: e.salePrice,
     saleDescription: e.saleDescription,
@@ -49,11 +51,15 @@ class AssetModel extends AssetEntity {
   /// existe en la tabla (se traduce a un post real, ver `updateAsset` en
   /// datasources.dart) -- se queda en su default (false) al leer.
   factory AssetModel.fromJson(Map<String, dynamic> json) {
-    final photos = json['photos'] as List<dynamic>? ?? const [];
-    final cover = photos.isNotEmpty
-        ? (photos.firstWhere(
+    final photosJson = json['photos'] as List<dynamic>? ?? const [];
+    final photos = photosJson
+        .map((p) => p as Map<String, dynamic>)
+        .map((p) => AssetPhotoEntity(id: p['id'] as String, url: p['url'] as String))
+        .toList();
+    final cover = photosJson.isNotEmpty
+        ? (photosJson.firstWhere(
               (p) => (p as Map<String, dynamic>)['is_cover'] == true,
-              orElse: () => photos.first,
+              orElse: () => photosJson.first,
             ) as Map<String, dynamic>)['url'] as String?
         : null;
 
@@ -74,6 +80,7 @@ class AssetModel extends AssetEntity {
       restorationsCount: 0,
       isVerified: (json['blockchain_tx_id'] as String?)?.isNotEmpty ?? false,
       notes: json['notes'] as String?,
+      photos: photos,
       isForSale: json['is_for_sale'] as bool? ?? false,
       salePrice: (json['sale_price'] as num?)?.toDouble(),
       saleDescription: json['sale_description'] as String?,

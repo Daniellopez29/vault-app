@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/enums.dart';
 import '../features/auth/presentation/pages.dart';
@@ -13,6 +14,7 @@ import '../features/profile/presentation/register_business_page.dart';
 import '../features/legal/presentation/legal_page.dart';
 import '../features/notifications/presentation/notifications_page.dart';
 import '../features/chat/presentation/chat_page.dart';
+import '../features/chat/presentation/conversations_page.dart';
 import '../features/stats/presentation/stats_page.dart';
 import '../features/addresses/presentation/addresses_page.dart';
 import '../features/addresses/presentation/checkout_address_page.dart';
@@ -30,6 +32,7 @@ import '../features/subscription/presentation/subscription_page.dart';
 import '../features/subscription/presentation/subscription_checkout_page.dart';
 import '../features/shell/presentation/home_page.dart';
 import '../features/profile/presentation/asset_detail_page.dart';
+import '../features/profile/presentation/edit_asset_page.dart';
 import '../features/profile/domain/entities.dart';
 
 /// QuÃ© rol se crea y a dÃ³nde ir despuÃ©s de registrarse con Ã©xito. Cada
@@ -58,6 +61,7 @@ abstract class AppRoutes {
   static const legal         = '/legal';
   static const notifications = '/notifications';
   static const chat          = '/chat';
+  static const conversations = '/conversations';
   static const subscription  = '/subscription';
   static const stats         = '/stats';
   static const productDetail = '/product-detail';
@@ -70,6 +74,7 @@ abstract class AppRoutes {
   static const reviews       = '/reviews';
   static const subscriptionCheckout = '/subscription-checkout';
   static const assetDetail = '/asset-detail';
+  static const editAsset = '/edit-asset';
 }
 
 final appRouter = GoRouter(
@@ -214,8 +219,18 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
+      path: AppRoutes.conversations,
+      builder: (context, state) => const ConversationsListPage(),
+    ),
+    GoRoute(
       path: AppRoutes.assetDetail,
       builder: (context, state) => AssetDetailPage(
+        asset: state.extra as AssetEntity,
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.editAsset,
+      builder: (context, state) => EditAssetPage(
         asset: state.extra as AssetEntity,
       ),
     ),

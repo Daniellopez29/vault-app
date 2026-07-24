@@ -1,10 +1,12 @@
 import 'dart:convert';
 
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/enums.dart';
 import '../../../core/api_client.dart';
 import '../../../core/error.dart';
+import '../../../core/google_config.dart';
 import 'models.dart';
 
 abstract class AuthRemoteDataSource {
@@ -94,16 +96,55 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel> loginWithGoogle() async {
-    throw const ServerFailure(
-      'Inicio de sesión con Google no está disponible todavía.',
-    );
+    try {
+      final googleSignIn = GoogleSignIn(serverClientId: googleServerClientId);
+      // Por si quedó una sesión de Google de otra cuenta -- sin esto,
+      // signIn() puede devolver la última cuenta sin mostrar el selector.
+      await googleSignIn.signOut();
+
+      final account = await googleSignIn.signIn();
+      if (account == null) {
+        throw const ServerFailure('Inicio de sesión con Google cancelado.');
+      }
+
+      final googleAuth = await account.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null) {
+        throw const ServerFailure('No se pudo obtener el token de Google.');
+      }
+
+      final body = await _client.post(
+        '/auth/google',
+        body: {'id_token': idToken},
+        auth: false,
+      );
+      final user = UserModel.fromJson(body as Map<String, dynamic>);
+      await _persist(user);
+      return user;
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al iniciar sesión con Google: $e');
+    }
   }
 
   @override
   Future<UserModel> saveUserRole(UserRole role) async {
-    throw const ServerFailure(
-      'Inicio de sesión con Google no está disponible todavía.',
-    );
+    final current = await getCurrentUser();
+    // Mismo patrón que updateRole: PUT fija el rol "principal", y
+    // /roles lo agrega también al histórico acumulado -- una cuenta de
+    // Google recién creada no tiene ninguno todavía.
+    final body = await _client.put('/users/${current.id}', body: {
+      'name': current.fullName ?? '',
+      'avatar_url': current.avatarUrl,
+      'role': role.value,
+    });
+    final updated = await _applyUpdate(current, body as Map<String, dynamic>);
+
+    final withRoles = await _client.post('/users/${current.id}/roles', body: {
+      'roles': [role.value],
+    });
+    return _applyUpdate(updated, withRoles as Map<String, dynamic>);
   }
 
   @override

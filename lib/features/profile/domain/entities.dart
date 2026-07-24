@@ -55,6 +55,17 @@ enum AssetCategory {
   }
 }
 
+/// Una foto ya subida de un activo (id real, para poder borrarla).
+class AssetPhotoEntity extends Equatable {
+  final String id;
+  final String url;
+
+  const AssetPhotoEntity({required this.id, required this.url});
+
+  @override
+  List<Object?> get props => [id, url];
+}
+
 class AssetEntity extends Equatable {
   final String id;
   final AssetCategory category;
@@ -70,6 +81,7 @@ class AssetEntity extends Equatable {
   final int restorationsCount;
   final bool isVerified;
   final String? notes;
+  final List<AssetPhotoEntity> photos;
 
   // ─── Estado de comunidad/comercio ───
   final bool isForSale;
@@ -93,6 +105,7 @@ class AssetEntity extends Equatable {
     required this.restorationsCount,
     this.isVerified = false,
     this.notes,
+    this.photos = const [],
     this.isForSale = false,
     this.salePrice,
     this.saleDescription,
@@ -101,6 +114,15 @@ class AssetEntity extends Equatable {
   });
 
   AssetEntity copyWith({
+    String? name,
+    AssetCategory? category,
+    String? brand,
+    DateTime? acquisitionDate,
+    double? originalPrice,
+    String? origin,
+    String? size,
+    String? condition,
+    String? notes,
     bool? isForSale,
     double? salePrice,
     String? saleDescription,
@@ -109,19 +131,20 @@ class AssetEntity extends Equatable {
   }) {
     return AssetEntity(
       id: id,
-      category: category,
-      brand: brand,
-      name: name,
+      category: category ?? this.category,
+      brand: brand ?? this.brand,
+      name: name ?? this.name,
       imageUrl: imageUrl,
-      acquisitionDate: acquisitionDate,
-      originalPrice: originalPrice,
-      origin: origin,
-      size: size,
-      condition: condition,
+      acquisitionDate: acquisitionDate ?? this.acquisitionDate,
+      originalPrice: originalPrice ?? this.originalPrice,
+      origin: origin ?? this.origin,
+      size: size ?? this.size,
+      condition: condition ?? this.condition,
       servicesCount: servicesCount,
       restorationsCount: restorationsCount,
       isVerified: isVerified,
-      notes: notes,
+      notes: notes ?? this.notes,
+      photos: photos,
       isForSale: isForSale ?? this.isForSale,
       salePrice: salePrice ?? this.salePrice,
       saleDescription: saleDescription ?? this.saleDescription,
@@ -134,7 +157,7 @@ class AssetEntity extends Equatable {
   List<Object?> get props => [
     id, category, brand, name, imageUrl, acquisitionDate, originalPrice,
     origin, size, condition, servicesCount, restorationsCount, isVerified,
-    notes, isForSale, salePrice, saleDescription, isPublished, publishCaption,
+    notes, photos, isForSale, salePrice, saleDescription, isPublished, publishCaption,
   ];
 }
 

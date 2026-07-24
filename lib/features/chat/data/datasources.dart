@@ -14,6 +14,7 @@ abstract class ChatRemoteDataSource {
     required EncryptedMessageEntity encrypted,
   });
   Future<List<ChatMessageModel>> getConversation(String otherUserId);
+  Future<List<ConversationSummaryModel>> getConversations();
   Future<void> registerPublicKey(String userId, String publicKey);
 
   /// `null` si el usuario todavía no registró ninguna llave pública.
@@ -56,6 +57,21 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       rethrow;
     } catch (e) {
       throw ServerFailure('Error al cargar la conversación: $e');
+    }
+  }
+
+  @override
+  Future<List<ConversationSummaryModel>> getConversations() async {
+    try {
+      final body = await _client.get('/conversations');
+      final list = body as List<dynamic>? ?? const [];
+      return list
+          .map((e) => ConversationSummaryModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al cargar tus conversaciones: $e');
     }
   }
 

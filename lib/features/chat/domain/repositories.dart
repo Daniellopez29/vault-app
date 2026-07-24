@@ -16,6 +16,11 @@ abstract class ChatRepository {
   /// Historial de la conversación con [otherUserId], ya descifrado.
   Future<Either<Failure, List<MessageEntity>>> getConversation(String otherUserId);
 
+  /// Una fila por cada persona con la que hay al menos un mensaje, con su
+  /// último mensaje descifrado cuando es posible (ver
+  /// [ConversationSummaryEntity]).
+  Future<Either<Failure, List<ConversationSummaryEntity>>> getConversations();
+
   /// Cifra [plainText] con la pública de [recipientId] y lo manda.
   Future<Either<Failure, MessageEntity>> sendMessage({
     required String recipientId,

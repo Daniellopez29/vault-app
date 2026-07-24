@@ -7,7 +7,10 @@ abstract class ProfileRemoteDataSource {
   Future<List<AssetModel>> getUserAssets();
   Future<void> addAsset(AssetModel asset, {List<AssetImageUpload> images = const []});
   Future<void> updateAsset(AssetModel asset);
+  Future<AssetModel> editAsset(AssetModel asset);
   Future<void> deleteAsset(String assetId);
+  Future<AssetModel> uploadAssetPhoto(String assetId, {required List<int> bytes, required String filename});
+  Future<AssetModel> deleteAssetPhoto(String assetId, String photoId);
   Future<RestorerProfileModel?> getRestorerProfile(String userId);
   Future<void> saveRestorerProfile(RestorerProfileModel profile);
   Future<List<RestorerProfileModel>> getAllRestorerProfiles();
@@ -19,25 +22,23 @@ abstract class ProfileRemoteDataSource {
   });
 }
 
-/// [currentUserId] filtra GET /assets (que devuelve los de todos los
-/// usuarios) a solo los del dueño de la sesión -- el backend no tiene un
-/// endpoint "mis activos" todavía.
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   final ApiClient _client;
-  final String? Function() _currentUserId;
 
-  ProfileRemoteDataSourceImpl(this._client, {required this._currentUserId});
+  ProfileRemoteDataSourceImpl(this._client);
 
   @override
   Future<List<AssetModel>> getUserAssets() async {
     try {
-      final body = await _client.get('/assets', auth: false);
+      // GET /assets/mine filtra por el usuario del JWT en el backend -- el
+      // filtro anterior (GET /assets sin auth + filtrar por user_id en el
+      // cliente) caía a "sin filtro" si currentUserId() llegaba a leer null
+      // en el momento del fetch, mezclando los artículos de todas las
+      // cuentas del dispositivo.
+      final body = await _client.get('/assets/mine');
       final list = body as List<dynamic>? ?? const [];
-      final userId = _currentUserId();
       return list
-          .map((e) => e as Map<String, dynamic>)
-          .where((json) => userId == null || json['user_id'] == userId)
-          .map(AssetModel.fromJson)
+          .map((e) => AssetModel.fromJson(e as Map<String, dynamic>))
           .toList();
     } on Failure {
       rethrow;
@@ -90,6 +91,22 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     }
   }
 
+  /// A diferencia de updateAsset, no publica nada en el Feed -- es solo
+  /// para editar los datos del activo (nombre, marca, condición, etc.),
+  /// así que usarlo no debe crear un post duplicado cada vez que se guarda
+  /// un cambio en un activo que ya estaba publicado.
+  @override
+  Future<AssetModel> editAsset(AssetModel asset) async {
+    try {
+      final body = await _client.put('/assets/${asset.id}', body: asset.toApiJson());
+      return AssetModel.fromJson(body as Map<String, dynamic>);
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al actualizar el activo: $e');
+    }
+  }
+
   @override
   Future<void> deleteAsset(String assetId) async {
     try {
@@ -98,6 +115,39 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       rethrow;
     } catch (e) {
       throw ServerFailure('Error al eliminar el activo: $e');
+    }
+  }
+
+  @override
+  Future<AssetModel> uploadAssetPhoto(
+    String assetId, {
+    required List<int> bytes,
+    required String filename,
+  }) async {
+    try {
+      final body = await _client.postMultipart(
+        '/assets/$assetId/photos',
+        bytes: bytes,
+        filename: filename,
+        fieldName: 'image',
+      );
+      return AssetModel.fromJson(body as Map<String, dynamic>);
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al subir la foto: $e');
+    }
+  }
+
+  @override
+  Future<AssetModel> deleteAssetPhoto(String assetId, String photoId) async {
+    try {
+      final body = await _client.delete('/assets/$assetId/photos/$photoId');
+      return AssetModel.fromJson(body as Map<String, dynamic>);
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al eliminar la foto: $e');
     }
   }
 

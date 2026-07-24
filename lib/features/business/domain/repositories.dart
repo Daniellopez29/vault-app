@@ -17,4 +17,6 @@ abstract class BusinessRepository {
     required List<int> bytes,
     required String filename,
   });
+
+  Future<Either<Failure, BusinessEntity>> deletePhoto(String id, String photoId);
 }

@@ -27,6 +27,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
     try {
       final model = BusinessModel(
         id: business.id,
+        userId: business.userId,
         name: business.name,
         types: business.types,
         description: business.description,
@@ -48,7 +49,11 @@ class BusinessRepositoryImpl implements BusinessRepository {
   Future<Either<Failure, List<BusinessEntity>>> getAllBusinesses() async {
     try {
       final businesses = await remoteDataSource.getAllBusinesses();
-      return Right(businesses);
+      // Ver profile/data/repositories.dart: sin este .of(...), la lista
+      // conserva el tipo reificado List<BusinessModel> y cualquier
+      // firstWhere(orElse: ...) sobre ella puede tronar en tiempo de
+      // ejecución.
+      return Right(List<BusinessEntity>.of(businesses));
     } on Failure catch (f) {
       return Left(f);
     } catch (_) {
@@ -69,6 +74,18 @@ class BusinessRepositoryImpl implements BusinessRepository {
       return Left(f);
     } catch (_) {
       return const Left(ServerFailure('Error al subir la foto.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, BusinessEntity>> deletePhoto(String id, String photoId) async {
+    try {
+      final updated = await remoteDataSource.deletePhoto(id, photoId);
+      return Right(updated);
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (_) {
+      return const Left(ServerFailure('Error al eliminar la foto.'));
     }
   }
 }

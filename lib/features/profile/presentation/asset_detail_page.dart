@@ -1,7 +1,9 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/dimens.dart';
+import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../maintenance/domain/entities.dart';
 import '../../maintenance/presentation/providers.dart';
@@ -24,6 +26,13 @@ class AssetDetailPage extends ConsumerWidget {
       appBar: AppBar(
         title: Text(asset.name),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            tooltip: 'Editar',
+            onPressed: () => context.push(AppRoutes.editAsset, extra: asset),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: VaultColors.primary,

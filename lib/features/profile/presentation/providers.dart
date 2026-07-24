@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/usecase.dart';
-import '../../auth/presentation/providers.dart';
 import '../data/datasources.dart';
 import '../data/repositories.dart';
 import '../domain/entities.dart';
@@ -10,10 +9,7 @@ import '../domain/usecases.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepositoryImpl(
-    remoteDataSource: ProfileRemoteDataSourceImpl(
-      ref.read(apiClientProvider),
-      currentUserId: () => ref.read(authControllerProvider).user?.id,
-    ),
+    remoteDataSource: ProfileRemoteDataSourceImpl(ref.read(apiClientProvider)),
   );
 });
 
@@ -27,6 +23,18 @@ final addAssetUseCaseProvider = Provider<AddAssetUseCase>((ref) {
 
 final deleteAssetUseCaseProvider = Provider<DeleteAssetUseCase>((ref) {
   return DeleteAssetUseCase(ref.read(profileRepositoryProvider));
+});
+
+final editAssetUseCaseProvider = Provider<EditAssetUseCase>((ref) {
+  return EditAssetUseCase(ref.read(profileRepositoryProvider));
+});
+
+final uploadAssetPhotoUseCaseProvider = Provider<UploadAssetPhotoUseCase>((ref) {
+  return UploadAssetPhotoUseCase(ref.read(profileRepositoryProvider));
+});
+
+final deleteAssetPhotoUseCaseProvider = Provider<DeleteAssetPhotoUseCase>((ref) {
+  return DeleteAssetPhotoUseCase(ref.read(profileRepositoryProvider));
 });
 
 final getRestorerProfileUseCaseProvider =
@@ -103,6 +111,9 @@ StateNotifierProvider<ProfileAssetsController, ProfileAssetsState>((ref) {
     deleteAssetUseCase: ref.read(deleteAssetUseCaseProvider),
     setAssetForSaleUseCase: ref.read(setAssetForSaleUseCaseProvider),
     setAssetPublishedUseCase: ref.read(setAssetPublishedUseCaseProvider),
+    editAssetUseCase: ref.read(editAssetUseCaseProvider),
+    uploadAssetPhotoUseCase: ref.read(uploadAssetPhotoUseCaseProvider),
+    deleteAssetPhotoUseCase: ref.read(deleteAssetPhotoUseCaseProvider),
   );
 });
 
@@ -112,6 +123,9 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
   final DeleteAssetUseCase _deleteAsset;
   final SetAssetForSaleUseCase _setForSale;
   final SetAssetPublishedUseCase _setPublished;
+  final EditAssetUseCase _editAsset;
+  final UploadAssetPhotoUseCase _uploadAssetPhoto;
+  final DeleteAssetPhotoUseCase _deleteAssetPhoto;
 
   ProfileAssetsController({
     required GetUserAssetsUseCase getUserAssetsUseCase,
@@ -119,11 +133,17 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
     required DeleteAssetUseCase deleteAssetUseCase,
     required SetAssetForSaleUseCase setAssetForSaleUseCase,
     required SetAssetPublishedUseCase setAssetPublishedUseCase,
+    required EditAssetUseCase editAssetUseCase,
+    required UploadAssetPhotoUseCase uploadAssetPhotoUseCase,
+    required DeleteAssetPhotoUseCase deleteAssetPhotoUseCase,
   })  : _getUserAssets = getUserAssetsUseCase,
         _addAsset = addAssetUseCase,
         _deleteAsset = deleteAssetUseCase,
         _setForSale = setAssetForSaleUseCase,
         _setPublished = setAssetPublishedUseCase,
+        _editAsset = editAssetUseCase,
+        _uploadAssetPhoto = uploadAssetPhotoUseCase,
+        _deleteAssetPhoto = deleteAssetPhotoUseCase,
         super(const ProfileAssetsState()) {
     loadAssets();
   }
@@ -215,6 +235,41 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
       for (final a in state.assets) a.id == updated.id ? updated : a,
     ];
     state = state.copyWith(assets: assets);
+  }
+
+  /// Edita los datos del activo (nombre, marca, categorÃ­a, etc). Devuelve
+  /// true si se guardÃ³.
+  Future<bool> editAsset(AssetEntity asset) async {
+    final result = await _editAsset(asset);
+    return result.fold((failure) {
+      state = state.copyWith(errorMessage: failure.message);
+      return false;
+    }, (updated) {
+      _patchAsset(updated);
+      return true;
+    });
+  }
+
+  Future<bool> uploadPhoto(String assetId, {required List<int> bytes, required String filename}) async {
+    final result = await _uploadAssetPhoto(assetId, bytes: bytes, filename: filename);
+    return result.fold((failure) {
+      state = state.copyWith(errorMessage: failure.message);
+      return false;
+    }, (updated) {
+      _patchAsset(updated);
+      return true;
+    });
+  }
+
+  Future<bool> deletePhoto(String assetId, String photoId) async {
+    final result = await _deleteAssetPhoto(assetId, photoId);
+    return result.fold((failure) {
+      state = state.copyWith(errorMessage: failure.message);
+      return false;
+    }, (updated) {
+      _patchAsset(updated);
+      return true;
+    });
   }
 }
 

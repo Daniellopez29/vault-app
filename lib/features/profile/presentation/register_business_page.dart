@@ -116,15 +116,18 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
 
     // El negocio recién creado no trae su id de vuelta en esta llamada --
     // se recarga "mi negocio" (que sí lo tiene) antes de poder subir fotos.
-    if (_images.isNotEmpty) {
-      await ref.read(businessControllerProvider.notifier).load();
-      for (final image in _images) {
-        final bytes = await image.readAsBytes();
-        await ref
-            .read(businessControllerProvider.notifier)
-            .uploadPhoto(bytes: bytes, filename: image.name);
-      }
+    await ref.read(businessControllerProvider.notifier).load();
+    for (final image in _images) {
+      final bytes = await image.readAsBytes();
+      await ref
+          .read(businessControllerProvider.notifier)
+          .uploadPhoto(bytes: bytes, filename: image.name);
     }
+
+    // El directorio público del Shop (allBusinessesProvider) se cachea
+    // hasta que se invalide explícitamente -- sin esto, el negocio recién
+    // creado quedaba invisible ahí hasta reiniciar la app.
+    ref.invalidate(allBusinessesProvider);
 
     if (!mounted) return;
     context.pop();

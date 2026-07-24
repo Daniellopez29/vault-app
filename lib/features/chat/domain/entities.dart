@@ -52,6 +52,30 @@ class MessageEntity extends Equatable {
       [id, senderId, encryptedContent, timestamp, status, plainText];
 }
 
+/// Una fila de la bandeja de chat: la última conversación con cada persona,
+/// para [ConversationsListPage]. El servidor nunca ve el texto plano, así
+/// que [lastMessage] puede llegar sin descifrar si la privada propia no
+/// puede abrir esa envoltura (ver [ChatRepositoryImpl._withPlainText]).
+class ConversationSummaryEntity extends Equatable {
+  final String otherUserId;
+  final String otherUserName;
+  final String otherUserAvatarUrl;
+  final MessageEntity lastMessage;
+  final int unreadCount;
+
+  const ConversationSummaryEntity({
+    required this.otherUserId,
+    required this.otherUserName,
+    required this.otherUserAvatarUrl,
+    required this.lastMessage,
+    required this.unreadCount,
+  });
+
+  @override
+  List<Object?> get props =>
+      [otherUserId, otherUserName, otherUserAvatarUrl, lastMessage, unreadCount];
+}
+
 /// El par de llaves del usuario. La privada NUNCA sale del dispositivo;
 /// se modela aquí pero se almacena en flutter_secure_storage.
 class KeyPairEntity extends Equatable {

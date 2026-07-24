@@ -72,6 +72,35 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
+  Future<Either<Failure, List<ConversationSummaryEntity>>> getConversations() async {
+    try {
+      final summaries = await _remote.getConversations();
+      final privateKey = await _keyStore.readPrivateKey();
+      final resolved = <ConversationSummaryEntity>[];
+      for (final summary in summaries) {
+        final fromOther = summary.lastMessage.senderId == summary.otherUserId;
+        final lastMessage = await _withPlainText(
+          summary.lastMessage,
+          privateKey?.toString(),
+          useSenderKey: !fromOther,
+        );
+        resolved.add(ConversationSummaryEntity(
+          otherUserId: summary.otherUserId,
+          otherUserName: summary.otherUserName,
+          otherUserAvatarUrl: summary.otherUserAvatarUrl,
+          lastMessage: lastMessage,
+          unreadCount: summary.unreadCount,
+        ));
+      }
+      return Right(resolved);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error al cargar tus conversaciones: $e'));
+    }
+  }
+
+  @override
   Future<Either<Failure, MessageEntity>> sendMessage({
     required String recipientId,
     required String plainText,

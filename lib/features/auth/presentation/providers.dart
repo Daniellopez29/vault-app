@@ -4,6 +4,16 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/enums.dart';
 import '../../../core/providers.dart';
+import '../../addresses/presentation/providers.dart' show addressesControllerProvider;
+import '../../business/presentation/providers.dart'
+    show businessControllerProvider, allBusinessesProvider;
+import '../../cart/presentation/providers.dart' show cartControllerProvider;
+import '../../chat/presentation/providers.dart' show conversationsControllerProvider;
+import '../../favorites/presentation/providers.dart' show favoritesControllerProvider;
+import '../../home/presentation/providers.dart' show feedControllerProvider;
+import '../../notifications/presentation/providers.dart' show notificationsControllerProvider;
+import '../../profile/presentation/providers.dart'
+    show profileAssetsControllerProvider, restorerProfileControllerProvider;
 import '../data/datasources.dart';
 import '../data/repositories.dart';
 import '../domain/entities.dart';
@@ -97,6 +107,7 @@ final uploadProfilePhotoUseCaseProvider = Provider<UploadProfilePhotoUseCase>((r
 final authControllerProvider =
 StateNotifierProvider<AuthController, AuthState>((ref) {
   return AuthController(
+    ref: ref,
     loginUseCase: ref.read(loginUseCaseProvider),
     registerUseCase: ref.read(registerUseCaseProvider),
     loginWithGoogleUseCase: ref.read(loginWithGoogleUseCaseProvider),
@@ -112,6 +123,7 @@ StateNotifierProvider<AuthController, AuthState>((ref) {
 });
 
 class AuthController extends StateNotifier<AuthState> {
+  final Ref _ref;
   final LoginUseCase _loginUseCase;
   final RegisterUseCase _registerUseCase;
   final LoginWithGoogleUseCase _loginWithGoogleUseCase;
@@ -127,6 +139,7 @@ class AuthController extends StateNotifier<AuthState> {
   Timer? _inactivityTimer;
 
   AuthController({
+    required Ref ref,
     required this._loginUseCase,
     required this._registerUseCase,
     required this._loginWithGoogleUseCase,
@@ -138,7 +151,26 @@ class AuthController extends StateNotifier<AuthState> {
     required this._addRolesUseCase,
     required this._uploadProfilePhotoUseCase,
     required this._logoutUseCase,
-  }) : super(const AuthState());
+  })  : _ref = ref,
+        super(const AuthState());
+
+  /// Todo el estado que se cargó "por usuario" (guardados, mis artículos,
+  /// mi negocio, carrito, direcciones, notificaciones, feed) vive en
+  /// providers globales que solo cargan una vez -- sin esto, al cerrar
+  /// sesión e iniciar con otra cuenta, la UI seguía mostrando los datos
+  /// de la cuenta anterior hasta reiniciar la app.
+  void _invalidateUserScopedProviders() {
+    _ref.invalidate(favoritesControllerProvider);
+    _ref.invalidate(profileAssetsControllerProvider);
+    _ref.invalidate(restorerProfileControllerProvider);
+    _ref.invalidate(businessControllerProvider);
+    _ref.invalidate(allBusinessesProvider);
+    _ref.invalidate(cartControllerProvider);
+    _ref.invalidate(addressesControllerProvider);
+    _ref.invalidate(notificationsControllerProvider);
+    _ref.invalidate(feedControllerProvider);
+    _ref.invalidate(conversationsControllerProvider);
+  }
 
   Future<void> login({required String email, required String password}) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
@@ -209,6 +241,7 @@ class AuthController extends StateNotifier<AuthState> {
     _cancelInactivityTimer();
     await _logoutUseCase();
     state = const AuthState();
+    _invalidateUserScopedProviders();
   }
 
   Future<bool> deleteAccount() async {
@@ -223,6 +256,7 @@ class AuthController extends StateNotifier<AuthState> {
           (_) {
         _cancelInactivityTimer();
         state = const AuthState();
+        _invalidateUserScopedProviders();
         return true;
       },
     );

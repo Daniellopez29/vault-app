@@ -100,6 +100,35 @@ class _EmptyView extends StatelessWidget {
   }
 }
 
+/// Categorías de negocio (chips de selección múltiple). Debe coincidir con
+/// el CHECK constraint de `businesses.types` (servicio/restaurador) --
+/// mismo mapeo que `register_business_page.dart`.
+enum _BusinessCategory { mantenimiento, reparacion }
+
+extension _BusinessCategoryUI on _BusinessCategory {
+  String get label {
+    switch (this) {
+      case _BusinessCategory.mantenimiento: return 'Mantenimiento';
+      case _BusinessCategory.reparacion: return 'Reparación';
+    }
+  }
+
+  String get value {
+    switch (this) {
+      case _BusinessCategory.mantenimiento: return 'servicio';
+      case _BusinessCategory.reparacion: return 'restaurador';
+    }
+  }
+
+  static _BusinessCategory? fromValue(String value) {
+    switch (value) {
+      case 'servicio': return _BusinessCategory.mantenimiento;
+      case 'restaurador': return _BusinessCategory.reparacion;
+      default: return null;
+    }
+  }
+}
+
 class _AdminView extends ConsumerStatefulWidget {
   final BusinessEntity business;
 
@@ -110,8 +139,19 @@ class _AdminView extends ConsumerStatefulWidget {
 }
 
 class _AdminViewState extends ConsumerState<_AdminView> {
+  late final TextEditingController _nameController =
+      TextEditingController(text: widget.business.name);
+  late final TextEditingController _descriptionController =
+      TextEditingController(text: widget.business.description);
   late final TextEditingController _locationController =
       TextEditingController(text: widget.business.location);
+  late final TextEditingController _specialtiesController =
+      TextEditingController(text: widget.business.specialties.join(', '));
+  late Set<_BusinessCategory> _categories = widget.business.types
+      .map(_BusinessCategoryUI.fromValue)
+      .whereType<_BusinessCategory>()
+      .toSet();
+
   bool _saving = false;
   bool _uploadingPhoto = false;
 
@@ -138,43 +178,59 @@ class _AdminViewState extends ConsumerState<_AdminView> {
     }
   }
 
-  @override
-  void didUpdateWidget(covariant _AdminView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.business.location != widget.business.location &&
-        _locationController.text != widget.business.location) {
-      _locationController.text = widget.business.location;
-    }
+  Future<void> _removePhoto(String photoId) async {
+    final ok = await ref.read(businessControllerProvider.notifier).deletePhoto(photoId);
+    if (!mounted || ok) return;
+    final error = ref.read(businessControllerProvider).errorMessage ?? 'No se pudo quitar la foto';
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
   }
 
   @override
   void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
     _locationController.dispose();
+    _specialtiesController.dispose();
     super.dispose();
   }
 
-  Future<void> _saveLocation() async {
+  Future<void> _save() async {
+    if (_categories.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Elige al menos una categoría')),
+      );
+      return;
+    }
     setState(() => _saving = true);
-    final ok = await ref
-        .read(businessControllerProvider.notifier)
-        .updateLocation(_locationController.text.trim());
+    final ok = await ref.read(businessControllerProvider.notifier).update(
+          name: _nameController.text.trim(),
+          types: _categories.map((c) => c.value).toList(),
+          description: _descriptionController.text.trim(),
+          location: _locationController.text.trim(),
+          specialties: _specialtiesController.text
+              .split(',')
+              .map((s) => s.trim())
+              .where((s) => s.isNotEmpty)
+              .toList(),
+        );
     if (mounted) {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ok ? 'Dirección actualizada.' : 'No se pudo guardar.')),
+        SnackBar(content: Text(ok ? 'Negocio actualizado.' : 'No se pudo guardar.')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Se lee de nuevo del provider (no de widget.business) para que la
+    // grilla de fotos refleje subidas/borrados al instante.
+    final business = ref.watch(businessControllerProvider).business ?? widget.business;
+
     return ListView(
       padding: const EdgeInsets.all(VaultSpacing.md),
       children: [
-        Text(widget.business.name,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-        if (widget.business.isVerified) ...[
-          const SizedBox(height: VaultSpacing.xs),
+        if (business.isVerified) ...[
           const Row(
             children: [
               Icon(Icons.verified, size: VaultIconSize.sm, color: VaultColors.success),
@@ -182,47 +238,66 @@ class _AdminViewState extends ConsumerState<_AdminView> {
               Text('Verificado', style: TextStyle(color: VaultColors.success)),
             ],
           ),
+          const SizedBox(height: VaultSpacing.md),
         ],
-        const SizedBox(height: VaultSpacing.lg),
         _section(
           title: "Imágenes",
-          child: SizedBox(
-            height: 96,
-            child: Row(
-              children: [
-                Expanded(
-                  child: widget.business.photos.isNotEmpty
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(VaultRadius.sm),
-                          child: ItemImage(imageUrl: widget.business.photos[0]),
+          child: Wrap(
+            spacing: VaultSpacing.sm,
+            runSpacing: VaultSpacing.sm,
+            children: [
+              for (final photo in business.photos)
+                _PhotoThumb(url: photo.url, onRemove: () => _removePhoto(photo.id)),
+              GestureDetector(
+                onTap: _uploadingPhoto ? null : _addPhoto,
+                child: SizedBox(
+                  width: 96,
+                  height: 96,
+                  child: _uploadingPhoto
+                      ? const Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         )
-                      : _imagePlaceholder(),
+                      : _imagePlaceholder(isAdd: true),
                 ),
-                const SizedBox(width: VaultSpacing.sm),
-                Expanded(
-                  child: widget.business.photos.length > 1
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(VaultRadius.sm),
-                          child: ItemImage(imageUrl: widget.business.photos[1]),
-                        )
-                      : _imagePlaceholder(),
-                ),
-                const SizedBox(width: VaultSpacing.sm),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: _uploadingPhoto ? null : _addPhoto,
-                    child: _uploadingPhoto
-                        ? const Center(
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          )
-                        : _imagePlaceholder(isAdd: true),
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+        ),
+        _section(
+          title: "Categoría",
+          child: _BusinessCategoryChips(
+            selected: _categories,
+            onToggle: (c) => setState(() {
+              _categories.contains(c) ? _categories.remove(c) : _categories.add(c);
+            }),
+          ),
+        ),
+        _section(
+          title: "Nombre",
+          child: TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+          ),
+        ),
+        _section(
+          title: "Descripción",
+          child: TextField(
+            controller: _descriptionController,
+            maxLines: 3,
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+          ),
+        ),
+        _section(
+          title: "Especialidades",
+          child: TextField(
+            controller: _specialtiesController,
+            decoration: const InputDecoration(
+              hintText: "Separadas por coma, ej: sneakers, relojes",
+              border: OutlineInputBorder(),
             ),
           ),
         ),
@@ -236,17 +311,21 @@ class _AdminViewState extends ConsumerState<_AdminView> {
             ),
           ),
         ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: _saving ? null : _saveLocation,
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _saving ? null : _save,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: VaultColors.primary,
+              padding: const EdgeInsets.symmetric(vertical: VaultSpacing.md),
+            ),
             child: _saving
                 ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Text('Guardar dirección'),
+                : const Text('Guardar cambios'),
           ),
         ),
         _section(
@@ -321,6 +400,77 @@ class _AdminViewState extends ConsumerState<_AdminView> {
       label: Text(label),
       selected: false,
       onSelected: (_) {},
+    );
+  }
+}
+
+class _PhotoThumb extends StatelessWidget {
+  final String url;
+  final VoidCallback onRemove;
+
+  const _PhotoThumb({required this.url, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(VaultRadius.sm),
+          child: SizedBox(width: 96, height: 96, child: ItemImage(imageUrl: url)),
+        ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+              child: const Icon(Icons.close, size: 16, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BusinessCategoryChips extends StatelessWidget {
+  final Set<_BusinessCategory> selected;
+  final ValueChanged<_BusinessCategory> onToggle;
+
+  const _BusinessCategoryChips({required this.selected, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: VaultSpacing.sm,
+      runSpacing: VaultSpacing.sm,
+      children: _BusinessCategory.values.map((c) {
+        final isSelected = selected.contains(c);
+        return GestureDetector(
+          onTap: () => onToggle(c),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: VaultSpacing.lg,
+              vertical: VaultSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: isSelected ? VaultColors.success : VaultColors.surface,
+              borderRadius: VaultRadius.buttonBorder,
+              border: Border.all(color: isSelected ? VaultColors.success : VaultColors.divider),
+            ),
+            child: Text(
+              c.label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : VaultColors.textPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

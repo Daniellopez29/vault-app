@@ -7,6 +7,7 @@ abstract class BusinessRemoteDataSource {
   Future<BusinessModel> updateBusiness(String id, BusinessModel business);
   Future<List<BusinessModel>> getAllBusinesses();
   Future<BusinessModel> uploadPhoto(String id, {required List<int> bytes, required String filename});
+  Future<BusinessModel> deletePhoto(String id, String photoId);
 }
 
 /// [currentUserId] filtra `GET /businesses` (que devuelve los de todos los
@@ -82,6 +83,18 @@ class BusinessRemoteDataSourceImpl implements BusinessRemoteDataSource {
       rethrow;
     } catch (e) {
       throw ServerFailure('Error al subir la foto: $e');
+    }
+  }
+
+  @override
+  Future<BusinessModel> deletePhoto(String id, String photoId) async {
+    try {
+      final body = await _client.delete('/businesses/$id/photos/$photoId');
+      return BusinessModel.fromJson(body as Map<String, dynamic>);
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al eliminar la foto: $e');
     }
   }
 }

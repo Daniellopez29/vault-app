@@ -1,10 +1,13 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
 import '../../business/presentation/my_business_tab.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/router.dart';
 import '../../subscription/domain/entities.dart';
+import '../../profile/presentation/asset_widgets.dart';
+import '../../profile/presentation/providers.dart';
 
 /// Vista de comercio del vendedor. Contiene dos apartados:
 /// 1) "En venta": sus productos publicados + suscripción para destacarlos.
@@ -47,13 +50,17 @@ class SellerCommerceView extends StatelessWidget {
   }
 }
 
-/// Apartado "Mis productos en venta". Esqueleto: banner de suscripción +
-/// espacio para la lista real (se conecta luego con su provider).
-class _ProductsForSaleTab extends StatelessWidget {
+/// Apartado "Mis productos en venta": banner de suscripción + los activos
+/// del usuario que tiene marcados como en venta (mismo estado que alimenta
+/// el grid de "Mis artículos" en el Perfil, solo que filtrado).
+class _ProductsForSaleTab extends ConsumerWidget {
   const _ProductsForSaleTab();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(profileAssetsControllerProvider);
+    final forSale = state.assets.where((a) => a.isForSale).toList();
+
     return ListView(
       padding: const EdgeInsets.all(VaultSpacing.md),
       children: [
@@ -64,16 +71,38 @@ class _ProductsForSaleTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: VaultSpacing.lg),
-        // TEMPORAL: aquí va tu lista real de productos en venta.
-        const Center(
-          child: Padding(
-            padding: EdgeInsets.all(VaultSpacing.xl),
-            child: Text(
-              "Aquí aparecerán tus productos en venta.",
-              style: TextStyle(color: VaultColors.textSecondary),
+        switch (state.status) {
+          ProfileAssetsStatus.initial ||
+          ProfileAssetsStatus.loading =>
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(VaultSpacing.xl),
+                child: CircularProgressIndicator(),
+              ),
             ),
-          ),
-        ),
+          ProfileAssetsStatus.error => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(VaultSpacing.xl),
+                child: Text(
+                  state.errorMessage ?? "Error al cargar tus productos",
+                  style: const TextStyle(color: VaultColors.textSecondary),
+                ),
+              ),
+            ),
+          ProfileAssetsStatus.loaded => forSale.isEmpty
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(VaultSpacing.xl),
+                    child: Text(
+                      "Aún no has puesto ningún artículo en venta.\n"
+                      "Márcalo desde tu Perfil con el ícono de etiqueta.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: VaultColors.textSecondary),
+                    ),
+                  ),
+                )
+              : AssetsGrid(assets: forSale),
+        },
       ],
     );
   }
