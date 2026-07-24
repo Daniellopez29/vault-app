@@ -138,6 +138,15 @@ class AssetEntity extends Equatable {
   ];
 }
 
+/// Una foto seleccionada en el dispositivo, pendiente de subir. Mismo
+/// patrón que `PostImageUpload` (ver `features/home/domain/repositories.dart`).
+class AssetImageUpload {
+  final List<int> bytes;
+  final String filename;
+
+  const AssetImageUpload({required this.bytes, required this.filename});
+}
+
 class RestorerServiceEntity extends Equatable {
   final String id;
   final String title;

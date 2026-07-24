@@ -32,6 +32,7 @@ abstract class AuthRepository {
   /// o al registrar un negocio). No pide confirmación -- la decide quien
   /// llama, aquí solo se persiste.
   Future<Either<Failure, UserEntity>> updateRole(UserRole role);
+  Future<Either<Failure, UserEntity>> addRoles(List<UserRole> roles);
 
   Future<Either<Failure, UserEntity>> uploadProfilePhoto({
     required List<int> bytes,

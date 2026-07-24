@@ -139,9 +139,10 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
     );
   }
 
-  /// Registra un activo nuevo y refresca el grid con la lista actualizada.
-  Future<bool> addAsset(AssetEntity asset) async {
-    final result = await _addAsset(asset);
+  /// Registra un activo nuevo (con sus fotos, si trae) y refresca el grid
+  /// con la lista actualizada.
+  Future<bool> addAsset(AssetEntity asset, {List<AssetImageUpload> images = const []}) async {
+    final result = await _addAsset(asset, images: images);
     return result.fold(
           (failure) {
         state = state.copyWith(errorMessage: failure.message);

@@ -151,6 +151,18 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, UserEntity>> addRoles(List<UserRole> roles) async {
+    try {
+      final user = await remoteDataSource.addRoles(roles);
+      return Right(user);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: $e'));
+    }
+  }
+
+  @override
   Future<Either<Failure, UserEntity>> uploadProfilePhoto({
     required List<int> bytes,
     required String filename,

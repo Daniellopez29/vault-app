@@ -87,7 +87,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
                     totalArticles: assetsState.totalArticles,
                     categoryCounts: assetsState.categoryCounts,
                     avatarUrl: authState.user?.avatarUrl ?? '',
-                    role: authState.user?.role ?? UserRole.user,
+                    roles: authState.user?.roles ?? [UserRole.user],
                   ),
                 ),
                 const SliverToBoxAdapter(

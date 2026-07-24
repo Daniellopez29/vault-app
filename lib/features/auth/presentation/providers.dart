@@ -86,6 +86,10 @@ final updateRoleUseCaseProvider = Provider<UpdateRoleUseCase>((ref) {
   return UpdateRoleUseCase(ref.read(authRepositoryProvider));
 });
 
+final addRolesUseCaseProvider = Provider<AddRolesUseCase>((ref) {
+  return AddRolesUseCase(ref.read(authRepositoryProvider));
+});
+
 final uploadProfilePhotoUseCaseProvider = Provider<UploadProfilePhotoUseCase>((ref) {
   return UploadProfilePhotoUseCase(ref.read(authRepositoryProvider));
 });
@@ -101,6 +105,7 @@ StateNotifierProvider<AuthController, AuthState>((ref) {
     updateDisplayNameUseCase: ref.read(updateDisplayNameUseCaseProvider),
     updatePasswordUseCase: ref.read(updatePasswordUseCaseProvider),
     updateRoleUseCase: ref.read(updateRoleUseCaseProvider),
+    addRolesUseCase: ref.read(addRolesUseCaseProvider),
     uploadProfilePhotoUseCase: ref.read(uploadProfilePhotoUseCaseProvider),
     logoutUseCase: ref.read(logoutUseCaseProvider),
   );
@@ -115,6 +120,7 @@ class AuthController extends StateNotifier<AuthState> {
   final UpdateDisplayNameUseCase _updateDisplayNameUseCase;
   final UpdatePasswordUseCase _updatePasswordUseCase;
   final UpdateRoleUseCase _updateRoleUseCase;
+  final AddRolesUseCase _addRolesUseCase;
   final UploadProfilePhotoUseCase _uploadProfilePhotoUseCase;
   final LogoutUseCase _logoutUseCase;
 
@@ -129,6 +135,7 @@ class AuthController extends StateNotifier<AuthState> {
     required this._updateDisplayNameUseCase,
     required this._updatePasswordUseCase,
     required this._updateRoleUseCase,
+    required this._addRolesUseCase,
     required this._uploadProfilePhotoUseCase,
     required this._logoutUseCase,
   }) : super(const AuthState());
@@ -301,6 +308,23 @@ class AuthController extends StateNotifier<AuthState> {
   /// una categoría específica), no como efecto secundario.
   Future<bool> updateRole(UserRole role) async {
     final result = await _updateRoleUseCase(role);
+    return result.fold(
+      (failure) {
+        state = state.copyWith(errorMessage: failure.message);
+        return false;
+      },
+      (user) {
+        state = state.copyWith(user: user);
+        return true;
+      },
+    );
+  }
+
+  /// Agrega roles al histórico acumulado de la cuenta (no reemplaza los que
+  /// ya tenía) -- se llama al completar una acción que otorga uno o más
+  /// roles nuevos, como registrar un negocio con varias categorías.
+  Future<bool> addRoles(List<UserRole> roles) async {
+    final result = await _addRolesUseCase(roles);
     return result.fold(
       (failure) {
         state = state.copyWith(errorMessage: failure.message);

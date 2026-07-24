@@ -28,7 +28,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
       final model = BusinessModel(
         id: business.id,
         name: business.name,
-        type: business.type,
+        types: business.types,
         description: business.description,
         location: business.location,
         isVerified: business.isVerified,

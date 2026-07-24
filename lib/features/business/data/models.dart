@@ -4,29 +4,33 @@ class BusinessModel extends BusinessEntity {
   const BusinessModel({
     required super.id,
     required super.name,
-    required super.type,
+    required super.types,
     required super.description,
     required super.location,
     required super.isVerified,
+    super.specialties,
   });
 
   factory BusinessModel.fromJson(Map<String, dynamic> json) {
     return BusinessModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      type: json['type'] as String,
+      types: List<String>.from(json['types'] as List? ?? const []),
       description: json['description'] as String? ?? '',
       location: json['location'] as String? ?? '',
       isVerified: json['is_verified'] as bool? ?? false,
+      specialties: List<String>.from(json['specialties'] as List? ?? const []),
     );
   }
 
-  /// Body para `PUT /businesses/{id}` -- el backend exige los 4 campos
-  /// juntos aunque solo cambie uno.
+  /// Body para `PUT /businesses/{id}` -- el backend exige los campos juntos
+  /// aunque solo cambie uno (si se omite `specialties` se sobreescribe con
+  /// vacío, así que siempre se manda con el valor actual).
   Map<String, dynamic> toRequestJson() => {
         'name': name,
-        'type': type,
+        'types': types,
         'description': description,
         'location': location,
+        'specialties': specialties,
       };
 }

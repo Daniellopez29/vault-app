@@ -140,6 +140,14 @@ class UpdateRoleUseCase {
       repository.updateRole(role);
 }
 
+class AddRolesUseCase {
+  final AuthRepository repository;
+  const AddRolesUseCase(this.repository);
+
+  Future<Either<Failure, UserEntity>> call(List<UserRole> roles) =>
+      repository.addRoles(roles);
+}
+
 class UploadProfilePhotoUseCase {
   final AuthRepository repository;
   const UploadProfilePhotoUseCase(this.repository);

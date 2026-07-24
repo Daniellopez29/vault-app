@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/dashed_border.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
@@ -49,6 +52,7 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
 
   AssetCategory _category = AssetCategory.sneakers;
   _Condition _condition = _Condition.nuevo;
+  final List<XFile> _images = [];
   bool _saving = false;
 
   @override
@@ -62,11 +66,14 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
     super.dispose();
   }
 
-  void _onPhotoTap() {
-    // Solo visual por ahora. La selección/subida real llega con el storage.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Agregar foto (próximamente)')),
-    );
+  Future<void> _addImages() async {
+    final picked = await ImagePicker().pickMultiImage(maxWidth: 1600, imageQuality: 85);
+    if (picked.isEmpty) return;
+    setState(() => _images.addAll(picked));
+  }
+
+  void _removeImage(int index) {
+    setState(() => _images.removeAt(index));
   }
 
   Future<void> _save() async {
@@ -78,7 +85,7 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
       category: _category,
       brand: _brandController.text.trim(),
       name: _nameController.text.trim(),
-      imageUrl: '', // el storage devolverá la URL real más adelante
+      imageUrl: '', // la portada real la resuelve el backend con las fotos subidas
       acquisitionDate: DateTime.now(),
       originalPrice: double.tryParse(_priceController.text.trim()) ?? 0,
       origin: _storeController.text.trim(),
@@ -92,9 +99,14 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
           : _notesController.text.trim(),
     );
 
+    final images = <AssetImageUpload>[];
+    for (final image in _images) {
+      images.add(AssetImageUpload(bytes: await image.readAsBytes(), filename: image.name));
+    }
+
     final ok = await ref
         .read(profileAssetsControllerProvider.notifier)
-        .addAsset(asset);
+        .addAsset(asset, images: images);
 
     if (!mounted) return;
     if (ok) {
@@ -126,7 +138,17 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
               ),
               const SizedBox(height: VaultSpacing.lg),
 
-              _AssetPhotoPicker(onTap: _onPhotoTap),
+              Text('Fotos (opcional)', style: tt.titleMedium),
+              const SizedBox(height: VaultSpacing.sm),
+              Wrap(
+                spacing: VaultSpacing.sm,
+                runSpacing: VaultSpacing.sm,
+                children: [
+                  for (var i = 0; i < _images.length; i++)
+                    _ImageThumb(image: _images[i], onRemove: () => _removeImage(i)),
+                  _AddImageTile(onTap: _addImages),
+                ],
+              ),
               const SizedBox(height: VaultSpacing.xl),
 
               const _Label('Categoría', required: true),
@@ -249,45 +271,70 @@ class _Label extends StatelessWidget {
   }
 }
 
-/// Bloque de fotos: una grande al centro y dos laterales (solo visual).
-class _AssetPhotoPicker extends StatelessWidget {
-  final VoidCallback onTap;
-  const _AssetPhotoPicker({required this.onTap});
+/// Miniatura de una foto ya seleccionada, con botón para quitarla. Mismo
+/// patrón que `create_post_page.dart` (`_ImageThumb`).
+class _ImageThumb extends StatelessWidget {
+  final XFile image;
+  final VoidCallback onRemove;
 
-  Widget _slot(double size, {bool primary = false}) {
+  const _ImageThumb({required this.image, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: VaultRadius.cardBorder,
+          child: FutureBuilder<Uint8List>(
+            future: image.readAsBytes(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return Container(width: 96, height: 96, color: VaultColors.surface);
+              }
+              return Image.memory(snapshot.data!, width: 96, height: 96, fit: BoxFit.cover);
+            },
+          ),
+        ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+              child: const Icon(Icons.close, size: 16, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Casilla para agregar una foto nueva.
+class _AddImageTile extends StatelessWidget {
+  final VoidCallback onTap;
+  const _AddImageTile({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: DashedBorder(
         color: VaultColors.divider,
         borderRadius: VaultRadius.card,
         child: Container(
-          width: size,
-          height: size,
+          width: 96,
+          height: 96,
           decoration: BoxDecoration(
             color: VaultColors.surface,
             borderRadius: VaultRadius.cardBorder,
           ),
-          child: Icon(
-            Icons.photo_camera_outlined,
-            color: VaultColors.textSecondary,
-            size: primary ? VaultIconSize.lg : VaultIconSize.md,
-          ),
+          child: Icon(Icons.add_photo_alternate_outlined,
+              color: VaultColors.textSecondary, size: VaultIconSize.lg),
         ),
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _slot(64),
-        const SizedBox(width: VaultSpacing.md),
-        _slot(104, primary: true),
-        const SizedBox(width: VaultSpacing.md),
-        _slot(64),
-      ],
     );
   }
 }

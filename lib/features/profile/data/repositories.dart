@@ -25,9 +25,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addAsset(AssetEntity asset) async {
+  Future<Either<Failure, void>> addAsset(AssetEntity asset, {List<AssetImageUpload> images = const []}) async {
     try {
-      await remoteDataSource.addAsset(AssetModel.fromEntity(asset));
+      await remoteDataSource.addAsset(AssetModel.fromEntity(asset), images: images);
       return const Right(null);
     } on Failure catch (e) {
       return Left(e);
@@ -104,14 +104,14 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<Either<Failure, void>> registerBusiness({
     required String name,
-    required String type,
+    required List<String> types,
     required String description,
     required String location,
   }) async {
     try {
       await remoteDataSource.registerBusiness(
         name: name,
-        type: type,
+        types: types,
         description: description,
         location: location,
       );

@@ -51,7 +51,7 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
   final _addressController = TextEditingController();
   final _detailsController = TextEditingController();
 
-  _BusinessCategory _category = _BusinessCategory.mantenimiento;
+  final Set<_BusinessCategory> _categories = {_BusinessCategory.mantenimiento};
   bool _saving = false;
 
   @override
@@ -71,12 +71,18 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_categories.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Elige al menos una categoría')),
+      );
+      return;
+    }
     setState(() => _saving = true);
 
     final result = await ref.read(registerBusinessUseCaseProvider).call(
           RegisterBusinessParams(
             name: _nameController.text.trim(),
-            type: _category.businessType,
+            types: _categories.map((c) => c.businessType).toList(),
             description: _detailsController.text.trim(),
             location: _addressController.text.trim(),
           ),
@@ -93,9 +99,12 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
 
     if (!ok) return;
 
-    // El negocio quedó registrado -- el rol de la cuenta pasa a reflejar
-    // la categoría elegida (Restaurador o Servicio).
-    await ref.read(authControllerProvider.notifier).updateRole(_category.role);
+    // El negocio quedó registrado -- se AGREGAN los roles de las
+    // categorías elegidas al histórico de la cuenta, sin reemplazar los
+    // que ya tenía (a diferencia de antes, que sobreescribía el rol).
+    await ref
+        .read(authControllerProvider.notifier)
+        .addRoles(_categories.map((c) => c.role).toList());
 
     if (!mounted) return;
     context.pop();
@@ -131,9 +140,20 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
               const SizedBox(height: VaultSpacing.lg),
 
               _BusinessLabel('Categoría', required: true),
+              Text(
+                'Puedes elegir ambas si tu negocio hace las dos cosas',
+                style: tt.labelSmall,
+              ),
+              const SizedBox(height: VaultSpacing.sm),
               _BusinessCategoryChips(
-                selected: _category,
-                onSelected: (c) => setState(() => _category = c),
+                selected: _categories,
+                onToggle: (c) => setState(() {
+                  if (_categories.contains(c)) {
+                    _categories.remove(c);
+                  } else {
+                    _categories.add(c);
+                  }
+                }),
               ),
               const SizedBox(height: VaultSpacing.lg),
 
@@ -255,10 +275,10 @@ class _BusinessPhotoPicker extends StatelessWidget {
 }
 
 class _BusinessCategoryChips extends StatelessWidget {
-  final _BusinessCategory selected;
-  final ValueChanged<_BusinessCategory> onSelected;
+  final Set<_BusinessCategory> selected;
+  final ValueChanged<_BusinessCategory> onToggle;
 
-  const _BusinessCategoryChips({required this.selected, required this.onSelected});
+  const _BusinessCategoryChips({required this.selected, required this.onToggle});
 
   @override
   Widget build(BuildContext context) {
@@ -266,9 +286,9 @@ class _BusinessCategoryChips extends StatelessWidget {
       spacing: VaultSpacing.sm,
       runSpacing: VaultSpacing.sm,
       children: _BusinessCategory.values.map((c) {
-        final isSelected = c == selected;
+        final isSelected = selected.contains(c);
         return GestureDetector(
-          onTap: () => onSelected(c),
+          onTap: () => onToggle(c),
           child: Container(
             padding: const EdgeInsets.symmetric(
               horizontal: VaultSpacing.lg,

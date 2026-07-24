@@ -17,8 +17,8 @@ class AddAssetUseCase {
   final ProfileRepository repository;
   const AddAssetUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(AssetEntity asset) =>
-      repository.addAsset(asset);
+  Future<Either<Failure, void>> call(AssetEntity asset, {List<AssetImageUpload> images = const []}) =>
+      repository.addAsset(asset, images: images);
 }
 
 class DeleteAssetUseCase {
@@ -91,7 +91,7 @@ class RegisterBusinessUseCase {
 
   Future<Either<Failure, void>> call(RegisterBusinessParams params) => repository.registerBusiness(
         name: params.name,
-        type: params.type,
+        types: params.types,
         description: params.description,
         location: params.location,
       );
@@ -99,13 +99,13 @@ class RegisterBusinessUseCase {
 
 class RegisterBusinessParams {
   final String name;
-  final String type;
+  final List<String> types;
   final String description;
   final String location;
 
   const RegisterBusinessParams({
     required this.name,
-    required this.type,
+    required this.types,
     required this.description,
     required this.location,
   });

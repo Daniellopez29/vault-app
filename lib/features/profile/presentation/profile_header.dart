@@ -14,7 +14,10 @@ class ProfileHeader extends ConsumerStatefulWidget {
   final Map<String, int> categoryCounts;
   final String? fullName;
   final String avatarUrl;
-  final UserRole role;
+
+  /// Todos los roles que la cuenta ha adquirido (no solo el más reciente) --
+  /// se muestran todos como chips.
+  final List<UserRole> roles;
 
   const ProfileHeader({
     super.key,
@@ -22,7 +25,7 @@ class ProfileHeader extends ConsumerStatefulWidget {
     required this.totalArticles,
     required this.categoryCounts,
     required this.avatarUrl,
-    required this.role,
+    required this.roles,
     this.fullName,
   });
 
@@ -82,7 +85,14 @@ class _ProfileHeaderState extends ConsumerState<ProfileHeader> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.role.displayName, style: tt.titleMedium),
+                    Wrap(
+                      spacing: VaultSpacing.xs,
+                      runSpacing: VaultSpacing.xs,
+                      children: widget.roles
+                          .map((r) => _CategoryChip(label: r.displayName))
+                          .toList(),
+                    ),
+                    const SizedBox(height: VaultSpacing.xs),
                     Text(widget.email, style: tt.labelSmall),
                   ],
                 ),

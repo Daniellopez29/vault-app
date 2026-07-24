@@ -4,7 +4,7 @@ import 'models.dart';
 
 abstract class ProfileRemoteDataSource {
   Future<List<AssetModel>> getUserAssets();
-  Future<void> addAsset(AssetModel asset);
+  Future<void> addAsset(AssetModel asset, {List<AssetImageUpload> images = const []});
   Future<void> updateAsset(AssetModel asset);
   Future<void> deleteAsset(String assetId);
   Future<RestorerProfileModel?> getRestorerProfile(String userId);
@@ -12,7 +12,7 @@ abstract class ProfileRemoteDataSource {
   Future<List<RestorerProfileModel>> getAllRestorerProfiles();
   Future<void> registerBusiness({
     required String name,
-    required String type,
+    required List<String> types,
     required String description,
     required String location,
   });
@@ -46,9 +46,22 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
-  Future<void> addAsset(AssetModel asset) async {
+  Future<void> addAsset(AssetModel asset, {List<AssetImageUpload> images = const []}) async {
     try {
-      await _client.post('/assets', body: asset.toApiJson());
+      // Mismo patrón que crear un post con fotos (ver
+      // HomeRemoteDataSourceImpl.createPost): primero se crea el recurso
+      // para tener su id real, luego se sube cada foto contra ese id.
+      final body = await _client.post('/assets', body: asset.toApiJson());
+      final assetId = (body as Map<String, dynamic>)['id'] as String;
+
+      for (final image in images) {
+        await _client.postMultipart(
+          '/assets/$assetId/photos',
+          bytes: image.bytes,
+          filename: image.filename,
+          fieldName: 'image',
+        );
+      }
     } on Failure {
       rethrow;
     } catch (e) {
@@ -141,14 +154,14 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
   Future<void> registerBusiness({
     required String name,
-    required String type,
+    required List<String> types,
     required String description,
     required String location,
   }) async {
     try {
       await _client.post('/businesses', body: {
         'name': name,
-        'type': type,
+        'types': types,
         'description': description,
         'location': location,
       });

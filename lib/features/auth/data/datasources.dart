@@ -26,6 +26,7 @@ abstract class AuthRemoteDataSource {
   Future<UserModel> updateDisplayName(String fullName);
   Future<void> updatePassword(String newPassword);
   Future<UserModel> updateRole(UserRole role);
+  Future<UserModel> addRoles(List<UserRole> roles);
   Future<UserModel> uploadProfilePhoto({required List<int> bytes, required String filename});
   Future<void> logout();
 }
@@ -166,15 +167,28 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     return _applyUpdate(current, body as Map<String, dynamic>);
   }
 
+  @override
+  Future<UserModel> addRoles(List<UserRole> roles) async {
+    final current = await getCurrentUser();
+    final body = await _client.post('/users/${current.id}/roles', body: {
+      'roles': roles.map((r) => r.value).toList(),
+    });
+    return _applyUpdate(current, body as Map<String, dynamic>);
+  }
+
   /// Combina la respuesta del backend (que no repite el token) con la
   /// sesión actual, y persiste el resultado.
   Future<UserModel> _applyUpdate(UserModel current, Map<String, dynamic> body) async {
+    final rolesJson = body['roles'] as List<dynamic>?;
+    final roles = rolesJson?.map((r) => UserRole.fromValue(r as String)).toList();
+
     final updated = UserModel(
       id: current.id,
       email: current.email,
       fullName: body['name'] as String? ?? current.fullName,
       role: UserRole.fromValue(body['role'] as String? ?? current.role.value),
       avatarUrl: body['avatar_url'] as String? ?? current.avatarUrl,
+      roles: (roles == null || roles.isEmpty) ? current.roles : roles,
       token: current.token,
     );
     await _persist(updated);

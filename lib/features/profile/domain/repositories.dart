@@ -4,7 +4,7 @@ import 'entities.dart';
 
 abstract class ProfileRepository {
   Future<Either<Failure, List<AssetEntity>>> getUserAssets();
-  Future<Either<Failure, void>> addAsset(AssetEntity asset);
+  Future<Either<Failure, void>> addAsset(AssetEntity asset, {List<AssetImageUpload> images = const []});
   Future<Either<Failure, void>> updateAsset(AssetEntity asset);
   Future<Either<Failure, void>> deleteAsset(String assetId);
   Future<Either<Failure, RestorerProfileEntity?>> getRestorerProfile(String userId);
@@ -18,7 +18,7 @@ abstract class ProfileRepository {
   /// description/location). [type] debe ser 'restaurador' o 'servicio'.
   Future<Either<Failure, void>> registerBusiness({
     required String name,
-    required String type,
+    required List<String> types,
     required String description,
     required String location,
   });

@@ -25,7 +25,9 @@ class SubscriptionRemoteDataSource implements SubscriptionDataSource {
   Future<List<SubscriptionPlanModel>> getPlans(SubscriptionType type) async {
     try {
       final body = await _client.get('/subscriptions/plans', auth: false);
-      final list = body as List<dynamic>? ?? const [];
+      // El backend envuelve la lista en {"plans": [...]} (ver
+      // ListPlansController.go), no es un array plano.
+      final list = (body as Map<String, dynamic>)['plans'] as List<dynamic>? ?? const [];
       return list.map((e) => SubscriptionPlanModel.fromJson(e as Map<String, dynamic>)).toList();
     } on Failure {
       rethrow;

@@ -128,7 +128,7 @@ class _BusinessCard extends StatelessWidget {
                   ],
                 ),
                 Text(
-                  business.type,
+                  business.types.join(' · '),
                   style: tt.labelSmall?.copyWith(color: VaultColors.textSecondary),
                 ),
                 if (business.description.isNotEmpty) ...[
