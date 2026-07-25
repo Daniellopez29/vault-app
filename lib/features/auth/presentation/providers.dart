@@ -7,9 +7,14 @@ import '../../../core/providers.dart';
 import '../../addresses/presentation/providers.dart' show addressesControllerProvider;
 import '../../business/presentation/providers.dart'
     show businessControllerProvider, allBusinessesProvider;
-import '../../cart/presentation/providers.dart' show cartControllerProvider;
+import '../../cart/presentation/providers.dart'
+    show cartControllerProvider, cartRepositoryProvider;
 import '../../chat/presentation/providers.dart'
-    show conversationsControllerProvider, conversationControllerProvider;
+    show
+        conversationsControllerProvider,
+        conversationControllerProvider,
+        chatWebSocketDataSourceProvider,
+        chatRepositoryProvider;
 import '../../favorites/presentation/providers.dart' show favoritesControllerProvider;
 import '../../home/presentation/providers.dart' show feedControllerProvider;
 import '../../notifications/presentation/providers.dart' show notificationsControllerProvider;
@@ -167,6 +172,13 @@ class AuthController extends StateNotifier<AuthState> {
     _ref.invalidate(businessControllerProvider);
     _ref.invalidate(allBusinessesProvider);
     _ref.invalidate(cartControllerProvider);
+    // El carrito vive en memoria dentro de CartLocalDataSourceImpl, que
+    // cuelga de cartRepositoryProvider (un Provider normal, cacheado para
+    // siempre). Invalidar solo cartControllerProvider no alcanza: el
+    // controller nuevo vuelve a leer el MISMO repositorio con los mismos
+    // items adentro. Hay que invalidar el repositorio también para que se
+    // reconstruya con una lista vacía.
+    _ref.invalidate(cartRepositoryProvider);
     _ref.invalidate(addressesControllerProvider);
     _ref.invalidate(notificationsControllerProvider);
     _ref.invalidate(feedControllerProvider);
@@ -177,6 +189,15 @@ class AuthController extends StateNotifier<AuthState> {
     // instancia cacheada y mostraría los mensajes de la cuenta anterior.
     // invalidate() sin argumentos limpia TODAS las instancias del family.
     _ref.invalidate(conversationControllerProvider);
+    // El socket de chat se conecta una sola vez con el token vigente en ese
+    // momento y se queda así indefinidamente (ver el comentario en
+    // chatWebSocketDataSourceProvider). Sin esto, la siguiente cuenta que
+    // inicie sesión en este mismo dispositivo se queda escuchando la
+    // conexión de la cuenta anterior y nunca recibe sus propios mensajes en
+    // tiempo real. chatRepositoryProvider debe invalidarse junto con él
+    // porque guarda una referencia directa al datasource viejo.
+    _ref.invalidate(chatWebSocketDataSourceProvider);
+    _ref.invalidate(chatRepositoryProvider);
   }
 
   Future<void> login({required String email, required String password}) async {

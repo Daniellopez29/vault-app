@@ -12,6 +12,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class KeyStore {
   static const _privateKeyName = 'vault_rsa_private_key';
   static const _publicKeyName = 'vault_rsa_public_key';
+  // Id del usuario dueño del par guardado -- este storage es único por
+  // dispositivo, no por cuenta, así que si dos usuarios distintos inician
+  // sesión en el mismo teléfono hay que notar el cambio de dueño y generar
+  // un par nuevo en vez de que la segunda cuenta reuse (y re-registre en el
+  // servidor) la llave de la primera.
+  static const _ownerIdName = 'vault_rsa_key_owner_id';
 
   final FlutterSecureStorage _storage;
 
@@ -22,6 +28,14 @@ class KeyStore {
   Future<bool> hasKeyPair() async {
     final priv = await _storage.read(key: _privateKeyName);
     return priv != null;
+  }
+
+  /// Id del usuario al que pertenece el par guardado actualmente, o null si
+  /// no hay ninguno o se guardó antes de este control (versión previa).
+  Future<String?> readOwnerId() async => _storage.read(key: _ownerIdName);
+
+  Future<void> setOwnerId(String userId) async {
+    await _storage.write(key: _ownerIdName, value: userId);
   }
 
   /// Genera un par nuevo y lo guarda. Devuelve la clave pública en texto,

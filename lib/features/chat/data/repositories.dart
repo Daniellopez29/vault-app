@@ -26,12 +26,19 @@ class ChatRepositoryImpl implements ChatRepository {
   @override
   Future<Either<Failure, void>> ensurePublicKeyRegistered(String userId) async {
     try {
-      var publicKey = await _keyStore.readPublicKey();
+      // El storage del par RSA es del dispositivo, no de la cuenta: si el
+      // par guardado le pertenece a OTRO usuario (sesión anterior en este
+      // mismo teléfono), no se puede reusar -- se genera uno nuevo para
+      // este usuario, si no dos cuentas terminarían compartiendo una sola
+      // llave privada.
+      final owner = await _keyStore.readOwnerId();
+      var publicKey = owner == userId ? await _keyStore.readPublicKey() : null;
       if (publicKey == null) {
         final generated = await _encryption.generateKeyPair();
         if (generated.isLeft()) {
           return generated.fold((f) => Left(f), (_) => const Right(null));
         }
+        await _keyStore.setOwnerId(userId);
         publicKey = await _keyStore.readPublicKey();
       }
       if (publicKey == null) {
