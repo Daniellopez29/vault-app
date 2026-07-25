@@ -15,29 +15,12 @@ final chatRemoteDataSourceProvider = Provider<ChatRemoteDataSource>((ref) {
   return ChatRemoteDataSourceImpl(ref.read(apiClientProvider));
 });
 
-/// Una sola instancia por sesión de LOGIN -- mantiene una única conexión
-/// WebSocket compartida entre todas las conversaciones que se abran.
-///
-/// El socket se conecta una sola vez con el token que esté vigente en ese
-/// momento (`_broadcastStream ??= ...` en [ChatWebSocketDataSource]) y se
-/// queda así aunque la sesión cambie. `AuthController` invalida este
-/// provider al cerrar sesión (ver `auth/presentation/providers.dart`) para
-/// que se cierre esa conexión y la próxima cuenta que inicie sesión en el
-/// mismo dispositivo abra una nueva con su propio token -- si no, la
-/// segunda cuenta se queda escuchando el socket de la primera y nunca
-/// recibe sus propios mensajes en tiempo real.
-final chatWebSocketDataSourceProvider = Provider<ChatWebSocketDataSource>((ref) {
-  final ws = ChatWebSocketDataSource(ref.read(apiClientProvider));
-  ref.onDispose(ws.dispose);
-  return ws;
-});
-
 final encryptionServiceProvider = Provider<EncryptionService>((ref) => RsaEncryptionService());
 
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   return ChatRepositoryImpl(
     remote: ref.read(chatRemoteDataSourceProvider),
-    ws: ref.read(chatWebSocketDataSourceProvider),
+    ws: ref.read(realtimeSocketProvider),
     encryption: ref.read(encryptionServiceProvider),
   );
 });

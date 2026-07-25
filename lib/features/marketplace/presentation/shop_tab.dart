@@ -6,6 +6,8 @@ import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../cart/domain/entities.dart';
 import '../../cart/presentation/providers.dart';
+import '../../chat/presentation/providers.dart' show conversationsControllerProvider;
+import '../../notifications/presentation/providers.dart' show notificationsControllerProvider;
 import '../domain/entities.dart';
 import 'providers.dart';
 import '../../../core/widgets/search_header.dart';
@@ -34,6 +36,12 @@ class ShopTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(shopControllerProvider);
+    final unreadNotifications =
+        ref.watch(notificationsControllerProvider).notifications.where((n) => !n.read).length;
+    final unreadChats = ref
+        .watch(conversationsControllerProvider)
+        .conversations
+        .fold(0, (sum, c) => sum + c.unreadCount);
 
     switch (state.status) {
       case ShopStatus.initial:
@@ -88,6 +96,8 @@ class ShopTab extends ConsumerWidget {
                   onQueryChanged: controller.search,
                   onNotificationsTap: () => context.push(AppRoutes.notifications),
                   onChatTap: () => context.push(AppRoutes.conversations),
+                  unreadNotificationsCount: unreadNotifications,
+                  unreadChatCount: unreadChats,
                 ),
                 if (!isSearching)
                   SliverToBoxAdapter(

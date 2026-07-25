@@ -13,6 +13,8 @@ class VaultSearchHeader extends StatelessWidget {
   final ValueChanged<String> onQueryChanged;
   final VoidCallback onNotificationsTap;
   final VoidCallback onChatTap;
+  final int unreadNotificationsCount;
+  final int unreadChatCount;
 
   const VaultSearchHeader({
     super.key,
@@ -21,6 +23,8 @@ class VaultSearchHeader extends StatelessWidget {
     required this.onNotificationsTap,
     required this.onChatTap,
     this.hintText = 'Buscar',
+    this.unreadNotificationsCount = 0,
+    this.unreadChatCount = 0,
   });
 
   @override
@@ -46,10 +50,12 @@ class VaultSearchHeader extends StatelessWidget {
           _HeaderIconButton(
             icon: Icons.notifications_outlined,
             onTap: onNotificationsTap,
+            badgeCount: unreadNotificationsCount,
           ),
           _HeaderIconButton(
             icon: Icons.chat_bubble_outline,
             onTap: onChatTap,
+            badgeCount: unreadChatCount,
           ),
         ],
       ),
@@ -148,20 +154,51 @@ class _SearchFieldState extends State<_SearchField> {
 }
 
 /// Botón de ícono del header (notificaciones / chat), con estilo consistente.
+/// Muestra un badge con el conteo cuando [badgeCount] > 0 -- antes no había
+/// nada que distinguiera "llegó algo nuevo" de "no hay nada", así que había
+/// que entrar a la pantalla para enterarte.
 class _HeaderIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
+  final int badgeCount;
 
-  const _HeaderIconButton({required this.icon, required this.onTap});
+  const _HeaderIconButton({required this.icon, required this.onTap, this.badgeCount = 0});
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: onTap,
-      icon: Icon(
-        icon,
-        color: VaultColors.textPrimary,
-        size: VaultIconSize.lg,
+      icon: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Icon(
+            icon,
+            color: VaultColors.textPrimary,
+            size: VaultIconSize.lg,
+          ),
+          if (badgeCount > 0)
+            Positioned(
+              right: -4,
+              top: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                constraints: const BoxConstraints(minWidth: 16),
+                decoration: const BoxDecoration(
+                  color: VaultColors.accent,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  badgeCount > 9 ? '9+' : '$badgeCount',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

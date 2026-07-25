@@ -1,8 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
-
-import 'package:web_socket_channel/web_socket_channel.dart';
-
 import '../../../core/api_client.dart';
 import '../../../core/error.dart';
 import '../domain/entities.dart';
@@ -96,46 +91,5 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     } catch (e) {
       throw ServerFailure('Error al obtener la llave pública del destinatario: $e');
     }
-  }
-}
-
-/// Relay en vivo de mensajes de chat sobre el mismo socket de notificaciones
-/// (`realtime/` multiplexa ambos con un discriminador `event` en el
-/// payload). Conecta una sola vez por sesión (stream broadcast, lazy) y
-/// reutiliza la conexión para todas las conversaciones abiertas -- no hay
-/// lógica de reconexión automática (fuera de alcance del MVP: si el socket
-/// cae, el usuario reabre la pantalla).
-class ChatWebSocketDataSource {
-  final ApiClient _client;
-  WebSocketChannel? _channel;
-  Stream<ChatMessageModel>? _broadcastStream;
-
-  ChatWebSocketDataSource(this._client);
-
-  Stream<ChatMessageModel> chatMessages() {
-    return _broadcastStream ??= _connect().asBroadcastStream();
-  }
-
-  Stream<ChatMessageModel> _connect() async* {
-    final token = await _client.getToken();
-    if (token == null) return;
-
-    _channel = WebSocketChannel.connect(Uri.parse('${RealtimeConfig.wsUrl}?token=$token'));
-    await for (final raw in _channel!.stream) {
-      Map<String, dynamic>? decoded;
-      try {
-        decoded = jsonDecode(raw as String) as Map<String, dynamic>;
-      } catch (_) {
-        continue;
-      }
-      if (decoded['event'] != 'chat_message') continue;
-      yield ChatMessageModel.fromJson(decoded);
-    }
-  }
-
-  void dispose() {
-    _channel?.sink.close();
-    _channel = null;
-    _broadcastStream = null;
   }
 }

@@ -1,21 +1,23 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../core/error.dart';
+import '../../../core/realtime_socket.dart';
 import 'crypto/key_store.dart';
 import '../domain/encryption_service.dart';
 import '../domain/entities.dart';
 import '../domain/repositories.dart';
 import 'datasources.dart';
+import 'models.dart';
 
 class ChatRepositoryImpl implements ChatRepository {
   final ChatRemoteDataSource _remote;
-  final ChatWebSocketDataSource _ws;
+  final RealtimeSocket _ws;
   final EncryptionService _encryption;
   final KeyStore _keyStore;
 
   ChatRepositoryImpl({
     required ChatRemoteDataSource remote,
-    required ChatWebSocketDataSource ws,
+    required RealtimeSocket ws,
     required EncryptionService encryption,
     KeyStore? keyStore,
   })  : _remote = remote,
@@ -158,7 +160,11 @@ class ChatRepositoryImpl implements ChatRepository {
     // Todo lo que llega por WS viene dirigido a mí (el backend solo hace
     // relay al recipient_id) -- siempre uso encryptedAesKey, nunca la
     // envoltura "para emisor".
-    return _ws.chatMessages().asyncMap((message) async {
+    return _ws
+        .events()
+        .where((e) => e['event'] == 'chat_message')
+        .map(ChatMessageModel.fromJson)
+        .asyncMap((message) async {
       final privateKey = await _keyStore.readPrivateKey();
       return _withPlainText(message, privateKey?.toString(), useSenderKey: false);
     });

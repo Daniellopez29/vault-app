@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/usecase.dart';
@@ -10,6 +12,7 @@ import '../domain/usecases.dart';
 final notificationsRepositoryProvider = Provider<NotificationsRepository>((ref) {
   return NotificationsRepositoryImpl(
     remoteDataSource: NotificationsRemoteDataSourceImpl(ref.read(apiClientProvider)),
+    ws: ref.read(realtimeSocketProvider),
   );
 });
 
@@ -55,10 +58,24 @@ class NotificationsController extends StateNotifier<NotificationsState> {
   final GetMyNotificationsUseCase _getMyNotifications;
   final MarkNotificationAsReadUseCase _markAsRead;
   final DeleteNotificationUseCase _delete;
+  StreamSubscription<NotificationEntity>? _subscription;
 
-  NotificationsController(this._getMyNotifications, this._markAsRead, this._delete)
-      : super(const NotificationsState()) {
+  NotificationsController(
+    this._getMyNotifications,
+    this._markAsRead,
+    this._delete,
+    NotificationsRepository repository,
+  ) : super(const NotificationsState()) {
     load();
+    // Recarga la lista en cuanto llega una notificación nueva por
+    // WebSocket -- antes esto solo se refrescaba al reabrir la pantalla.
+    _subscription = repository.incomingNotifications().listen((_) => load());
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 
   Future<void> load() async {
@@ -110,5 +127,6 @@ final notificationsControllerProvider =
     ref.read(getMyNotificationsUseCaseProvider),
     ref.read(markNotificationAsReadUseCaseProvider),
     ref.read(deleteNotificationUseCaseProvider),
+    ref.read(notificationsRepositoryProvider),
   );
 });

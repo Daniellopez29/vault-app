@@ -5,8 +5,10 @@ import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/search_header.dart';
+import '../../chat/presentation/providers.dart' show conversationsControllerProvider;
 import '../../comments/domain/entities.dart';
 import '../../comments/presentation/comments_sheet.dart';
+import '../../notifications/presentation/providers.dart' show notificationsControllerProvider;
 import '../domain/entities.dart';
 import 'feed_skeleton.dart';
 import 'providers.dart';
@@ -17,6 +19,12 @@ class FeedTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(feedControllerProvider);
+    final unreadNotifications =
+        ref.watch(notificationsControllerProvider).notifications.where((n) => !n.read).length;
+    final unreadChats = ref
+        .watch(conversationsControllerProvider)
+        .conversations
+        .fold(0, (sum, c) => sum + c.unreadCount);
 
     switch (state.status) {
       case FeedStatus.initial:
@@ -50,6 +58,8 @@ class FeedTab extends ConsumerWidget {
                 onQueryChanged: controller.search,
                 onNotificationsTap: () => context.push(AppRoutes.notifications),
                 onChatTap: () => context.push(AppRoutes.conversations),
+                unreadNotificationsCount: unreadNotifications,
+                unreadChatCount: unreadChats,
               ),
               if (posts.isEmpty)
                 SliverFillRemaining(

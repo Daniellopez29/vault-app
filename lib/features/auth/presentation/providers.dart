@@ -13,11 +13,11 @@ import '../../chat/presentation/providers.dart'
     show
         conversationsControllerProvider,
         conversationControllerProvider,
-        chatWebSocketDataSourceProvider,
         chatRepositoryProvider;
 import '../../favorites/presentation/providers.dart' show favoritesControllerProvider;
 import '../../home/presentation/providers.dart' show feedControllerProvider;
-import '../../notifications/presentation/providers.dart' show notificationsControllerProvider;
+import '../../notifications/presentation/providers.dart'
+    show notificationsControllerProvider, notificationsRepositoryProvider;
 import '../../profile/presentation/providers.dart'
     show profileAssetsControllerProvider, restorerProfileControllerProvider;
 import '../data/datasources.dart';
@@ -189,15 +189,17 @@ class AuthController extends StateNotifier<AuthState> {
     // instancia cacheada y mostraría los mensajes de la cuenta anterior.
     // invalidate() sin argumentos limpia TODAS las instancias del family.
     _ref.invalidate(conversationControllerProvider);
-    // El socket de chat se conecta una sola vez con el token vigente en ese
-    // momento y se queda así indefinidamente (ver el comentario en
-    // chatWebSocketDataSourceProvider). Sin esto, la siguiente cuenta que
-    // inicie sesión en este mismo dispositivo se queda escuchando la
-    // conexión de la cuenta anterior y nunca recibe sus propios mensajes en
-    // tiempo real. chatRepositoryProvider debe invalidarse junto con él
-    // porque guarda una referencia directa al datasource viejo.
-    _ref.invalidate(chatWebSocketDataSourceProvider);
+    // El socket de eventos en vivo (chat + notificaciones, ver
+    // RealtimeSocket) se conecta una sola vez con el token vigente en ese
+    // momento y se queda así indefinidamente. Sin esto, la siguiente cuenta
+    // que inicie sesión en este mismo dispositivo se queda escuchando la
+    // conexión de la cuenta anterior y nunca recibe sus propios mensajes o
+    // notificaciones en tiempo real. chatRepositoryProvider y
+    // notificationsRepositoryProvider deben invalidarse junto con él porque
+    // guardan una referencia directa al socket viejo.
+    _ref.invalidate(realtimeSocketProvider);
     _ref.invalidate(chatRepositoryProvider);
+    _ref.invalidate(notificationsRepositoryProvider);
   }
 
   Future<void> login({required String email, required String password}) async {

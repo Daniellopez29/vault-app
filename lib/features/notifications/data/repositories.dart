@@ -1,13 +1,22 @@
 import 'package:dartz/dartz.dart';
 import '../../../core/error.dart';
+import '../../../core/realtime_socket.dart';
 import '../domain/entities.dart';
 import '../domain/repositories.dart';
 import 'datasources.dart';
+import 'models.dart';
 
 class NotificationsRepositoryImpl implements NotificationsRepository {
   final NotificationsRemoteDataSource remoteDataSource;
+  final RealtimeSocket _ws;
 
-  NotificationsRepositoryImpl({required this.remoteDataSource});
+  NotificationsRepositoryImpl({required this.remoteDataSource, required RealtimeSocket ws})
+      : _ws = ws;
+
+  @override
+  Stream<NotificationEntity> incomingNotifications() {
+    return _ws.events().where((e) => e['event'] == 'notification').map(NotificationModel.fromJson);
+  }
 
   @override
   Future<Either<Failure, List<NotificationEntity>>> getMyNotifications() async {
