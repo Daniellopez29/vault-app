@@ -8,7 +8,8 @@ import '../../addresses/presentation/providers.dart' show addressesControllerPro
 import '../../business/presentation/providers.dart'
     show businessControllerProvider, allBusinessesProvider;
 import '../../cart/presentation/providers.dart' show cartControllerProvider;
-import '../../chat/presentation/providers.dart' show conversationsControllerProvider;
+import '../../chat/presentation/providers.dart'
+    show conversationsControllerProvider, conversationControllerProvider;
 import '../../favorites/presentation/providers.dart' show favoritesControllerProvider;
 import '../../home/presentation/providers.dart' show feedControllerProvider;
 import '../../notifications/presentation/providers.dart' show notificationsControllerProvider;
@@ -170,6 +171,12 @@ class AuthController extends StateNotifier<AuthState> {
     _ref.invalidate(notificationsControllerProvider);
     _ref.invalidate(feedControllerProvider);
     _ref.invalidate(conversationsControllerProvider);
+    // conversationControllerProvider es un .family keyed por el id de la
+    // otra persona: si la siguiente cuenta que inicia sesión en este mismo
+    // dispositivo le escribe a la misma contraparte, reutilizaría la
+    // instancia cacheada y mostraría los mensajes de la cuenta anterior.
+    // invalidate() sin argumentos limpia TODAS las instancias del family.
+    _ref.invalidate(conversationControllerProvider);
   }
 
   Future<void> login({required String email, required String password}) async {
