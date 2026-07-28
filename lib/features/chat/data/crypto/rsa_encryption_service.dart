@@ -21,10 +21,10 @@ class RsaEncryptionService implements EncryptionService {
   RsaEncryptionService({KeyStore? keyStore}) : _keyStore = keyStore ?? KeyStore();
 
   @override
-  Future<Either<Failure, KeyPairEntity>> generateKeyPair() async {
+  Future<Either<Failure, KeyPairEntity>> generateKeyPair(String userId) async {
     try {
-      final publicKey = await _keyStore.generateAndStore();
-      final privateKey = await _keyStore.readPrivateKey();
+      final publicKey = await _keyStore.generateAndStore(userId);
+      final privateKey = await _keyStore.readPrivateKey(userId);
       if (privateKey == null) {
         return const Left(ServerFailure('No se pudo generar el par de llaves.'));
       }

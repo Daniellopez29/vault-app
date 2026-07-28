@@ -14,6 +14,10 @@ abstract class ChatRemoteDataSource {
 
   /// `null` si el usuario todavía no registró ninguna llave pública.
   Future<String?> getPublicKey(String userId);
+
+  /// Marca un mensaje como leído (para que baje del contador de no leídos
+  /// en la bandeja de conversaciones).
+  Future<void> markAsRead(String messageId);
 }
 
 class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
@@ -90,6 +94,17 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       return null;
     } catch (e) {
       throw ServerFailure('Error al obtener la llave pública del destinatario: $e');
+    }
+  }
+
+  @override
+  Future<void> markAsRead(String messageId) async {
+    try {
+      await _client.patch('/chat/messages/$messageId/status', body: {'status': 'read'});
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al marcar el mensaje como leído: $e');
     }
   }
 }

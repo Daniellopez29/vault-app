@@ -31,4 +31,9 @@ abstract class ChatRepository {
   /// con la privada propia. El llamador filtra por el remitente que le
   /// interesa.
   Stream<MessageEntity> incomingMessages();
+
+  /// Marca [messageIds] como leídos en el servidor -- baja el contador de
+  /// no leídos que se muestra en la bandeja. Best-effort: no falla si algún
+  /// id individual no se pudo marcar.
+  Future<Either<Failure, void>> markMessagesAsRead(List<String> messageIds);
 }

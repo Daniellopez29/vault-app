@@ -41,3 +41,11 @@ class SendMessageParams {
 
   const SendMessageParams({required this.recipientId, required this.plainText});
 }
+
+class MarkMessagesAsReadUseCase {
+  final ChatRepository repository;
+  const MarkMessagesAsReadUseCase(this.repository);
+
+  Future<Either<Failure, void>> call(List<String> messageIds) =>
+      repository.markMessagesAsRead(messageIds);
+}

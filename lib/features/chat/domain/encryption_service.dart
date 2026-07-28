@@ -11,9 +11,10 @@ import 'entities.dart';
 /// Regla de oro: la llave privada nunca sale del dispositivo; el servidor
 /// nunca ve texto plano.
 abstract class EncryptionService {
-  /// Genera un par de llaves RSA. La privada se guardará en almacenamiento
-  /// seguro; la pública se comparte con el servidor.
-  Future<Either<Failure, KeyPairEntity>> generateKeyPair();
+  /// Genera un par de llaves RSA para [userId]. La privada se guardará en
+  /// almacenamiento seguro (en un slot propio de esa cuenta); la pública se
+  /// comparte con el servidor.
+  Future<Either<Failure, KeyPairEntity>> generateKeyPair(String userId);
 
   /// Cifra un mensaje para DOS destinatarios de la misma llave AES: el
   /// receptor real (con [recipientPublicKey]) y el propio emisor (con

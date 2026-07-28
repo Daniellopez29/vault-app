@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
@@ -36,6 +37,9 @@ final sendMessageUseCaseProvider =
 
 final getConversationsUseCaseProvider =
     Provider((ref) => GetConversationsUseCase(ref.read(chatRepositoryProvider)));
+
+final markMessagesAsReadUseCaseProvider =
+    Provider((ref) => MarkMessagesAsReadUseCase(ref.read(chatRepositoryProvider)));
 
 enum ConversationStatus { initial, loading, loaded, error }
 
@@ -75,6 +79,12 @@ final conversationControllerProvider =
     repository: ref.read(chatRepositoryProvider),
     getConversation: ref.read(getConversationUseCaseProvider),
     sendMessage: ref.read(sendMessageUseCaseProvider),
+    markMessagesAsRead: ref.read(markMessagesAsReadUseCaseProvider),
+    // Al marcar mensajes como leídos acá, el contador de la bandeja
+    // (conversationsControllerProvider) queda desactualizado hasta que algo
+    // lo recargue -- por eso se lo avisamos directo en vez de esperar a que
+    // el usuario haga pull to refresh.
+    onMessagesRead: () => ref.read(conversationsControllerProvider.notifier).load(),
   );
 });
 
@@ -83,6 +93,8 @@ class ConversationController extends StateNotifier<ConversationState> {
   final ChatRepository _repository;
   final GetConversationUseCase _getConversation;
   final SendMessageUseCase _sendMessage;
+  final MarkMessagesAsReadUseCase _markMessagesAsRead;
+  final VoidCallback? _onMessagesRead;
   StreamSubscription<MessageEntity>? _subscription;
 
   ConversationController({
@@ -90,15 +102,22 @@ class ConversationController extends StateNotifier<ConversationState> {
     required ChatRepository repository,
     required GetConversationUseCase getConversation,
     required SendMessageUseCase sendMessage,
+    required MarkMessagesAsReadUseCase markMessagesAsRead,
+    VoidCallback? onMessagesRead,
   })  : _otherUserId = otherUserId,
         _repository = repository,
         _getConversation = getConversation,
         _sendMessage = sendMessage,
+        _markMessagesAsRead = markMessagesAsRead,
+        _onMessagesRead = onMessagesRead,
         super(const ConversationState()) {
     _load();
     _subscription = _repository.incomingMessages().listen((message) {
       if (message.senderId != _otherUserId) return;
       state = state.copyWith(messages: [...state.messages, message]);
+      // El hilo ya está abierto -- lo que llega mientras se mira se
+      // considera leído de inmediato, no hace falta salir y volver a entrar.
+      _markAsRead([message.id]);
     });
   }
 
@@ -115,6 +134,19 @@ class ConversationController extends StateNotifier<ConversationState> {
         messages: messages,
       ),
     );
+    if (state.status != ConversationStatus.loaded) return;
+
+    final unread = state.messages
+        .where((m) => m.senderId == _otherUserId && m.status != MessageStatus.read)
+        .map((m) => m.id)
+        .toList();
+    await _markAsRead(unread);
+  }
+
+  Future<void> _markAsRead(List<String> messageIds) async {
+    if (messageIds.isEmpty) return;
+    await _markMessagesAsRead(messageIds);
+    _onMessagesRead?.call();
   }
 
   /// Envío optimista: el mensaje propio aparece de inmediato, sin esperar

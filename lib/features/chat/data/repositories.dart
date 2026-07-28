@@ -15,6 +15,12 @@ class ChatRepositoryImpl implements ChatRepository {
   final EncryptionService _encryption;
   final KeyStore _keyStore;
 
+  /// Fijado por [ensurePublicKeyRegistered], que main.dart llama una vez por
+  /// cada inicio de sesión antes de que se pueda llegar a ninguna pantalla
+  /// de chat -- lo usan el resto de los métodos para leer el slot de llaves
+  /// que le corresponde a esta cuenta (ver KeyStore).
+  String? _currentUserId;
+
   ChatRepositoryImpl({
     required ChatRemoteDataSource remote,
     required RealtimeSocket ws,
@@ -27,21 +33,17 @@ class ChatRepositoryImpl implements ChatRepository {
 
   @override
   Future<Either<Failure, void>> ensurePublicKeyRegistered(String userId) async {
+    _currentUserId = userId;
     try {
-      // El storage del par RSA es del dispositivo, no de la cuenta: si el
-      // par guardado le pertenece a OTRO usuario (sesión anterior en este
-      // mismo teléfono), no se puede reusar -- se genera uno nuevo para
-      // este usuario, si no dos cuentas terminarían compartiendo una sola
-      // llave privada.
-      final owner = await _keyStore.readOwnerId();
-      var publicKey = owner == userId ? await _keyStore.readPublicKey() : null;
+      // KeyStore guarda un slot de llaves propio por cuenta -- no hace
+      // falta comparar "dueños" acá, cada userId tiene el suyo.
+      var publicKey = await _keyStore.readPublicKey(userId);
       if (publicKey == null) {
-        final generated = await _encryption.generateKeyPair();
+        final generated = await _encryption.generateKeyPair(userId);
         if (generated.isLeft()) {
           return generated.fold((f) => Left(f), (_) => const Right(null));
         }
-        await _keyStore.setOwnerId(userId);
-        publicKey = await _keyStore.readPublicKey();
+        publicKey = await _keyStore.readPublicKey(userId);
       }
       if (publicKey == null) {
         return const Left(ServerFailure('No se pudo generar la llave de cifrado.'));
@@ -59,7 +61,7 @@ class ChatRepositoryImpl implements ChatRepository {
   Future<Either<Failure, List<MessageEntity>>> getConversation(String otherUserId) async {
     try {
       final messages = await _remote.getConversation(otherUserId);
-      final privateKey = await _keyStore.readPrivateKey();
+      final privateKey = await _ownPrivateKeyString();
       final resolved = <MessageEntity>[];
       for (final message in messages) {
         // En una conversación 1 a 1, todo mensaje que no vino del otro
@@ -68,7 +70,7 @@ class ChatRepositoryImpl implements ChatRepository {
         final fromOther = message.senderId == otherUserId;
         resolved.add(await _withPlainText(
           message,
-          privateKey?.toString(),
+          privateKey,
           useSenderKey: !fromOther,
         ));
       }
@@ -84,13 +86,13 @@ class ChatRepositoryImpl implements ChatRepository {
   Future<Either<Failure, List<ConversationSummaryEntity>>> getConversations() async {
     try {
       final summaries = await _remote.getConversations();
-      final privateKey = await _keyStore.readPrivateKey();
+      final privateKey = await _ownPrivateKeyString();
       final resolved = <ConversationSummaryEntity>[];
       for (final summary in summaries) {
         final fromOther = summary.lastMessage.senderId == summary.otherUserId;
         final lastMessage = await _withPlainText(
           summary.lastMessage,
-          privateKey?.toString(),
+          privateKey,
           useSenderKey: !fromOther,
         );
         resolved.add(ConversationSummaryEntity(
@@ -121,7 +123,7 @@ class ChatRepositoryImpl implements ChatRepository {
           ServerFailure('El destinatario aún no tiene el chat configurado.'),
         );
       }
-      final ownPublicKey = await _keyStore.readPublicKey();
+      final ownPublicKey = await _ownPublicKey();
       if (ownPublicKey == null) {
         return const Left(
           ServerFailure('Tu cifrado todavía no está listo, intenta de nuevo en un momento.'),
@@ -165,9 +167,38 @@ class ChatRepositoryImpl implements ChatRepository {
         .where((e) => e['event'] == 'chat_message')
         .map(ChatMessageModel.fromJson)
         .asyncMap((message) async {
-      final privateKey = await _keyStore.readPrivateKey();
-      return _withPlainText(message, privateKey?.toString(), useSenderKey: false);
+      final privateKey = await _ownPrivateKeyString();
+      return _withPlainText(message, privateKey, useSenderKey: false);
     });
+  }
+
+  @override
+  Future<Either<Failure, void>> markMessagesAsRead(List<String> messageIds) async {
+    if (messageIds.isEmpty) return const Right(null);
+    try {
+      // Best-effort: si un mensaje individual falla, no vale la pena
+      // reventar toda la operación por eso (mismo criterio que el backend
+      // usa para notificaciones -- ver SendChatMessageUseCase.go).
+      await Future.wait(messageIds.map(_remote.markAsRead));
+      return const Right(null);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error al marcar mensajes como leídos: $e'));
+    }
+  }
+
+  Future<String?> _ownPrivateKeyString() async {
+    final userId = _currentUserId;
+    if (userId == null) return null;
+    final key = await _keyStore.readPrivateKey(userId);
+    return key?.toString();
+  }
+
+  Future<String?> _ownPublicKey() async {
+    final userId = _currentUserId;
+    if (userId == null) return null;
+    return _keyStore.readPublicKey(userId);
   }
 
   /// Intenta descifrar con la privada propia, usando la envoltura correcta
