@@ -1,10 +1,9 @@
 /// Llave publicable de Stripe (la que puede vivir en el cliente sin riesgo;
 /// la llave secreta solo la usa `payment/`, nunca esta app).
 ///
-/// TODO: reemplazar con la llave real de producción antes de lanzar --
-/// Stripe Dashboard → Developers → API keys → Publishable key (empieza con
-/// "pk_"). Mientras tanto, `flutter_stripe` rechaza cualquier llamada con un
-/// error claro ("Invalid API Key") en vez de fallar en silencio.
+/// Es la de modo test (`pk_test_`) -- antes de lanzar a producción hay que
+/// cambiarla por la `pk_live_` del Stripe Dashboard.
 abstract class StripeConfig {
-  static const publishableKey = 'pk_test_REEMPLAZAR_CON_TU_LLAVE_PUBLICABLE';
+  static const publishableKey =
+      'pk_test_51TvBSUBe8INFqTaYcwXJBl52VRi3QEbaGpkjpaQNjc6j7S1gXyFcW1E7XO3RBVTO0DUHo0rJKbAYBK2Mid3PHvpg00GMm37oFy';
 }
