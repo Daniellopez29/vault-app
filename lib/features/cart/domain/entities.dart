@@ -57,32 +57,30 @@ class PaymentMethodEntity extends Equatable {
   List<Object?> get props => [id, type, label, description];
 }
 
-/// Resumen de costos de la orden. La tarifa de uso se calcula con una tasa
-/// centralizada, no con un número mágico en la UI.
+/// Resumen de costos de la orden. El comprador paga exactamente el precio
+/// listado -- antes había acá una "tarifa de uso" fija del 10% cobrada al
+/// comprador, sin relación con la comisión real de Vault (que ya varía
+/// según el plan del vendedor, ver SellerCommissionAdapter.go en payment/):
+/// esa comisión se sigue descontando del pago al vendedor al liberar el
+/// escrow, nunca del lado del comprador -- es el modelo estándar de
+/// marketplace, y así el beneficio de un plan mejor sí se refleja en
+/// cuánto le llega al vendedor, en vez de ser invisible.
 class OrderSummaryEntity extends Equatable {
-  /// Tarifa de uso de la plataforma (10%).
-  static const usageFeeRate = 0.10;
-
   final double subtotal;
-  final double fee;
   final double discount;
 
   const OrderSummaryEntity({
     required this.subtotal,
-    required this.fee,
     this.discount = 0,
   });
 
-  double get total => subtotal + fee - discount;
+  double get total => subtotal - discount;
 
   factory OrderSummaryEntity.fromItems(List<CartItemEntity> items) {
     final subtotal = items.fold<double>(0, (sum, item) => sum + item.lineTotal);
-    return OrderSummaryEntity(
-      subtotal: subtotal,
-      fee: subtotal * usageFeeRate,
-    );
+    return OrderSummaryEntity(subtotal: subtotal);
   }
 
   @override
-  List<Object?> get props => [subtotal, fee, discount];
+  List<Object?> get props => [subtotal, discount];
 }

@@ -101,8 +101,18 @@ class _AssetSummary extends StatelessWidget {
           _row('Condición', asset.condition),
           _row('Talla', asset.size),
           _row('Origen', asset.origin),
+          // originalPrice/acquisitionDate/notes se capturan al registrar el
+          // activo (register_asset_page.dart) pero nunca se mostraban acá.
+          _row('Precio original', '\$${asset.originalPrice.toStringAsFixed(0)}'),
+          _row('Fecha de adquisición', DateFormat('dd/MM/yyyy').format(asset.acquisitionDate)),
           _row('Servicios', '${asset.servicesCount}'),
           _row('Restauraciones', '${asset.restorationsCount}'),
+          if (asset.notes != null && asset.notes!.isNotEmpty) ...[
+            const SizedBox(height: VaultSpacing.sm),
+            Text('Comentario', style: const TextStyle(color: VaultColors.textSecondary)),
+            const SizedBox(height: VaultSpacing.xs),
+            Text(asset.notes!, style: tt.bodyMedium),
+          ],
         ],
       ),
     );

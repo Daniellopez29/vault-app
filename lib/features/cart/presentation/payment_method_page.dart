@@ -54,14 +54,11 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: VaultSpacing.sm),
-              // Desglose ANTES de pagar -- sin esto, el total no coincidía
-              // con la suma de los artículos y no había forma de saber que
-              // la diferencia era la tarifa de uso de la plataforma.
+              // El comprador paga exactamente el precio listado -- la
+              // comisión de Vault (variable según el plan del vendedor) se
+              // descuenta del pago al vendedor al liberar el escrow, no de
+              // acá. Ver OrderSummaryEntity.
               SummaryRow(label: 'Subtotal', value: '\$${summary.subtotal.toStringAsFixed(0)}'),
-              SummaryRow(
-                label: 'Tarifa de uso (${(OrderSummaryEntity.usageFeeRate * 100).toStringAsFixed(0)}%)',
-                value: '\$${summary.fee.toStringAsFixed(0)}',
-              ),
               if (summary.discount > 0)
                 SummaryRow(label: 'Descuento', value: '-\$${summary.discount.toStringAsFixed(0)}'),
               const Divider(color: VaultColors.divider),
@@ -206,10 +203,11 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
     final succeededIds = <String>[];
 
     for (final item in items) {
-      // Se cobra el mismo total que ya se le mostró al comprador (subtotal
-      // + tarifa de uso), no solo el precio base -- ver OrderSummaryEntity.
-      final amountCents =
-          (item.lineTotal * (1 + OrderSummaryEntity.usageFeeRate) * 100).round();
+      // El comprador paga exactamente el precio listado -- la comisión de
+      // Vault se descuenta del lado del vendedor al liberar el escrow (ver
+      // CreateOrderUseCase.go / SellerCommissionAdapter.go en payment/), no
+      // se le agrega nada al comprador acá.
+      final amountCents = (item.lineTotal * 100).round();
       final result = await createOrder(CreateOrderParams(
         sellerId: item.sellerId,
         assetId: item.id,

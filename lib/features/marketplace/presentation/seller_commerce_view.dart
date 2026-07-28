@@ -68,15 +68,25 @@ class _ProductsForSaleTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(VaultSpacing.md),
       children: [
-        // Ya suscrito: no tiene caso seguir mostrando el anuncio para
-        // comprar el mismo plan -- se deja un link directo a administrarla.
-        if (hasActiveSubscription)
+        // Ya suscrito: no tiene caso seguir ofreciendo comprar el mismo
+        // plan, pero SÍ hace falta dejar algo que dispare startAdvertiseFlow
+        // -- sin este botón, un vendedor ya suscrito no tenía ninguna forma
+        // de crear (ni una primera, ni una segunda) anuncio de producto,
+        // porque la única entrada al flujo era esta misma tarjeta.
+        if (hasActiveSubscription) ...[
           TextButton.icon(
             onPressed: () => context.push(AppRoutes.subscriptionManagement),
             icon: Icon(Icons.workspace_premium, color: VaultColors.success),
             label: const Text('Suscripción activa · Ver detalles'),
-          )
-        else
+          ),
+          const SizedBox(height: VaultSpacing.sm),
+          ElevatedButton.icon(
+            onPressed: () => startAdvertiseFlow(context, ref, type: SubscriptionType.product),
+            style: ElevatedButton.styleFrom(backgroundColor: VaultColors.accent),
+            icon: const Icon(Icons.campaign_outlined, color: Colors.white),
+            label: const Text('Anunciar un producto', style: TextStyle(color: Colors.white)),
+          ),
+        ] else
           _ProductSubscriptionCard(
             onTap: () => startAdvertiseFlow(context, ref, type: SubscriptionType.product),
           ),

@@ -80,14 +80,11 @@ class _OrderSuccessPageState extends ConsumerState<OrderSuccessPage> {
                       label: 'Subtotal',
                       value: '\$${_summary.subtotal.toStringAsFixed(0)}',
                     ),
-                    SummaryRow(
-                      label: 'Tarifa de uso',
-                      value: '\$${_summary.fee.toStringAsFixed(0)}',
-                    ),
-                    SummaryRow(
-                      label: 'Descuento',
-                      value: '\$${_summary.discount.toStringAsFixed(0)}',
-                    ),
+                    if (_summary.discount > 0)
+                      SummaryRow(
+                        label: 'Descuento',
+                        value: '-\$${_summary.discount.toStringAsFixed(0)}',
+                      ),
                     Divider(color: VaultColors.divider),
                     SummaryRow(
                       label: 'Total',
