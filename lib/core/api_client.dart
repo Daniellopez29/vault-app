@@ -72,11 +72,29 @@ class ApiClient {
         'servidor en Configuración → Avanzado.',
       );
 
+  /// Reintenta UNA vez, tras una breve espera, si el primer intento falla
+  /// por timeout o error de conexión -- Railway duerme los servicios tras
+  /// un rato sin uso, así que la primera petición de la sesión (que suele
+  /// disparar varias pantallas casi a la vez: perfil, notificaciones, chat)
+  /// puede tardar más que el timeout mientras el contenedor despierta.
+  /// Antes de esto, esa lentitud puntual se veía como TODAS esas pantallas
+  /// cayendo a la vez en su estado de error, obligando a tocar "Reintentar"
+  /// a mano en cada una. No reintenta errores reales del servidor (401,
+  /// 404, 500...) -- esos ya implican que SÍ hubo respuesta.
+  Future<http.Response> _sendWithRetry(Future<http.Response> Function() send) async {
+    try {
+      return await send().timeout(_requestTimeout);
+    } catch (_) {
+      await Future.delayed(const Duration(seconds: 2));
+      return await send().timeout(_requestTimeout, onTimeout: _throwTimeout);
+    }
+  }
+
   Future<dynamic> get(String path, {Map<String, String>? query, bool auth = true}) async {
     try {
-      final response = await _http
-          .get(_uri(path, query), headers: await _headers(withAuth: auth))
-          .timeout(_requestTimeout, onTimeout: _throwTimeout);
+      final response = await _sendWithRetry(
+        () async => _http.get(_uri(path, query), headers: await _headers(withAuth: auth)),
+      );
       return _handle(response);
     } on Failure {
       rethrow;
@@ -87,13 +105,13 @@ class ApiClient {
 
   Future<dynamic> post(String path, {Object? body, bool auth = true}) async {
     try {
-      final response = await _http
-          .post(
-            _uri(path),
-            headers: await _headers(withAuth: auth),
-            body: body != null ? jsonEncode(body) : null,
-          )
-          .timeout(_requestTimeout, onTimeout: _throwTimeout);
+      final response = await _sendWithRetry(
+        () async => _http.post(
+          _uri(path),
+          headers: await _headers(withAuth: auth),
+          body: body != null ? jsonEncode(body) : null,
+        ),
+      );
       return _handle(response);
     } on Failure {
       rethrow;
@@ -104,13 +122,13 @@ class ApiClient {
 
   Future<dynamic> put(String path, {Object? body, bool auth = true}) async {
     try {
-      final response = await _http
-          .put(
-            _uri(path),
-            headers: await _headers(withAuth: auth),
-            body: body != null ? jsonEncode(body) : null,
-          )
-          .timeout(_requestTimeout, onTimeout: _throwTimeout);
+      final response = await _sendWithRetry(
+        () async => _http.put(
+          _uri(path),
+          headers: await _headers(withAuth: auth),
+          body: body != null ? jsonEncode(body) : null,
+        ),
+      );
       return _handle(response);
     } on Failure {
       rethrow;
@@ -121,13 +139,13 @@ class ApiClient {
 
   Future<dynamic> patch(String path, {Object? body, bool auth = true}) async {
     try {
-      final response = await _http
-          .patch(
-            _uri(path),
-            headers: await _headers(withAuth: auth),
-            body: body != null ? jsonEncode(body) : null,
-          )
-          .timeout(_requestTimeout, onTimeout: _throwTimeout);
+      final response = await _sendWithRetry(
+        () async => _http.patch(
+          _uri(path),
+          headers: await _headers(withAuth: auth),
+          body: body != null ? jsonEncode(body) : null,
+        ),
+      );
       return _handle(response);
     } on Failure {
       rethrow;
@@ -145,14 +163,21 @@ class ApiClient {
     bool auth = true,
   }) async {
     try {
-      final request = http.MultipartRequest(method, _uri(path));
-      final headers = await _headers(withAuth: auth);
-      headers.remove('Content-Type'); // http arma el boundary multipart solo
-      request.headers.addAll(headers);
-      request.files.add(http.MultipartFile.fromBytes(fieldName, bytes, filename: filename));
+      // Un MultipartRequest solo se puede enviar una vez (su stream de
+      // archivo se consume en send()) -- _sendWithRetry puede llamar a este
+      // closure una segunda vez, así que arma un request NUEVO en cada
+      // intento en vez de reutilizar uno solo.
+      Future<http.Response> attempt() async {
+        final request = http.MultipartRequest(method, _uri(path));
+        final headers = await _headers(withAuth: auth);
+        headers.remove('Content-Type'); // http arma el boundary multipart solo
+        request.headers.addAll(headers);
+        request.files.add(http.MultipartFile.fromBytes(fieldName, bytes, filename: filename));
+        final streamed = await _http.send(request);
+        return http.Response.fromStream(streamed);
+      }
 
-      final streamed = await _http.send(request).timeout(_requestTimeout, onTimeout: _throwTimeout);
-      final response = await http.Response.fromStream(streamed);
+      final response = await _sendWithRetry(attempt);
       return _handle(response);
     } on Failure {
       rethrow;
@@ -182,9 +207,9 @@ class ApiClient {
 
   Future<dynamic> delete(String path, {bool auth = true}) async {
     try {
-      final response = await _http
-          .delete(_uri(path), headers: await _headers(withAuth: auth))
-          .timeout(_requestTimeout, onTimeout: _throwTimeout);
+      final response = await _sendWithRetry(
+        () async => _http.delete(_uri(path), headers: await _headers(withAuth: auth)),
+      );
       return _handle(response);
     } on Failure {
       rethrow;

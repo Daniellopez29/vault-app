@@ -1,3 +1,5 @@
+import 'dart:developer' as dev;
+
 import 'package:dartz/dartz.dart';
 
 import '../../../core/error.dart';
@@ -190,15 +192,31 @@ class ChatRepositoryImpl implements ChatRepository {
 
   Future<String?> _ownPrivateKeyString() async {
     final userId = _currentUserId;
-    if (userId == null) return null;
+    if (userId == null) {
+      // Si esto se ve en los logs, ensurePublicKeyRegistered todavía no
+      // corrió para esta cuenta -- todo lo que dependa de la privada
+      // (descifrar mensajes) va a fallar en silencio hasta que corra.
+      dev.log('_ownPrivateKeyString: _currentUserId es null', name: 'chat_e2ee');
+      return null;
+    }
     final key = await _keyStore.readPrivateKey(userId);
+    if (key == null) {
+      dev.log('_ownPrivateKeyString: no hay privada guardada para $userId', name: 'chat_e2ee');
+    }
     return key?.toString();
   }
 
   Future<String?> _ownPublicKey() async {
     final userId = _currentUserId;
-    if (userId == null) return null;
-    return _keyStore.readPublicKey(userId);
+    if (userId == null) {
+      dev.log('_ownPublicKey: _currentUserId es null', name: 'chat_e2ee');
+      return null;
+    }
+    final key = await _keyStore.readPublicKey(userId);
+    if (key == null) {
+      dev.log('_ownPublicKey: no hay pública guardada para $userId', name: 'chat_e2ee');
+    }
+    return key;
   }
 
   /// Intenta descifrar con la privada propia, usando la envoltura correcta
@@ -215,7 +233,16 @@ class ChatRepositoryImpl implements ChatRepository {
     final keyToUse = useSenderKey
         ? message.encryptedContent.encryptedAesKeySender
         : message.encryptedContent.encryptedAesKey;
-    if (keyToUse.isEmpty) return message;
+    if (keyToUse.isEmpty) {
+      // El mensaje llegó sin la envoltura AES que le tocaba (senderKey o
+      // recipientKey, según useSenderKey) -- distinto de una privada que no
+      // coincide, esto es un dato faltante del lado del servidor/mensaje.
+      dev.log(
+        'mensaje ${message.id}: falta ${useSenderKey ? "encrypted_aes_key_sender" : "encrypted_aes_key"}',
+        name: 'chat_e2ee',
+      );
+      return message;
+    }
 
     final decrypted = await _encryption.decryptMessage(
       cipherText: message.encryptedContent.cipherText,

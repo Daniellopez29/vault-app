@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/vault_card_field.dart';
 import '../../auth/presentation/providers.dart';
 import '../../orders/domain/usecases.dart';
 import '../../orders/presentation/providers.dart';
@@ -96,23 +97,20 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                                 _selectedType = method.type;
                               }),
                             ),
+                            // El campo de tarjeta aparece pegado a "Tarjeta"
+                            // en cuanto se elige, no después de TODOS los
+                            // métodos -- antes quedaba hasta el final de la
+                            // lista, tapado por el teclado al escribir.
+                            if (method.type == PaymentType.card &&
+                                method.id == _selectedId) ...[
+                              const SizedBox(height: VaultSpacing.sm),
+                              VaultCardField(
+                                onCompleteChanged: (complete) =>
+                                    setState(() => _cardComplete = complete),
+                              ),
+                            ],
                             const SizedBox(height: VaultSpacing.md),
                           ],
-                          if (isCardSelected)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.md),
-                              decoration: BoxDecoration(
-                                color: VaultColors.surface,
-                                borderRadius: VaultRadius.cardBorder,
-                                border: Border.all(color: VaultColors.divider),
-                              ),
-                              child: stripe.CardField(
-                                enablePostalCode: true,
-                                onCardChanged: (details) {
-                                  setState(() => _cardComplete = details?.complete ?? false);
-                                },
-                              ),
-                            ),
                         ],
                       );
                     },
