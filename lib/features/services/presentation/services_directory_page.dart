@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
@@ -6,21 +6,23 @@ import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../auth/presentation/providers.dart';
+import '../../business/domain/entities.dart';
+import '../../business/presentation/providers.dart';
 import '../../chat/presentation/chat_page.dart';
-import '../../profile/domain/entities.dart';
-import '../../profile/presentation/providers.dart';
 
 /// Directorio de especialistas: quien ofrece que servicio.
 ///
 /// Lo ve cualquier usuario, sin importar su rol. Desde aqui un coleccionista
-/// puede encontrar a alguien que restaure o repare sus activos.
+/// puede encontrar a alguien que restaure o repare sus activos. El catálogo
+/// de cada negocio vive en `businesses/{id}/services` (ver
+/// `businessservices` en `api/`).
 class ServicesDirectoryPage extends ConsumerWidget {
   const ServicesDirectoryPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profilesAsync = ref.watch(allRestorerProfilesProvider);
-    return profilesAsync.when(
+    final businessesAsync = ref.watch(allBusinessesProvider);
+    return businessesAsync.when(
         loading: () => const _DirectorySkeleton(),
         error: (error, _) => Center(
           child: Padding(
@@ -34,15 +36,15 @@ class ServicesDirectoryPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: VaultSpacing.md),
                 ElevatedButton(
-                  onPressed: () => ref.invalidate(allRestorerProfilesProvider),
+                  onPressed: () => ref.invalidate(allBusinessesProvider),
                   child: const Text('Reintentar'),
                 ),
               ],
             ),
           ),
         ),
-        data: (profiles) {
-          if (profiles.isEmpty) {
+        data: (businesses) {
+          if (businesses.isEmpty) {
             return const Center(
               child: Padding(
                 padding: EdgeInsets.all(VaultSpacing.xl),
@@ -55,12 +57,12 @@ class ServicesDirectoryPage extends ConsumerWidget {
             );
           }
           return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(allRestorerProfilesProvider),
+            onRefresh: () async => ref.invalidate(allBusinessesProvider),
             child: ListView.builder(
               padding: const EdgeInsets.all(VaultSpacing.md),
-              itemCount: profiles.length,
+              itemCount: businesses.length,
               itemBuilder: (context, index) =>
-                  _SpecialistCard(profile: profiles[index]),
+                  _BusinessCard(business: businesses[index]),
             ),
           );
         },
@@ -68,17 +70,18 @@ class ServicesDirectoryPage extends ConsumerWidget {
   }
 }
 
-/// Tarjeta de un especialista con los servicios que ofrece.
-class _SpecialistCard extends ConsumerWidget {
-  final RestorerProfileEntity profile;
+/// Tarjeta de un negocio con los servicios que ofrece.
+class _BusinessCard extends ConsumerWidget {
+  final BusinessEntity business;
 
-  const _SpecialistCard({required this.profile});
+  const _BusinessCard({required this.business});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tt = Theme.of(context).textTheme;
     final currentUserId = ref.watch(authControllerProvider).user?.id;
-    final isSelf = currentUserId != null && currentUserId == profile.userId;
+    final isSelf = currentUserId != null && currentUserId == business.userId;
+    final servicesState = ref.watch(businessServicesControllerProvider(business.id));
 
     return Container(
       margin: const EdgeInsets.only(bottom: VaultSpacing.md),
@@ -112,23 +115,12 @@ class _SpecialistCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${profile.services.length} servicios',
+                      business.name.isNotEmpty ? business.name : 'Especialista',
                       style: tt.titleSmall,
                     ),
-                    Row(
-                      children: [
-                        const Icon(Icons.star,
-                            size: VaultIconSize.sm, color: VaultColors.accent),
-                        const SizedBox(width: VaultSpacing.xs),
-                        Text(
-                          profile.rating > 0
-                              ? profile.rating.toStringAsFixed(1)
-                              : 'Sin calificar',
-                          style: tt.labelSmall?.copyWith(
-                            color: VaultColors.textSecondary,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      '${servicesState.services.length} servicios',
+                      style: tt.labelSmall?.copyWith(color: VaultColors.textSecondary),
                     ),
                   ],
                 ),
@@ -138,8 +130,8 @@ class _SpecialistCard extends ConsumerWidget {
                   onPressed: () => context.push(
                     AppRoutes.chat,
                     extra: ChatPageArgs(
-                      recipientId: profile.userId,
-                      recipientName: profile.name.isNotEmpty ? profile.name : 'Especialista',
+                      recipientId: business.userId,
+                      recipientName: business.name.isNotEmpty ? business.name : 'Especialista',
                     ),
                   ),
                   style: TextButton.styleFrom(
@@ -151,48 +143,59 @@ class _SpecialistCard extends ConsumerWidget {
                 ),
             ],
           ),
-          if (profile.bio.isNotEmpty) ...[
+          if (business.description.isNotEmpty) ...[
             const SizedBox(height: VaultSpacing.sm),
             Text(
-              profile.bio,
+              business.description,
               style: tt.bodyMedium?.copyWith(color: VaultColors.textSecondary),
             ),
           ],
           const SizedBox(height: VaultSpacing.md),
-          ...profile.services.map(
-            (service) => Padding(
-              padding: const EdgeInsets.only(bottom: VaultSpacing.sm),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(service.title, style: tt.bodyLarge),
-                        if (service.description.isNotEmpty)
-                          Text(
-                            service.description,
-                            style: tt.labelSmall?.copyWith(
-                              color: VaultColors.textSecondary,
+          if (servicesState.status == BusinessServicesStatus.loading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: VaultSpacing.sm),
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            )
+          else if (servicesState.services.isEmpty)
+            Text(
+              'Sin servicios publicados todavía.',
+              style: tt.labelSmall?.copyWith(color: VaultColors.textSecondary),
+            )
+          else
+            ...servicesState.services.map(
+              (service) => Padding(
+                padding: const EdgeInsets.only(bottom: VaultSpacing.sm),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(service.title, style: tt.bodyLarge),
+                          if (service.description.isNotEmpty)
+                            Text(
+                              service.description,
+                              style: tt.labelSmall?.copyWith(
+                                color: VaultColors.textSecondary,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: VaultSpacing.sm),
-                  Text(
-                    service.price > 0
-                        ? '\$${service.price.toStringAsFixed(0)}'
-                        : 'A convenir',
-                    style: tt.titleSmall?.copyWith(color: VaultColors.accent),
-                  ),
-                ],
+                    const SizedBox(width: VaultSpacing.sm),
+                    Text(
+                      service.price > 0
+                          ? '\$${service.price.toStringAsFixed(0)}'
+                          : 'A convenir',
+                      style: tt.titleSmall?.copyWith(color: VaultColors.accent),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

@@ -187,6 +187,152 @@ final businessControllerProvider =
   );
 });
 
+// ─── Catálogo de servicios de un negocio ───
+
+final getBusinessServicesUseCaseProvider = Provider<GetBusinessServicesUseCase>((ref) {
+  return GetBusinessServicesUseCase(ref.read(businessRepositoryProvider));
+});
+
+final createBusinessServiceUseCaseProvider = Provider<CreateBusinessServiceUseCase>((ref) {
+  return CreateBusinessServiceUseCase(ref.read(businessRepositoryProvider));
+});
+
+final updateBusinessServiceUseCaseProvider = Provider<UpdateBusinessServiceUseCase>((ref) {
+  return UpdateBusinessServiceUseCase(ref.read(businessRepositoryProvider));
+});
+
+final deleteBusinessServiceUseCaseProvider = Provider<DeleteBusinessServiceUseCase>((ref) {
+  return DeleteBusinessServiceUseCase(ref.read(businessRepositoryProvider));
+});
+
+enum BusinessServicesStatus { loading, loaded, error }
+
+class BusinessServicesState {
+  final BusinessServicesStatus status;
+  final List<BusinessServiceEntity> services;
+  final String? errorMessage;
+
+  const BusinessServicesState({
+    this.status = BusinessServicesStatus.loading,
+    this.services = const [],
+    this.errorMessage,
+  });
+
+  BusinessServicesState copyWith({
+    BusinessServicesStatus? status,
+    List<BusinessServiceEntity>? services,
+    String? errorMessage,
+  }) {
+    return BusinessServicesState(
+      status: status ?? this.status,
+      services: services ?? this.services,
+      errorMessage: errorMessage,
+    );
+  }
+}
+
+/// Catálogo de servicios de un negocio (`.family` por business id) --
+/// pública para verla (directorio de especialistas), CRUD solo para el
+/// dueño (el backend valida ownership, ver ErrNotOwner en Go).
+class BusinessServicesController extends StateNotifier<BusinessServicesState> {
+  final GetBusinessServicesUseCase _getServices;
+  final CreateBusinessServiceUseCase _createService;
+  final UpdateBusinessServiceUseCase _updateService;
+  final DeleteBusinessServiceUseCase _deleteService;
+  final String businessId;
+
+  BusinessServicesController(
+    this._getServices,
+    this._createService,
+    this._updateService,
+    this._deleteService,
+    this.businessId,
+  ) : super(const BusinessServicesState()) {
+    load();
+  }
+
+  Future<void> load() async {
+    state = state.copyWith(status: BusinessServicesStatus.loading);
+    final result = await _getServices(businessId);
+    result.fold(
+      (failure) => state = state.copyWith(
+        status: BusinessServicesStatus.error,
+        errorMessage: failure.message,
+      ),
+      (services) => state = state.copyWith(
+        status: BusinessServicesStatus.loaded,
+        services: services,
+      ),
+    );
+  }
+
+  Future<bool> addService({
+    required String title,
+    required String description,
+    required double price,
+  }) async {
+    final result = await _createService(BusinessServiceParams(
+      businessId: businessId,
+      title: title,
+      description: description,
+      price: price,
+    ));
+    return result.fold((failure) {
+      state = state.copyWith(errorMessage: failure.message);
+      return false;
+    }, (_) {
+      load();
+      return true;
+    });
+  }
+
+  Future<bool> updateService(
+    String serviceId, {
+    required String title,
+    required String description,
+    required double price,
+  }) async {
+    final result = await _updateService(BusinessServiceParams(
+      businessId: businessId,
+      serviceId: serviceId,
+      title: title,
+      description: description,
+      price: price,
+    ));
+    return result.fold((failure) {
+      state = state.copyWith(errorMessage: failure.message);
+      return false;
+    }, (_) {
+      load();
+      return true;
+    });
+  }
+
+  Future<bool> removeService(String serviceId) async {
+    final result = await _deleteService(
+      DeleteBusinessServiceParams(businessId: businessId, serviceId: serviceId),
+    );
+    return result.fold((failure) {
+      state = state.copyWith(errorMessage: failure.message);
+      return false;
+    }, (_) {
+      state = state.copyWith(services: state.services.where((s) => s.id != serviceId).toList());
+      return true;
+    });
+  }
+}
+
+final businessServicesControllerProvider = StateNotifierProvider.family<
+    BusinessServicesController, BusinessServicesState, String>((ref, businessId) {
+  return BusinessServicesController(
+    ref.read(getBusinessServicesUseCaseProvider),
+    ref.read(createBusinessServiceUseCaseProvider),
+    ref.read(updateBusinessServiceUseCaseProvider),
+    ref.read(deleteBusinessServiceUseCaseProvider),
+    businessId,
+  );
+});
+
 // ─── Directorio público de negocios (Shop) ───
 
 final getAllBusinessesUseCaseProvider = Provider<GetAllBusinessesUseCase>((ref) {

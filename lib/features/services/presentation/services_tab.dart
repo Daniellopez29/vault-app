@@ -1,27 +1,107 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
+import '../../../core/router.dart';
 import '../../../core/theme.dart';
-import '../../auth/presentation/providers.dart';
-import '../../profile/domain/entities.dart';
-import '../../profile/presentation/providers.dart';
+import '../../business/domain/entities.dart';
+import '../../business/presentation/providers.dart';
 
-/// Servicios que el usuario ofrece como especialista.
+/// Servicios que el usuario ofrece a través de su negocio.
 ///
-/// Cualquiera puede publicar servicios, sin importar su rol: el contenido
-/// depende de lo que la persona realmente ofrece.
+/// Cualquiera puede registrar un negocio y publicar servicios, sin importar
+/// su rol -- pero primero hace falta el negocio (el catálogo vive bajo
+/// `businesses/{id}/services`, ver `businessservices` en `api/`).
 class ServicesTab extends ConsumerWidget {
   const ServicesTab({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userId = ref.watch(authControllerProvider).user?.id;
-    if (userId == null) {
-      return const Center(child: Text('Inicia sesión para ver tus servicios'));
-    }
+    final businessState = ref.watch(businessControllerProvider);
 
-    final state = ref.watch(restorerProfileControllerProvider(userId));
-    final services = state.profile?.services ?? const <RestorerServiceEntity>[];
+    switch (businessState.status) {
+      case BusinessStatus.loading:
+        return const Center(child: CircularProgressIndicator());
+      case BusinessStatus.error:
+        return Center(
+          child: Text(businessState.errorMessage ?? 'Error al cargar tu negocio'),
+        );
+      case BusinessStatus.loaded:
+        final business = businessState.business;
+        if (business == null) {
+          return _NoBusinessPrompt(
+            onRegister: () => context.push(AppRoutes.registerBusiness),
+          );
+        }
+        return _ServicesList(businessId: business.id);
+    }
+  }
+}
+
+class _NoBusinessPrompt extends StatelessWidget {
+  final VoidCallback onRegister;
+
+  const _NoBusinessPrompt({required this.onRegister});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(VaultSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.storefront_outlined, size: VaultIconSize.xl, color: VaultColors.textSecondary),
+            const SizedBox(height: VaultSpacing.lg),
+            const Text(
+              'Registra tu negocio para publicar servicios',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: VaultSpacing.sm),
+            const Text(
+              'Tu catálogo de servicios (limpieza, restauración, reparación) '
+              'vive dentro de tu negocio en Vault.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: VaultColors.textSecondary),
+            ),
+            const SizedBox(height: VaultSpacing.xl),
+            ElevatedButton.icon(
+              onPressed: onRegister,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: VaultColors.primary,
+                padding: const EdgeInsets.symmetric(vertical: VaultSpacing.md, horizontal: VaultSpacing.lg),
+              ),
+              icon: const Icon(Icons.add),
+              label: const Text('Registrar negocio'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ServicesList extends ConsumerWidget {
+  final String businessId;
+
+  const _ServicesList({required this.businessId});
+
+  void _openSheet(BuildContext context, WidgetRef ref, {BusinessServiceEntity? service}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: VaultColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(VaultRadius.card)),
+      ),
+      builder: (_) => _ServiceSheet(businessId: businessId, ref: ref, existing: service),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(businessServicesControllerProvider(businessId));
 
     return Column(
       children: [
@@ -30,7 +110,7 @@ class ServicesTab extends ConsumerWidget {
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () => _openSheet(context, ref, userId),
+              onPressed: () => _openSheet(context, ref),
               style: ElevatedButton.styleFrom(
                 backgroundColor: VaultColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: VaultSpacing.md),
@@ -41,48 +121,26 @@ class ServicesTab extends ConsumerWidget {
           ),
         ),
         Expanded(
-          child: state.status == RestorerProfileStatus.loading
+          child: state.status == BusinessServicesStatus.loading
               ? const Center(child: CircularProgressIndicator())
-              : services.isEmpty
+              : state.services.isEmpty
                   ? const _EmptyServices()
                   : ListView.builder(
                       padding: const EdgeInsets.all(VaultSpacing.md),
-                      itemCount: services.length,
+                      itemCount: state.services.length,
                       itemBuilder: (context, index) {
-                        final service = services[index];
+                        final service = state.services[index];
                         return _ServiceCard(
                           service: service,
-                          onTap: () =>
-                              _openSheet(context, ref, userId, service: service),
+                          onTap: () => _openSheet(context, ref, service: service),
                           onDelete: () => ref
-                              .read(restorerProfileControllerProvider(userId)
-                                  .notifier)
+                              .read(businessServicesControllerProvider(businessId).notifier)
                               .removeService(service.id),
                         );
                       },
                     ),
         ),
       ],
-    );
-  }
-
-  /// Abre el formulario. Si recibe un servicio, lo edita; si no, crea uno nuevo.
-  void _openSheet(
-    BuildContext context,
-    WidgetRef ref,
-    String userId, {
-    RestorerServiceEntity? service,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: VaultColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(VaultRadius.card)),
-      ),
-      builder: (_) =>
-          _ServiceSheet(userId: userId, ref: ref, existing: service),
     );
   }
 }
@@ -124,7 +182,7 @@ class _EmptyServices extends StatelessWidget {
 }
 
 class _ServiceCard extends StatelessWidget {
-  final RestorerServiceEntity service;
+  final BusinessServiceEntity service;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
@@ -198,12 +256,12 @@ class _ServiceCard extends StatelessWidget {
 
 /// Formulario para publicar o editar un servicio.
 class _ServiceSheet extends StatefulWidget {
-  final String userId;
+  final String businessId;
   final WidgetRef ref;
-  final RestorerServiceEntity? existing;
+  final BusinessServiceEntity? existing;
 
   const _ServiceSheet({
-    required this.userId,
+    required this.businessId,
     required this.ref,
     this.existing,
   });
@@ -240,24 +298,26 @@ class _ServiceSheetState extends State<_ServiceSheet> {
   }
 
   Future<void> _save() async {
-    if (_titleController.text.trim().isEmpty) return;
+    final title = _titleController.text.trim();
+    final description = _descController.text.trim();
+    final price = double.tryParse(_priceController.text.trim()) ?? 0;
+    // El backend exige precio > 0 (BusinessServiceRequest.Validate en
+    // api/) -- a diferencia del catálogo viejo, ya no admite "a convenir".
+    if (title.isEmpty || price <= 0) return;
     setState(() => _saving = true);
 
-    final service = RestorerServiceEntity(
-      id: widget.existing?.id ??
-          DateTime.now().millisecondsSinceEpoch.toString(),
-      title: _titleController.text.trim(),
-      description: _descController.text.trim(),
-      price: double.tryParse(_priceController.text.trim()) ?? 0,
-    );
-
-    final notifier = widget.ref
-        .read(restorerProfileControllerProvider(widget.userId).notifier);
+    final notifier =
+        widget.ref.read(businessServicesControllerProvider(widget.businessId).notifier);
 
     if (_isEditing) {
-      await notifier.updateService(service);
+      await notifier.updateService(
+        widget.existing!.id,
+        title: title,
+        description: description,
+        price: price,
+      );
     } else {
-      await notifier.addService(service);
+      await notifier.addService(title: title, description: description, price: price);
     }
 
     if (mounted) {
@@ -308,7 +368,7 @@ class _ServiceSheetState extends State<_ServiceSheet> {
             controller: _priceController,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
-              labelText: 'Precio (opcional)',
+              labelText: 'Precio',
               border: OutlineInputBorder(),
             ),
           ),

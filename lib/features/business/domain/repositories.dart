@@ -19,4 +19,23 @@ abstract class BusinessRepository {
   });
 
   Future<Either<Failure, BusinessEntity>> deletePhoto(String id, String photoId);
+
+  Future<Either<Failure, List<BusinessServiceEntity>>> getServices(String businessId);
+
+  Future<Either<Failure, BusinessServiceEntity>> createService(
+    String businessId, {
+    required String title,
+    required String description,
+    required double price,
+  });
+
+  Future<Either<Failure, BusinessServiceEntity>> updateService(
+    String businessId,
+    String serviceId, {
+    required String title,
+    required String description,
+    required double price,
+  });
+
+  Future<Either<Failure, void>> deleteService(String businessId, String serviceId);
 }

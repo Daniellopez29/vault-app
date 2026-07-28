@@ -88,4 +88,74 @@ class BusinessRepositoryImpl implements BusinessRepository {
       return const Left(ServerFailure('Error al eliminar la foto.'));
     }
   }
+
+  @override
+  Future<Either<Failure, List<BusinessServiceEntity>>> getServices(String businessId) async {
+    try {
+      final services = await remoteDataSource.getServices(businessId);
+      return Right(List<BusinessServiceEntity>.of(services));
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (_) {
+      return const Left(ServerFailure('Error al cargar los servicios.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, BusinessServiceEntity>> createService(
+    String businessId, {
+    required String title,
+    required String description,
+    required double price,
+  }) async {
+    try {
+      final created = await remoteDataSource.createService(
+        businessId,
+        title: title,
+        description: description,
+        price: price,
+      );
+      return Right(created);
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (_) {
+      return const Left(ServerFailure('Error al publicar el servicio.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, BusinessServiceEntity>> updateService(
+    String businessId,
+    String serviceId, {
+    required String title,
+    required String description,
+    required double price,
+  }) async {
+    try {
+      final updated = await remoteDataSource.updateService(
+        businessId,
+        serviceId,
+        title: title,
+        description: description,
+        price: price,
+      );
+      return Right(updated);
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (_) {
+      return const Left(ServerFailure('Error al actualizar el servicio.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteService(String businessId, String serviceId) async {
+    try {
+      await remoteDataSource.deleteService(businessId, serviceId);
+      return const Right(null);
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (_) {
+      return const Left(ServerFailure('Error al eliminar el servicio.'));
+    }
+  }
 }

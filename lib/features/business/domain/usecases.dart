@@ -82,3 +82,79 @@ class DeleteBusinessPhotoUseCase
     return repository.deletePhoto(params.businessId, params.photoId);
   }
 }
+
+class GetBusinessServicesUseCase implements UseCase<List<BusinessServiceEntity>, String> {
+  final BusinessRepository repository;
+  GetBusinessServicesUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, List<BusinessServiceEntity>>> call(String businessId) {
+    return repository.getServices(businessId);
+  }
+}
+
+class BusinessServiceParams {
+  final String businessId;
+  final String? serviceId;
+  final String title;
+  final String description;
+  final double price;
+
+  const BusinessServiceParams({
+    required this.businessId,
+    this.serviceId,
+    required this.title,
+    required this.description,
+    required this.price,
+  });
+}
+
+class CreateBusinessServiceUseCase
+    implements UseCase<BusinessServiceEntity, BusinessServiceParams> {
+  final BusinessRepository repository;
+  CreateBusinessServiceUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, BusinessServiceEntity>> call(BusinessServiceParams params) {
+    return repository.createService(
+      params.businessId,
+      title: params.title,
+      description: params.description,
+      price: params.price,
+    );
+  }
+}
+
+class UpdateBusinessServiceUseCase
+    implements UseCase<BusinessServiceEntity, BusinessServiceParams> {
+  final BusinessRepository repository;
+  UpdateBusinessServiceUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, BusinessServiceEntity>> call(BusinessServiceParams params) {
+    return repository.updateService(
+      params.businessId,
+      params.serviceId!,
+      title: params.title,
+      description: params.description,
+      price: params.price,
+    );
+  }
+}
+
+class DeleteBusinessServiceParams {
+  final String businessId;
+  final String serviceId;
+  const DeleteBusinessServiceParams({required this.businessId, required this.serviceId});
+}
+
+class DeleteBusinessServiceUseCase
+    implements UseCase<void, DeleteBusinessServiceParams> {
+  final BusinessRepository repository;
+  DeleteBusinessServiceUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, void>> call(DeleteBusinessServiceParams params) {
+    return repository.deleteService(params.businessId, params.serviceId);
+  }
+}

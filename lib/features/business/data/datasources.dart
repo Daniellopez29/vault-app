@@ -8,6 +8,24 @@ abstract class BusinessRemoteDataSource {
   Future<List<BusinessModel>> getAllBusinesses();
   Future<BusinessModel> uploadPhoto(String id, {required List<int> bytes, required String filename});
   Future<BusinessModel> deletePhoto(String id, String photoId);
+
+  /// Catálogo de servicios de un negocio -- pública, la ve cualquiera en el
+  /// directorio de especialistas.
+  Future<List<BusinessServiceModel>> getServices(String businessId);
+  Future<BusinessServiceModel> createService(
+    String businessId, {
+    required String title,
+    required String description,
+    required double price,
+  });
+  Future<BusinessServiceModel> updateService(
+    String businessId,
+    String serviceId, {
+    required String title,
+    required String description,
+    required double price,
+  });
+  Future<void> deleteService(String businessId, String serviceId);
 }
 
 /// [currentUserId] filtra `GET /businesses` (que devuelve los de todos los
@@ -95,6 +113,73 @@ class BusinessRemoteDataSourceImpl implements BusinessRemoteDataSource {
       rethrow;
     } catch (e) {
       throw ServerFailure('Error al eliminar la foto: $e');
+    }
+  }
+
+  @override
+  Future<List<BusinessServiceModel>> getServices(String businessId) async {
+    try {
+      final body = await _client.get('/businesses/$businessId/services', auth: false);
+      final list = body as List<dynamic>? ?? const [];
+      return list.map((e) => BusinessServiceModel.fromJson(e as Map<String, dynamic>)).toList();
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al cargar los servicios: $e');
+    }
+  }
+
+  @override
+  Future<BusinessServiceModel> createService(
+    String businessId, {
+    required String title,
+    required String description,
+    required double price,
+  }) async {
+    try {
+      final body = await _client.post('/businesses/$businessId/services', body: {
+        'title': title,
+        'description': description,
+        'price': price,
+      });
+      return BusinessServiceModel.fromJson(body as Map<String, dynamic>);
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al publicar el servicio: $e');
+    }
+  }
+
+  @override
+  Future<BusinessServiceModel> updateService(
+    String businessId,
+    String serviceId, {
+    required String title,
+    required String description,
+    required double price,
+  }) async {
+    try {
+      final body = await _client.put('/businesses/$businessId/services/$serviceId', body: {
+        'title': title,
+        'description': description,
+        'price': price,
+      });
+      return BusinessServiceModel.fromJson(body as Map<String, dynamic>);
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al actualizar el servicio: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteService(String businessId, String serviceId) async {
+    try {
+      await _client.delete('/businesses/$businessId/services/$serviceId');
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al eliminar el servicio: $e');
     }
   }
 }

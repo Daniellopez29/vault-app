@@ -64,3 +64,22 @@ class BusinessEntity extends Equatable {
   List<Object?> get props =>
       [id, userId, name, types, description, location, isVerified, specialties, photos];
 }
+
+/// Un servicio del catálogo de un negocio (`businesses/{id}/services`), ej.
+/// "Limpieza de sneakers" con su precio.
+class BusinessServiceEntity extends Equatable {
+  final String id;
+  final String title;
+  final String description;
+  final double price;
+
+  const BusinessServiceEntity({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.price,
+  });
+
+  @override
+  List<Object?> get props => [id, title, description, price];
+}

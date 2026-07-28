@@ -42,3 +42,29 @@ class BusinessModel extends BusinessEntity {
         'specialties': specialties,
       };
 }
+
+class BusinessServiceModel extends BusinessServiceEntity {
+  const BusinessServiceModel({
+    required super.id,
+    required super.title,
+    required super.description,
+    required super.price,
+  });
+
+  /// Decodifica `BusinessServiceResponse` de
+  /// `GET/POST/PUT /businesses/{id}/services`.
+  factory BusinessServiceModel.fromJson(Map<String, dynamic> json) {
+    return BusinessServiceModel(
+      id: json['id'] as String,
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toRequestJson() => {
+        'title': title,
+        'description': description,
+        'price': price,
+      };
+}

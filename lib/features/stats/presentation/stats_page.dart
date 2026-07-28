@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
 import '../../auth/presentation/providers.dart';
+import '../../business/presentation/providers.dart';
 import '../../profile/domain/entities.dart';
 import '../../profile/presentation/providers.dart';
 import '../domain/entities.dart';
@@ -19,14 +20,23 @@ class StatsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(collectionStatsProvider);
     final userId = ref.watch(authControllerProvider).user?.id;
+    // El conteo de servicios ahora vive en el catálogo del negocio
+    // (businessservices), no en el perfil de restaurador -- rating y
+    // reseñas siguen siendo un concepto aparte (feature reviews), de ahí
+    // que se combinen dos fuentes distintas acá.
     final restorerState = userId == null
         ? null
         : ref.watch(restorerProfileControllerProvider(userId));
     final restorer = restorerState?.profile;
 
+    final businessId = ref.watch(businessControllerProvider).business?.id;
+    final servicesCount = businessId == null
+        ? 0
+        : ref.watch(businessServicesControllerProvider(businessId)).services.length;
+
     final hasCollection = stats.totalAssets > 0;
     final hasServices =
-        restorer != null && (restorer.services.isNotEmpty || restorer.reviewsCount > 0);
+        restorer != null && (servicesCount > 0 || restorer.reviewsCount > 0);
 
     if (!hasCollection && !hasServices) {
       return const _StatsScaffold(child: _EmptyStats());
@@ -40,7 +50,7 @@ class StatsPage extends ConsumerWidget {
             _CollectionSection(stats: stats),
             if (hasServices) const SizedBox(height: VaultSpacing.xl),
           ],
-          if (hasServices) _ServicesSection(profile: restorer),
+          if (hasServices) _ServicesSection(profile: restorer!, servicesCount: servicesCount),
           const SizedBox(height: VaultSpacing.xl),
         ],
       ),
@@ -194,8 +204,9 @@ class _CollectionSection extends StatelessWidget {
 /// Estadísticas como especialista: servicios ofrecidos y reputación.
 class _ServicesSection extends StatelessWidget {
   final RestorerProfileEntity profile;
+  final int servicesCount;
 
-  const _ServicesSection({required this.profile});
+  const _ServicesSection({required this.profile, required this.servicesCount});
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +223,7 @@ class _ServicesSection extends StatelessWidget {
               child: _StatCard(
                 icon: Icons.handyman_outlined,
                 label: 'Servicios',
-                value: '${profile.services.length}',
+                value: '$servicesCount',
               ),
             ),
             const SizedBox(width: VaultSpacing.md),

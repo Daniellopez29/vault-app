@@ -58,6 +58,11 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
   final Set<_BusinessCategory> _categories = {_BusinessCategory.mantenimiento};
   final List<XFile> _images = [];
   bool _saving = false;
+  // El backend no exige `location` (solo nombre y categoría, ver
+  // CreateBusinessRequest.Validate en api/) -- quien ofrece un servicio sin
+  // local propio puede saltarse este campo por completo, no hace falta
+  // "a domicilio" ni ningún valor de relleno.
+  bool _hasLocation = true;
 
   @override
   void dispose() {
@@ -190,13 +195,29 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
               ),
               const SizedBox(height: VaultSpacing.lg),
 
-              _BusinessLabel('Dirección'),
-              _BusinessField(
-                controller: _addressController,
-                label: 'Dirección',
-                icon: Icons.location_on_outlined,
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Tengo un local o dirección'),
+                subtitle: const Text(
+                  'Desactívalo si ofreces tus servicios sin un lugar fijo',
+                ),
+                value: _hasLocation,
+                onChanged: (v) => setState(() {
+                  _hasLocation = v;
+                  if (!v) _addressController.clear();
+                }),
               ),
-              const SizedBox(height: VaultSpacing.lg),
+              if (_hasLocation) ...[
+                const SizedBox(height: VaultSpacing.sm),
+                _BusinessLabel('Dirección'),
+                _BusinessField(
+                  controller: _addressController,
+                  label: 'Dirección',
+                  icon: Icons.location_on_outlined,
+                ),
+                const SizedBox(height: VaultSpacing.lg),
+              ] else
+                const SizedBox(height: VaultSpacing.md),
 
               _BusinessLabel('Detalles del Negocio'),
               _BusinessField(
@@ -205,11 +226,13 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
                 icon: Icons.chat_bubble_outline,
                 maxLines: 4,
               ),
-              const SizedBox(height: VaultSpacing.sm),
-              Text(
-                '* Agregar una imagen donde se muestre la ubicación del local en el mapa',
-                style: tt.labelSmall,
-              ),
+              if (_hasLocation) ...[
+                const SizedBox(height: VaultSpacing.sm),
+                Text(
+                  '* Agregar una imagen donde se muestre la ubicación del local en el mapa',
+                  style: tt.labelSmall,
+                ),
+              ],
               const SizedBox(height: VaultSpacing.xl),
 
               Row(
