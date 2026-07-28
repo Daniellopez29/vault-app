@@ -5,6 +5,9 @@ import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/search_header.dart';
+import '../../ads/domain/entities.dart';
+import '../../ads/presentation/ad_interleave.dart';
+import '../../ads/presentation/providers.dart';
 import '../../chat/presentation/providers.dart' show conversationsControllerProvider;
 import '../../comments/domain/entities.dart';
 import '../../comments/presentation/comments_sheet.dart';
@@ -19,6 +22,7 @@ class FeedTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(feedControllerProvider);
+    final ads = ref.watch(activeAdsControllerProvider(AdSection.feed)).ads;
     final unreadNotifications =
         ref.watch(notificationsControllerProvider).notifications.where((n) => !n.read).length;
     final unreadChats = ref
@@ -47,6 +51,9 @@ class FeedTab extends ConsumerWidget {
       case FeedStatus.loaded:
         final controller = ref.read(feedControllerProvider.notifier);
         final posts = state.visiblePosts;
+        // Igual que en el Shop: sin anuncios mientras se busca, para no
+        // interrumpir resultados que el usuario está filtrando a propósito.
+        final feedCells = state.isSearching ? posts : interleaveAds(posts, ads);
 
         return RefreshIndicator(
           onRefresh: () => ref.read(feedControllerProvider.notifier).loadFeed(),
@@ -83,17 +90,24 @@ class FeedTab extends ConsumerWidget {
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        final post = posts[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: VaultSpacing.lg),
-                          child: PostCard(
+                        final cell = feedCells[index];
+                        Widget child;
+                        if (cell is AdEntity) {
+                          child = _AdFeedCard(ad: cell);
+                        } else {
+                          final post = cell as PostEntity;
+                          child = PostCard(
                             post: post,
                             onLikeTap: () => controller.toggleLike(post.id),
                             onSaveTap: () => controller.toggleSave(post.id),
-                          ),
+                          );
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: VaultSpacing.lg),
+                          child: child,
                         );
                       },
-                      childCount: posts.length,
+                      childCount: feedCells.length,
                     ),
                   ),
                 ),
@@ -278,3 +292,60 @@ class _ActionStat extends StatelessWidget {
   }
 }
 
+/// Card de anuncio dentro del feed -- mismo lenguaje visual que [PostCard]
+/// (misma silueta: imagen 16/11 arriba, contenido debajo) para que no
+/// desentone entre publicaciones reales, pero marcado como "Patrocinado".
+class _AdFeedCard extends StatelessWidget {
+  final AdEntity ad;
+
+  const _AdFeedCard({required this.ad});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: VaultColors.surface,
+        borderRadius: VaultRadius.cardBorder,
+        boxShadow: VaultShadows.card,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AspectRatio(
+            aspectRatio: 16 / 11,
+            child: ad.imageUrl.isEmpty
+                ? Container(
+                    color: VaultColors.background,
+                    child: Icon(Icons.campaign_outlined,
+                        size: VaultIconSize.xl, color: VaultColors.textSecondary),
+                  )
+                : Image.network(ad.imageUrl, fit: BoxFit.cover),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: VaultSpacing.lg,
+              vertical: VaultSpacing.md,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Patrocinado',
+                    style: tt.labelSmall?.copyWith(color: VaultColors.textSecondary)),
+                const SizedBox(height: VaultSpacing.xs),
+                Text(ad.title, style: tt.titleLarge),
+                if (ad.description.isNotEmpty) ...[
+                  const SizedBox(height: VaultSpacing.xs),
+                  Text(ad.description, style: tt.bodyLarge, maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

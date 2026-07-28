@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 /// Un artículo dentro del carrito: el activo + la cantidad.
 class CartItemEntity extends Equatable {
   final String id;
+  final String sellerId;
   final String title;
   final String brand;
   final String imageUrl;
@@ -11,6 +12,7 @@ class CartItemEntity extends Equatable {
 
   const CartItemEntity({
     required this.id,
+    required this.sellerId,
     required this.title,
     required this.brand,
     required this.imageUrl,
@@ -22,6 +24,7 @@ class CartItemEntity extends Equatable {
 
   CartItemEntity copyWith({int? quantity}) => CartItemEntity(
     id: id,
+    sellerId: sellerId,
     title: title,
     brand: brand,
     imageUrl: imageUrl,
@@ -30,7 +33,7 @@ class CartItemEntity extends Equatable {
   );
 
   @override
-  List<Object?> get props => [id, title, brand, imageUrl, unitPrice, quantity];
+  List<Object?> get props => [id, sellerId, title, brand, imageUrl, unitPrice, quantity];
 }
 
 /// Tipo de método de pago. El ícono y el nombre derivan de aquí,

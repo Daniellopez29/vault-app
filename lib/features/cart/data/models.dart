@@ -3,6 +3,7 @@ import '../domain/entities.dart';
 class CartItemModel extends CartItemEntity {
   const CartItemModel({
     required super.id,
+    required super.sellerId,
     required super.title,
     required super.brand,
     required super.imageUrl,
@@ -12,6 +13,7 @@ class CartItemModel extends CartItemEntity {
 
   factory CartItemModel.fromEntity(CartItemEntity e) => CartItemModel(
     id: e.id,
+    sellerId: e.sellerId,
     title: e.title,
     brand: e.brand,
     imageUrl: e.imageUrl,
@@ -21,6 +23,7 @@ class CartItemModel extends CartItemEntity {
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) => CartItemModel(
     id: json['id'] as String,
+    sellerId: json['sellerId'] as String? ?? '',
     title: json['title'] as String,
     brand: json['brand'] as String,
     imageUrl: json['imageUrl'] as String,
@@ -30,6 +33,7 @@ class CartItemModel extends CartItemEntity {
 
   Map<String, dynamic> toJson() => {
     'id': id,
+    'sellerId': sellerId,
     'title': title,
     'brand': brand,
     'imageUrl': imageUrl,
@@ -41,6 +45,7 @@ class CartItemModel extends CartItemEntity {
   /// CartItemModel (y no la entidad base) al modificar cantidades.
   CartItemModel copyModelWith({int? quantity}) => CartItemModel(
     id: id,
+    sellerId: sellerId,
     title: title,
     brand: brand,
     imageUrl: imageUrl,

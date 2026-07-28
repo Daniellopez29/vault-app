@@ -5,6 +5,7 @@ import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../ads/domain/entities.dart';
+import '../../ads/presentation/ad_interleave.dart';
 import '../../ads/presentation/providers.dart';
 import '../../cart/domain/entities.dart';
 import '../../cart/presentation/providers.dart';
@@ -25,6 +26,7 @@ class ShopTab extends ConsumerWidget {
     ref.read(cartControllerProvider.notifier).addItem(
       CartItemEntity(
         id: item.id,
+        sellerId: item.sellerId,
         title: item.title,
         brand: item.brand,
         imageUrl: item.imageUrl,
@@ -80,7 +82,7 @@ class ShopTab extends ConsumerWidget {
         // Durante una búsqueda no se intercalan anuncios -- mismo criterio
         // que el carrusel, que tampoco se muestra mientras se busca.
         final gridCells =
-            isSearching ? state.items : _interleaveAds(state.items, ads);
+            isSearching ? state.items : interleaveAds(state.items, ads);
 
         return Scaffold(
           backgroundColor: VaultColors.background,
@@ -174,29 +176,6 @@ class ShopTab extends ConsumerWidget {
         );
     }
   }
-}
-
-/// Cada cuántos productos se intercala un anuncio en el grid -- lo bastante
-/// espaciado para que no se sienta invasivo (nunca dos anuncios seguidos).
-const _adSpacing = 8;
-
-/// Mezcla [items] con [ads] cada [_adSpacing] posiciones, rotando entre los
-/// anuncios disponibles (con más de `_adSpacing` productos, el mismo
-/// anuncio puede repetirse más adelante, pero nunca dos veces seguidas).
-/// Sin anuncios activos, devuelve [items] tal cual.
-List<Object> _interleaveAds(List<MarketplaceItemEntity> items, List<AdEntity> ads) {
-  if (ads.isEmpty) return items;
-
-  final cells = <Object>[];
-  var adCursor = 0;
-  for (var i = 0; i < items.length; i++) {
-    cells.add(items[i]);
-    if ((i + 1) % _adSpacing == 0) {
-      cells.add(ads[adCursor % ads.length]);
-      adCursor++;
-    }
-  }
-  return cells;
 }
 
 /// Card de anuncio dentro del grid de productos -- mismo tamaño que

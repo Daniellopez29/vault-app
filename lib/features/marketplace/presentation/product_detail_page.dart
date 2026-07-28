@@ -30,6 +30,7 @@ class ProductDetailPage extends ConsumerWidget {
     ref.read(cartControllerProvider.notifier).addItem(
           CartItemEntity(
             id: item.id,
+            sellerId: item.sellerId,
             title: item.title,
             brand: item.brand,
             imageUrl: item.imageUrl,

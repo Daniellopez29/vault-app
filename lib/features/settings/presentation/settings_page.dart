@@ -62,6 +62,11 @@ class SettingsPage extends ConsumerWidget {
                 label: 'Mi suscripción',
                 onTap: () => context.push(AppRoutes.subscriptionManagement),
               ),
+              _SettingsTile(
+                icon: Icons.account_balance_outlined,
+                label: 'Cobros',
+                onTap: () => context.push(AppRoutes.connectOnboarding),
+              ),
             ],
           ),
           _SettingsSection(

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
+import '../../auth/presentation/providers.dart';
+import '../../orders/domain/usecases.dart';
+import '../../orders/presentation/providers.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
 
@@ -26,6 +30,7 @@ class PaymentMethodPage extends ConsumerStatefulWidget {
 class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
   String? _selectedId;
   PaymentType? _selectedType;
+  bool _paying = false;
 
   @override
   Widget build(BuildContext context) {
@@ -90,15 +95,21 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
               ),
               const SizedBox(height: VaultSpacing.md),
               ElevatedButton.icon(
-                onPressed: _selectedType == null
+                onPressed: (_selectedType == null || _paying)
                     ? null
                     : () => _onPay(_selectedType!),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: VaultColors.accent,
                   foregroundColor: Colors.white,
                 ),
-                icon: const Icon(Icons.lock_outline),
-                label: const Text('Pagar ahora'),
+                icon: _paying
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.lock_outline),
+                label: Text(_paying ? 'Procesando...' : 'Pagar ahora'),
               ),
               const SizedBox(height: VaultSpacing.sm),
               TextButton.icon(
@@ -118,20 +129,105 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
     );
   }
 
-  /// Segun el metodo elegido: la tarjeta ira por Stripe (pendiente), y
+  /// Segun el metodo elegido: la tarjeta cobra de una vez con Stripe, y
   /// transferencia y efectivo muestran sus instrucciones de pago.
-  void _onPay(PaymentType type) {
-    if (type == PaymentType.card) {
+  Future<void> _onPay(PaymentType type) async {
+    if (type != PaymentType.card) {
+      context.push(AppRoutes.paymentInstructions, extra: type);
+      return;
+    }
+    await _payWithCard();
+  }
+
+  /// El carrito puede tener artículos de distintos vendedores -- cada uno
+  /// implica un cargo/escrow independiente (`POST /orders` por artículo,
+  /// ver `CreateOrderUseCase.go`). Si alguno falla a media, NO se reintenta
+  /// todo desde cero: solo se quitan del carrito los que sí se cobraron,
+  /// para que un segundo intento no vuelva a cobrar lo mismo dos veces.
+  Future<void> _payWithCard() async {
+    final items = ref.read(cartControllerProvider).items;
+    if (items.isEmpty) return;
+
+    final email = ref.read(authControllerProvider).user?.email;
+    if (email == null || email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('El pago con tarjeta se procesa con Stripe'),
-        ),
+        const SnackBar(content: Text('No se pudo identificar tu cuenta para procesar el pago')),
       );
       return;
     }
-    context.push(AppRoutes.paymentInstructions, extra: type);
-  }
 
+    setState(() => _paying = true);
+
+    final stripe.PaymentMethod paymentMethod;
+    try {
+      paymentMethod = await stripe.Stripe.instance.createPaymentMethod(
+        params: const stripe.PaymentMethodParams.card(
+          paymentMethodData: stripe.PaymentMethodData(),
+        ),
+      );
+    } on stripe.StripeError catch (e) {
+      if (!mounted) return;
+      setState(() => _paying = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo procesar la tarjeta: ${e.message}')),
+      );
+      return;
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _paying = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error inesperado al leer la tarjeta: $e')),
+      );
+      return;
+    }
+
+    final createOrder = ref.read(createOrderUseCaseProvider);
+    final failures = <String>[];
+    final succeededIds = <String>[];
+
+    for (final item in items) {
+      // Se cobra el mismo total que ya se le mostró al comprador (subtotal
+      // + tarifa de uso), no solo el precio base -- ver OrderSummaryEntity.
+      final amountCents =
+          (item.lineTotal * (1 + OrderSummaryEntity.usageFeeRate) * 100).round();
+      final result = await createOrder(CreateOrderParams(
+        sellerId: item.sellerId,
+        assetId: item.id,
+        amountCents: amountCents,
+        buyerEmail: email,
+        paymentMethodId: paymentMethod.id,
+      ));
+      result.fold(
+        (failure) => failures.add('${item.title}: ${failure.message}'),
+        (_) => succeededIds.add(item.id),
+      );
+    }
+
+    if (!mounted) return;
+    setState(() => _paying = false);
+
+    if (failures.isEmpty) {
+      // Éxito total: OrderSuccessPage lee el resumen del carrito (todavía
+      // completo) y lo vacía ella misma -- no se toca acá.
+      context.push(AppRoutes.orderSuccess);
+      return;
+    }
+
+    for (final id in succeededIds) {
+      await ref.read(cartControllerProvider.notifier).removeItem(id);
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          succeededIds.isEmpty
+              ? 'No se pudo procesar el pago: ${failures.join('; ')}'
+              : 'Algunos artículos no se pudieron cobrar: ${failures.join('; ')}',
+        ),
+      ),
+    );
+  }
 }
 
 class _PaymentTile extends StatelessWidget {
