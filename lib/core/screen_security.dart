@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 /// No tiene efecto en plataformas sin implementación nativa (iOS, web,
 /// desktop): las llamadas fallan en silencio.
 class ScreenSecurity {
-  static const _channel = MethodChannel('com.example.vault_app/security');
+  static const _channel = MethodChannel('vault/device_integrity');
 
   static Future<void> enable() async {
     try {
