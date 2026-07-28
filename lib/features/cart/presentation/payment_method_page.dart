@@ -5,11 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
-<<<<<<< HEAD
 import '../../../core/widgets/fill_button.dart';
-=======
 import '../../../core/widgets/vault_card_field.dart';
->>>>>>> 45ae271c3e622d33c887d33c5a7e7a10cd5a7e95
 import '../../auth/presentation/providers.dart';
 import '../../orders/domain/usecases.dart';
 import '../../orders/presentation/providers.dart';
@@ -114,26 +111,6 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                             ],
                             const SizedBox(height: VaultSpacing.md),
                           ],
-<<<<<<< HEAD
-                          if (isCardSelected)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: VaultSpacing.md),
-                              decoration: BoxDecoration(
-                                color: VaultColors.surface,
-                                borderRadius: VaultRadius.cardBorder,
-                                border: Border.all(color: VaultColors.divider),
-                              ),
-                              child: stripe.CardField(
-                                enablePostalCode: true,
-                                onCardChanged: (details) {
-                                  setState(() =>
-                                      _cardComplete = details?.complete ?? false);
-                                },
-                              ),
-                            ),
-=======
->>>>>>> 45ae271c3e622d33c887d33c5a7e7a10cd5a7e95
                         ],
                       );
                     },
