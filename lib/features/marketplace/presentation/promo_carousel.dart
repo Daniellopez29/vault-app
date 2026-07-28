@@ -12,7 +12,12 @@ import 'item_image.dart';
 class PromoCarousel extends StatefulWidget {
   final List<CarouselSlide> slides;
 
-  const PromoCarousel({super.key, required this.slides});
+  /// Se llama al tocar un slide de anuncio real, además de registrar el
+  /// clic -- antes no navegaba a ningún lado, a diferencia del mismo
+  /// anuncio en el grid del Shop (ver `_AdGridCard` en `shop_tab.dart`).
+  final void Function(AdEntity ad)? onAdTap;
+
+  const PromoCarousel({super.key, required this.slides, this.onAdTap});
 
   @override
   State<PromoCarousel> createState() => _PromoCarouselState();
@@ -72,7 +77,11 @@ class _PromoCarouselState extends State<PromoCarousel> {
   Widget _slideCard(BuildContext context, CarouselSlide slide) {
     return switch (slide) {
       PromoSlide(:final banner) => _PromoCard(banner: banner),
-      AdSlide(:final ad) => AdImpressionTracker(ad: ad, child: _AdCard(ad: ad)),
+      AdSlide(:final ad) => AdImpressionTracker(
+        ad: ad,
+        onTap: widget.onAdTap == null ? null : () => widget.onAdTap!(ad),
+        child: _AdCard(ad: ad),
+      ),
       SubscriptionSlide(:final type) => _SubscriptionCard(
         type: type,
         onTap: () => context.push(AppRoutes.subscription, extra: type),

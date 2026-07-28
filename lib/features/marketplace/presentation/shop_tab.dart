@@ -131,6 +131,16 @@ class ShopTab extends ConsumerWidget {
                           ),
                           ...ads.map(AdSlide.new),
                         ],
+                        // Antes tocar un anuncio del carrusel solo
+                        // registraba el clic y no llevaba a ningún lado --
+                        // mismo criterio que el anuncio del grid de abajo.
+                        onAdTap: (ad) {
+                          final target =
+                              state.items.where((i) => i.id == ad.targetId).firstOrNull;
+                          if (target != null) {
+                            context.push(AppRoutes.productDetail, extra: target);
+                          }
+                        },
                       ),
                     ),
                   ),

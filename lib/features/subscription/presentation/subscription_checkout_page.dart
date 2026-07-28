@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/vault_card_field.dart';
 import '../../auth/presentation/providers.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
@@ -99,19 +99,8 @@ class _SubscriptionCheckoutPageState
               const SizedBox(height: VaultSpacing.xl),
               Text('Datos de tu tarjeta', style: tt.titleMedium),
               const SizedBox(height: VaultSpacing.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.md),
-                decoration: BoxDecoration(
-                  color: VaultColors.surface,
-                  borderRadius: VaultRadius.cardBorder,
-                  border: Border.all(color: VaultColors.divider),
-                ),
-                child: stripe.CardField(
-                  enablePostalCode: true,
-                  onCardChanged: (details) {
-                    setState(() => _cardComplete = details?.complete ?? false);
-                  },
-                ),
+              VaultCardField(
+                onCompleteChanged: (complete) => setState(() => _cardComplete = complete),
               ),
               const SizedBox(height: VaultSpacing.sm),
               Text(

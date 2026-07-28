@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
+import '../../../core/realtime_socket.dart';
 import '../data/datasources.dart';
 import '../data/repositories.dart';
 import '../domain/entities.dart';
@@ -62,9 +65,27 @@ class MyOrdersState {
 class MyOrdersController extends StateNotifier<MyOrdersState> {
   final GetMyOrdersUseCase _getMyOrders;
   final ConfirmOrderUseCase _confirmOrder;
+  StreamSubscription<Map<String, dynamic>>? _shippedSubscription;
 
-  MyOrdersController(this._getMyOrders, this._confirmOrder) : super(const MyOrdersState()) {
+  MyOrdersController(this._getMyOrders, this._confirmOrder, RealtimeSocket realtimeSocket)
+      : super(const MyOrdersState()) {
     load();
+    // Cuando el vendedor marca el pedido como enviado, api/ crea una
+    // notificación subtype=pedido_enviado (ver StartOrderShippedConsumer)
+    // -- sin esto, "Mis pedidos" se quedaba con el estado "retenido" hasta
+    // que el comprador saliera y volviera a entrar a la pantalla, sin poder
+    // confirmar recepción aunque el pedido ya estuviera en camino.
+    _shippedSubscription = realtimeSocket.events().listen((e) {
+      if (e['event'] == 'notification' && e['subtype'] == 'pedido_enviado') {
+        load();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _shippedSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> load() async {
@@ -95,6 +116,7 @@ final myOrdersControllerProvider = StateNotifierProvider<MyOrdersController, MyO
   return MyOrdersController(
     ref.read(getMyOrdersUseCaseProvider),
     ref.read(confirmOrderUseCaseProvider),
+    ref.read(realtimeSocketProvider),
   );
 });
 
@@ -131,9 +153,25 @@ class MySalesState {
 class MySalesController extends StateNotifier<MySalesState> {
   final GetMySalesUseCase _getMySales;
   final ShipOrderUseCase _shipOrder;
+  StreamSubscription<Map<String, dynamic>>? _createdSubscription;
 
-  MySalesController(this._getMySales, this._shipOrder) : super(const MySalesState()) {
+  MySalesController(this._getMySales, this._shipOrder, RealtimeSocket realtimeSocket)
+      : super(const MySalesState()) {
     load();
+    // Misma razón que en MyOrdersController: sin esto, una venta nueva
+    // (subtype=pedido_recibido, ver StartOrderCreatedConsumer) no aparecía
+    // en "Mis ventas" hasta recargar la pantalla a mano.
+    _createdSubscription = realtimeSocket.events().listen((e) {
+      if (e['event'] == 'notification' && e['subtype'] == 'pedido_recibido') {
+        load();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _createdSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> load() async {
@@ -164,5 +202,6 @@ final mySalesControllerProvider = StateNotifierProvider<MySalesController, MySal
   return MySalesController(
     ref.read(getMySalesUseCaseProvider),
     ref.read(shipOrderUseCaseProvider),
+    ref.read(realtimeSocketProvider),
   );
 });

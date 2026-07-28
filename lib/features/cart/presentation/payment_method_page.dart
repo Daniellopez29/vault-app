@@ -5,7 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
+<<<<<<< HEAD
 import '../../../core/widgets/fill_button.dart';
+=======
+import '../../../core/widgets/vault_card_field.dart';
+>>>>>>> 45ae271c3e622d33c887d33c5a7e7a10cd5a7e95
 import '../../auth/presentation/providers.dart';
 import '../../orders/domain/usecases.dart';
 import '../../orders/presentation/providers.dart';
@@ -96,8 +100,21 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                                 _selectedType = method.type;
                               }),
                             ),
+                            // El campo de tarjeta aparece pegado a "Tarjeta"
+                            // en cuanto se elige, no después de TODOS los
+                            // métodos -- antes quedaba hasta el final de la
+                            // lista, tapado por el teclado al escribir.
+                            if (method.type == PaymentType.card &&
+                                method.id == _selectedId) ...[
+                              const SizedBox(height: VaultSpacing.sm),
+                              VaultCardField(
+                                onCompleteChanged: (complete) =>
+                                    setState(() => _cardComplete = complete),
+                              ),
+                            ],
                             const SizedBox(height: VaultSpacing.md),
                           ],
+<<<<<<< HEAD
                           if (isCardSelected)
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -115,6 +132,8 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                                 },
                               ),
                             ),
+=======
+>>>>>>> 45ae271c3e622d33c887d33c5a7e7a10cd5a7e95
                         ],
                       );
                     },

@@ -1,4 +1,6 @@
-﻿import 'package:crypton/crypton.dart';
+﻿import 'dart:developer' as dev;
+
+import 'package:crypton/crypton.dart';
 import 'package:dartz/dartz.dart';
 import 'package:encrypt/encrypt.dart' as enc;
 import '../../../../core/error.dart';
@@ -91,7 +93,13 @@ class RsaEncryptionService implements EncryptionService {
       // Con esa llave AES, desciframos el texto.
       final plainText = encrypter.decrypt64(cipherText, iv: ivObj);
       return Right(plainText);
-    } catch (_) {
+    } catch (e, st) {
+      // El error real se registra (no se le muestra al usuario, sigue
+      // mostrando "mensaje cifrado") -- sin esto, cuando falla acá no hay
+      // forma de saber si fue la privada que no coincide, la llave AES mal
+      // formada, o el padding del texto, y "revisa los logs" no servía de
+      // nada porque no había nada que revisar.
+      dev.log('decryptMessage falló: $e', name: 'chat_e2ee', error: e, stackTrace: st);
       return const Left(ServerFailure('Error al descifrar el mensaje.'));
     }
   }
