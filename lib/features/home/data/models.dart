@@ -17,8 +17,10 @@ class PostModel extends PostEntity {
   });
 
   /// Respuesta de GET/POST /api/v1/posts del API Go. El backend no separa
-  /// título/descripción (solo `content`) ni tiene "guardados" -- se dejan
-  /// vacío/false y esos campos quedan como estado local en la UI.
+  /// título/descripción (solo `content`) -- se deja vacío y ese campo queda
+  /// como estado local en la UI. `is_liked`/`is_saved` sí vienen del
+  /// backend, relativos a quien pide el feed (ver OptionalAuth): con sesión
+  /// reflejan lo que ya marcó antes, sin sesión siempre dan false.
   factory PostModel.fromJson(Map<String, dynamic> json) {
     final photos = json['photos'] as List<dynamic>? ?? const [];
     final firstPhoto =
@@ -34,8 +36,8 @@ class PostModel extends PostEntity {
       timeAgo: timeAgoFrom(json['created_at'] as String? ?? ''),
       likesCount: json['likes_count'] as int? ?? 0,
       commentsCount: json['comments_count'] as int? ?? 0,
-      isLiked: false,
-      isSaved: false,
+      isLiked: json['is_liked'] as bool? ?? false,
+      isSaved: json['is_saved'] as bool? ?? false,
     );
   }
 }

@@ -35,7 +35,11 @@ class FavoriteCard extends StatelessWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: AspectRatio(
               aspectRatio: 16 / 9,
-              child: post.imageUrl.startsWith('assets/')
+              // Antes solo revisaba el prefijo 'assets/', así que un post
+              // sin foto (imageUrl vacío) caía al Image.network('') de
+              // abajo y nunca mostraba nada -- mismo chequeo que ya usa
+              // PostCard en el feed.
+              child: post.imageUrl.isEmpty || post.imageUrl.startsWith('assets/')
                   ? Container(
                 color: VaultColors.background,
                 child: Icon(
@@ -56,9 +60,19 @@ class FavoriteCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(post.title, style: tt.titleLarge),
+                      // post.title del backend siempre viene vacío (ver
+                      // PostModel.fromJson) -- el texto real de la
+                      // publicación es post.description, lo que muestra
+                      // PostCard en el feed. Antes esta tarjeta se quedaba
+                      // con un hueco vacío donde debía ir el contenido.
+                      Text(
+                        post.description,
+                        style: tt.titleMedium,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       const SizedBox(height: 4),
-                      Text(post.authorName, style: tt.titleMedium),
+                      Text(post.authorName, style: tt.titleSmall),
                       const SizedBox(height: 4),
                       Text(post.timeAgo, style: tt.bodyMedium),
                     ],
