@@ -13,7 +13,7 @@ import '../domain/usecases.dart';
 /// Tiempo de inactividad tras el cual se cierra la sesión automáticamente.
 /// El timer solo corre mientras hay un usuario autenticado y se reinicia
 /// con cada interacción (ver [AuthController.onUserInteraction]).
-const kInactivityTimeout = Duration(minutes: 5);
+const kInactivityTimeout = Duration(seconds: 10);
 
 enum AuthStatus { initial, loading, authenticated, roleSelection, error }
 
@@ -182,8 +182,10 @@ class AuthController extends StateNotifier<AuthState> {
     result.fold(
           (failure) => state = state.copyWith(
           status: AuthStatus.error, errorMessage: failure.message),
-          (user) => state = state.copyWith(
-          status: AuthStatus.roleSelection, user: user),
+          (user) {
+        state = state.copyWith(status: AuthStatus.authenticated, user: user);
+        onUserInteraction(); // <-- Inicia la cuenta regresiva desde el primer segundo
+      },
     );
   }
 

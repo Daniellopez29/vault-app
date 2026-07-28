@@ -2,8 +2,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+
+// Módulos internos
 import 'core/api_client.dart';
 import 'core/router.dart';
+import 'core/security/fake_gps_guard.dart'; // <-- Guardián nativo de seguridad
 import 'core/stripe_config.dart';
 import 'core/theme.dart';
 import 'features/auth/presentation/providers.dart';
@@ -11,16 +14,23 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  // Recupera la URL del backend si se ajustó manualmente desde
-  // Configuración (celular físico en otra red, IP distinta, etc).
+
   await ApiConfig.loadOverride();
   await PaymentApiConfig.loadOverride();
   Stripe.publishableKey = StripeConfig.publishableKey;
   await Stripe.instance.applySettings();
-  runApp(const ProviderScope(child: VaultApp()));
+
+  runApp(
+    const FakeGpsGuard(
+      child: ProviderScope(
+        child: VaultApp(),
+      ),
+    ),
+  );
 }
 
 class VaultApp extends ConsumerWidget {
@@ -28,9 +38,7 @@ class VaultApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Si el estado deja de estar autenticado (logout manual, cierre por
-    // inactividad, o borrado de cuenta) y no hay un BuildContext específico
-    // que ya esté navegando, vuelve a la pantalla de login.
+    // Escucha el estado de autenticación para redirigir si expira la sesión
     ref.listen(authControllerProvider, (previous, next) {
       if (previous?.status == AuthStatus.authenticated &&
           next.status != AuthStatus.authenticated) {
@@ -38,8 +46,7 @@ class VaultApp extends ConsumerWidget {
       }
     });
 
-    // Traslúcido: no bloquea los gestos de los widgets hijos, solo los
-    // observa para reiniciar el temporizador de inactividad de la sesión.
+    // Detección global de interacción para el temporizador de inactividad
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () => ref.read(authControllerProvider.notifier).onUserInteraction(),
