@@ -6,6 +6,7 @@ import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/search_header.dart';
 import '../../ads/domain/entities.dart';
+import '../../ads/presentation/ad_impression_tracker.dart';
 import '../../ads/presentation/ad_interleave.dart';
 import '../../ads/presentation/providers.dart';
 import '../../chat/presentation/providers.dart' show conversationsControllerProvider;
@@ -93,7 +94,7 @@ class FeedTab extends ConsumerWidget {
                         final cell = feedCells[index];
                         Widget child;
                         if (cell is AdEntity) {
-                          child = _AdFeedCard(ad: cell);
+                          child = AdImpressionTracker(ad: cell, child: _AdFeedCard(ad: cell));
                         } else {
                           final post = cell as PostEntity;
                           child = PostCard(

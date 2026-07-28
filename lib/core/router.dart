@@ -32,6 +32,7 @@ import '../features/subscription/presentation/subscription_page.dart';
 import '../features/subscription/presentation/subscription_checkout_page.dart';
 import '../features/subscription/presentation/subscription_management_page.dart';
 import '../features/connect/presentation/connect_onboarding_page.dart';
+import '../features/ads/presentation/my_ads_page.dart';
 import '../features/shell/presentation/home_page.dart';
 import '../features/profile/presentation/asset_detail_page.dart';
 import '../features/profile/presentation/edit_asset_page.dart';
@@ -67,6 +68,7 @@ abstract class AppRoutes {
   static const subscription  = '/subscription';
   static const subscriptionManagement = '/subscription-management';
   static const connectOnboarding = '/connect-onboarding';
+  static const myAds = '/my-ads';
   static const stats         = '/stats';
   static const productDetail = '/product-detail';
   static const commerce      = '/commerce';
@@ -132,6 +134,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.connectOnboarding,
       builder: (context, state) => const ConnectOnboardingPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.myAds,
+      builder: (context, state) => const MyAdsPage(),
     ),
     GoRoute(
       path: AppRoutes.subscriptionCheckout,

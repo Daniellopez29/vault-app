@@ -56,4 +56,48 @@ class AdRepositoryImpl implements AdRepository {
       return Left(ServerFailure('Error al eliminar el anuncio: $e'));
     }
   }
+
+  @override
+  Future<Either<Failure, List<AdEntity>>> getMyAds() async {
+    try {
+      final ads = await _remote.getMyAds();
+      return Right(ads);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error al cargar tus anuncios: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AdEntity>> updateAd(
+    String id, {
+    required String title,
+    required String description,
+    required String imageUrl,
+    required String targetSection,
+    required String targetId,
+  }) async {
+    try {
+      final ad = await _remote.updateAd(
+        id,
+        title: title,
+        description: description,
+        imageUrl: imageUrl,
+        targetSection: targetSection,
+        targetId: targetId,
+      );
+      return Right(ad);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error al actualizar el anuncio: $e'));
+    }
+  }
+
+  @override
+  Future<void> registerImpression(String id) => _remote.registerImpression(id);
+
+  @override
+  Future<void> registerClick(String id) => _remote.registerClick(id);
 }

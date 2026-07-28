@@ -4,6 +4,7 @@ import '../../../core/theme.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/router.dart';
 import '../../ads/domain/entities.dart';
+import '../../ads/presentation/ad_impression_tracker.dart';
 import '../../subscription/domain/entities.dart';
 import '../domain/entities.dart';
 import 'item_image.dart';
@@ -71,7 +72,7 @@ class _PromoCarouselState extends State<PromoCarousel> {
   Widget _slideCard(BuildContext context, CarouselSlide slide) {
     return switch (slide) {
       PromoSlide(:final banner) => _PromoCard(banner: banner),
-      AdSlide(:final ad) => _AdCard(ad: ad),
+      AdSlide(:final ad) => AdImpressionTracker(ad: ad, child: _AdCard(ad: ad)),
       SubscriptionSlide(:final type) => _SubscriptionCard(
         type: type,
         onTap: () => context.push(AppRoutes.subscription, extra: type),

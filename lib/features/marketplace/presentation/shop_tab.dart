@@ -5,6 +5,7 @@ import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../ads/domain/entities.dart';
+import '../../ads/presentation/ad_impression_tracker.dart';
 import '../../ads/presentation/ad_interleave.dart';
 import '../../ads/presentation/providers.dart';
 import '../../cart/domain/entities.dart';
@@ -152,7 +153,23 @@ class ShopTab extends ConsumerWidget {
                             (context, index) {
                           final cell = gridCells[index];
                           if (cell is AdEntity) {
-                            return _AdGridCard(ad: cell);
+                            return AdImpressionTracker(
+                              ad: cell,
+                              onTap: () {
+                                // Si el anuncio apunta a un producto que ya
+                                // está cargado en el catálogo, se navega a
+                                // su detalle -- si no (p.ej. se vendió o ya
+                                // no está en venta), el clic igual queda
+                                // registrado, solo no hay a dónde ir.
+                                final target = state.items
+                                    .where((i) => i.id == cell.targetId)
+                                    .firstOrNull;
+                                if (target != null) {
+                                  context.push(AppRoutes.productDetail, extra: target);
+                                }
+                              },
+                              child: _AdGridCard(ad: cell),
+                            );
                           }
                           final item = cell as MarketplaceItemEntity;
                           return GestureDetector(

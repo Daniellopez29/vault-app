@@ -18,6 +18,8 @@ class AdEntity extends Equatable {
   final String targetSection;
   final String targetId;
   final String status;
+  final int impressions;
+  final int clicks;
 
   const AdEntity({
     required this.id,
@@ -27,9 +29,11 @@ class AdEntity extends Equatable {
     required this.targetSection,
     required this.targetId,
     required this.status,
+    this.impressions = 0,
+    this.clicks = 0,
   });
 
   @override
   List<Object?> get props =>
-      [id, title, description, imageUrl, targetSection, targetId, status];
+      [id, title, description, imageUrl, targetSection, targetId, status, impressions, clicks];
 }

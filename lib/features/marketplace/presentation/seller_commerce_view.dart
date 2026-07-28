@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
+import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../business/presentation/my_business_tab.dart';
 import '../../subscription/domain/entities.dart';
@@ -66,7 +68,13 @@ class _ProductsForSaleTab extends ConsumerWidget {
         _ProductSubscriptionCard(
           onTap: () => startAdvertiseFlow(context, ref, type: SubscriptionType.product),
         ),
-        const SizedBox(height: VaultSpacing.lg),
+        const SizedBox(height: VaultSpacing.sm),
+        TextButton.icon(
+          onPressed: () => context.push(AppRoutes.myAds),
+          icon: const Icon(Icons.campaign_outlined),
+          label: const Text('Ver mis anuncios'),
+        ),
+        const SizedBox(height: VaultSpacing.md),
         switch (state.status) {
           ProfileAssetsStatus.initial ||
           ProfileAssetsStatus.loading =>

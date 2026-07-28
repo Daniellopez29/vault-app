@@ -9,9 +9,12 @@ class AdModel extends AdEntity {
     required super.targetSection,
     required super.targetId,
     required super.status,
+    super.impressions,
+    super.clicks,
   });
 
-  /// Decodifica `AdResponse` (`GET /ads`, `POST /ads`) del backend de pagos.
+  /// Decodifica `AdResponse` (`GET /ads`, `GET /ads/mine`, `POST/PUT /ads`)
+  /// del backend de pagos.
   factory AdModel.fromJson(Map<String, dynamic> json) {
     return AdModel(
       id: json['id'] as String,
@@ -21,6 +24,8 @@ class AdModel extends AdEntity {
       targetSection: json['target_section'] as String? ?? '',
       targetId: json['target_id'] as String? ?? '',
       status: json['status'] as String? ?? '',
+      impressions: (json['impressions'] as num?)?.toInt() ?? 0,
+      clicks: (json['clicks'] as num?)?.toInt() ?? 0,
     );
   }
 }
