@@ -6,6 +6,7 @@ import '../../../core/api_config.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
 import '../../auth/presentation/providers.dart';
+import '../domain/usecases.dart';
 import 'providers.dart';
 
 /// Pantalla "Cobros": onboarding de Stripe Connect. Sin esto, `payment/`
