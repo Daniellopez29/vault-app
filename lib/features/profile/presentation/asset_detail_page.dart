@@ -1,10 +1,12 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
+import '../../auth/presentation/providers.dart';
 import '../../maintenance/domain/entities.dart';
 import '../../maintenance/presentation/providers.dart';
 import '../domain/entities.dart';
@@ -48,6 +50,10 @@ class AssetDetailPage extends ConsumerWidget {
           Text('Historial de mantenimiento', style: tt.titleMedium),
           const SizedBox(height: VaultSpacing.sm),
           _MaintenanceList(state: maintenanceState),
+          const SizedBox(height: VaultSpacing.lg),
+          Text('Certificado blockchain', style: tt.titleMedium),
+          const SizedBox(height: VaultSpacing.sm),
+          _CertificateSection(asset: asset),
           const SizedBox(height: 80),
         ],
       ),
@@ -104,6 +110,103 @@ class _AssetSummary extends StatelessWidget {
   Widget _row(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: VaultSpacing.xs),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: VaultColors.textSecondary)),
+          Text(value, style: const TextStyle(color: VaultColors.textPrimary)),
+        ],
+      ),
+    );
+  }
+}
+
+/// Certificado de propiedad emitido en Vara Network: mientras la
+/// certificación asíncrona no haya terminado (`asset.isVerified == false`,
+/// ver `AssetModel.fromJson`), solo se avisa que está en curso.
+class _CertificateSection extends ConsumerWidget {
+  final AssetEntity asset;
+
+  const _CertificateSection({required this.asset});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!asset.isVerified) {
+      return Container(
+        padding: const EdgeInsets.all(VaultSpacing.md),
+        decoration: BoxDecoration(
+          color: VaultColors.surface,
+          borderRadius: VaultRadius.cardBorder,
+          border: Border.all(color: VaultColors.divider),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: VaultSpacing.md),
+            Expanded(child: Text('Verificando en Vara Network...')),
+          ],
+        ),
+      );
+    }
+
+    final ownerName = ref.watch(authControllerProvider).user?.fullName ?? 'Tú';
+    final txId = asset.blockchainTxId ?? '';
+    final shortTxId =
+        txId.length > 14 ? '${txId.substring(0, 8)}…${txId.substring(txId.length - 6)}' : txId;
+
+    return Container(
+      padding: const EdgeInsets.all(VaultSpacing.md),
+      decoration: BoxDecoration(
+        color: VaultColors.surface,
+        borderRadius: VaultRadius.cardBorder,
+        border: Border.all(color: VaultColors.success),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.verified_user, color: VaultColors.success),
+              const SizedBox(width: VaultSpacing.sm),
+              Text('Certificado de propiedad',
+                  style: Theme.of(context).textTheme.titleSmall),
+            ],
+          ),
+          const SizedBox(height: VaultSpacing.sm),
+          _certRow('Dueño', ownerName),
+          _certRow('Producto', '${asset.brand} ${asset.name}'),
+          _certRow('Categoría', asset.category.displayName),
+          const SizedBox(height: VaultSpacing.xs),
+          Row(
+            children: [
+              const Text('ID en Vara: ', style: TextStyle(color: VaultColors.textSecondary)),
+              Expanded(
+                child: Text(shortTxId, style: const TextStyle(fontFamily: 'monospace')),
+              ),
+              TextButton.icon(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: txId));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('ID copiado')),
+                  );
+                },
+                icon: const Icon(Icons.copy, size: VaultIconSize.sm),
+                label: const Text('Copiar'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _certRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

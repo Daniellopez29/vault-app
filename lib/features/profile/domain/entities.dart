@@ -80,6 +80,7 @@ class AssetEntity extends Equatable {
   final int servicesCount;
   final int restorationsCount;
   final bool isVerified;
+  final String? blockchainTxId;
   final String? notes;
   final List<AssetPhotoEntity> photos;
 
@@ -104,6 +105,7 @@ class AssetEntity extends Equatable {
     required this.servicesCount,
     required this.restorationsCount,
     this.isVerified = false,
+    this.blockchainTxId,
     this.notes,
     this.photos = const [],
     this.isForSale = false,
@@ -143,6 +145,7 @@ class AssetEntity extends Equatable {
       servicesCount: servicesCount,
       restorationsCount: restorationsCount,
       isVerified: isVerified,
+      blockchainTxId: blockchainTxId,
       notes: notes ?? this.notes,
       photos: photos,
       isForSale: isForSale ?? this.isForSale,
@@ -157,7 +160,8 @@ class AssetEntity extends Equatable {
   List<Object?> get props => [
     id, category, brand, name, imageUrl, acquisitionDate, originalPrice,
     origin, size, condition, servicesCount, restorationsCount, isVerified,
-    notes, photos, isForSale, salePrice, saleDescription, isPublished, publishCaption,
+    blockchainTxId, notes, photos, isForSale, salePrice, saleDescription,
+    isPublished, publishCaption,
   ];
 }
 

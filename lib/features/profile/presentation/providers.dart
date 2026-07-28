@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
+import '../../../core/realtime_socket.dart';
 import '../../../core/usecase.dart';
 import '../data/datasources.dart';
 import '../data/repositories.dart';
@@ -114,6 +117,7 @@ StateNotifierProvider<ProfileAssetsController, ProfileAssetsState>((ref) {
     editAssetUseCase: ref.read(editAssetUseCaseProvider),
     uploadAssetPhotoUseCase: ref.read(uploadAssetPhotoUseCaseProvider),
     deleteAssetPhotoUseCase: ref.read(deleteAssetPhotoUseCaseProvider),
+    realtimeSocket: ref.read(realtimeSocketProvider),
   );
 });
 
@@ -126,6 +130,7 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
   final EditAssetUseCase _editAsset;
   final UploadAssetPhotoUseCase _uploadAssetPhoto;
   final DeleteAssetPhotoUseCase _deleteAssetPhoto;
+  StreamSubscription<Map<String, dynamic>>? _blockchainSubscription;
 
   ProfileAssetsController({
     required GetUserAssetsUseCase getUserAssetsUseCase,
@@ -136,6 +141,7 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
     required EditAssetUseCase editAssetUseCase,
     required UploadAssetPhotoUseCase uploadAssetPhotoUseCase,
     required DeleteAssetPhotoUseCase deleteAssetPhotoUseCase,
+    required RealtimeSocket realtimeSocket,
   })  : _getUserAssets = getUserAssetsUseCase,
         _addAsset = addAssetUseCase,
         _deleteAsset = deleteAssetUseCase,
@@ -146,6 +152,20 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
         _deleteAssetPhoto = deleteAssetPhotoUseCase,
         super(const ProfileAssetsState()) {
     loadAssets();
+    // Cuando termina la certificación en Vara (async, 10-30s), el activo ya
+    // vino sin blockchain_tx_id en el load original -- sin esto el badge se
+    // quedaría en "Verificando..." hasta que el usuario recargue a mano.
+    _blockchainSubscription = realtimeSocket.events().listen((e) {
+      if (e['event'] == 'notification' && e['subtype'] == 'asset_verificado') {
+        loadAssets();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _blockchainSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> loadAssets() async {

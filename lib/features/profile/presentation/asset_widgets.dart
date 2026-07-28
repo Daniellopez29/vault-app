@@ -170,6 +170,14 @@ class AssetCard extends ConsumerWidget {
                       color: VaultColors.accent,
                     ),
                   ),
+                Positioned(
+                  bottom: VaultSpacing.xs,
+                  left: VaultSpacing.xs,
+                  child: _StatusBadge(
+                    label: asset.isVerified ? 'Verificado' : 'Verificando...',
+                    color: asset.isVerified ? VaultColors.success : VaultColors.textSecondary,
+                  ),
+                ),
               ],
             ),
             ),
