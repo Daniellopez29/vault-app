@@ -41,6 +41,12 @@ final getConversationsUseCaseProvider =
 final markMessagesAsReadUseCaseProvider =
     Provider((ref) => MarkMessagesAsReadUseCase(ref.read(chatRepositoryProvider)));
 
+final deleteMessageUseCaseProvider =
+    Provider((ref) => DeleteMessageUseCase(ref.read(chatRepositoryProvider)));
+
+final deleteConversationUseCaseProvider =
+    Provider((ref) => DeleteConversationUseCase(ref.read(chatRepositoryProvider)));
+
 enum ConversationStatus { initial, loading, loaded, error }
 
 class ConversationState {
@@ -80,6 +86,7 @@ final conversationControllerProvider =
     getConversation: ref.read(getConversationUseCaseProvider),
     sendMessage: ref.read(sendMessageUseCaseProvider),
     markMessagesAsRead: ref.read(markMessagesAsReadUseCaseProvider),
+    deleteMessage: ref.read(deleteMessageUseCaseProvider),
     // Al marcar mensajes como leídos acá, el contador de la bandeja
     // (conversationsControllerProvider) queda desactualizado hasta que algo
     // lo recargue -- por eso se lo avisamos directo en vez de esperar a que
@@ -94,6 +101,7 @@ class ConversationController extends StateNotifier<ConversationState> {
   final GetConversationUseCase _getConversation;
   final SendMessageUseCase _sendMessage;
   final MarkMessagesAsReadUseCase _markMessagesAsRead;
+  final DeleteMessageUseCase _deleteMessage;
   final VoidCallback? _onMessagesRead;
   StreamSubscription<MessageEntity>? _subscription;
 
@@ -103,12 +111,14 @@ class ConversationController extends StateNotifier<ConversationState> {
     required GetConversationUseCase getConversation,
     required SendMessageUseCase sendMessage,
     required MarkMessagesAsReadUseCase markMessagesAsRead,
+    required DeleteMessageUseCase deleteMessage,
     VoidCallback? onMessagesRead,
   })  : _otherUserId = otherUserId,
         _repository = repository,
         _getConversation = getConversation,
         _sendMessage = sendMessage,
         _markMessagesAsRead = markMessagesAsRead,
+        _deleteMessage = deleteMessage,
         _onMessagesRead = onMessagesRead,
         super(const ConversationState()) {
     _load();
@@ -175,6 +185,18 @@ class ConversationController extends StateNotifier<ConversationState> {
     );
   }
 
+  /// Elimina solo de mi lado -- si falla, el mensaje vuelve a aparecer.
+  Future<void> deleteMessage(String messageId) async {
+    final current = state.messages;
+    state = state.copyWith(messages: current.where((m) => m.id != messageId).toList());
+
+    final result = await _deleteMessage(messageId);
+    result.fold(
+      (failure) => state = state.copyWith(messages: current, errorMessage: failure.message),
+      (_) {},
+    );
+  }
+
   @override
   void dispose() {
     _subscription?.cancel();
@@ -215,6 +237,7 @@ final conversationsControllerProvider =
   return ConversationsController(
     repository: ref.read(chatRepositoryProvider),
     getConversations: ref.read(getConversationsUseCaseProvider),
+    deleteConversation: ref.read(deleteConversationUseCaseProvider),
   );
 });
 
@@ -225,13 +248,16 @@ final conversationsControllerProvider =
 class ConversationsController extends StateNotifier<ConversationsState> {
   final ChatRepository _repository;
   final GetConversationsUseCase _getConversations;
+  final DeleteConversationUseCase _deleteConversation;
   StreamSubscription<MessageEntity>? _subscription;
 
   ConversationsController({
     required ChatRepository repository,
     required GetConversationsUseCase getConversations,
+    required DeleteConversationUseCase deleteConversation,
   })  : _repository = repository,
         _getConversations = getConversations,
+        _deleteConversation = deleteConversation,
         super(const ConversationsState()) {
     load();
     _subscription = _repository.incomingMessages().listen((_) => load());
@@ -249,6 +275,20 @@ class ConversationsController extends StateNotifier<ConversationsState> {
         status: ConversationsStatus.loaded,
         conversations: conversations,
       ),
+    );
+  }
+
+  /// Elimina solo de mi lado -- si falla, la conversación vuelve a aparecer.
+  Future<void> deleteConversation(String otherUserId) async {
+    final current = state.conversations;
+    state = state.copyWith(
+      conversations: current.where((c) => c.otherUserId != otherUserId).toList(),
+    );
+
+    final result = await _deleteConversation(otherUserId);
+    result.fold(
+      (failure) => state = state.copyWith(conversations: current, errorMessage: failure.message),
+      (_) {},
     );
   }
 

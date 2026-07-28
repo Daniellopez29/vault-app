@@ -5,6 +5,7 @@ import 'models.dart';
 abstract class NotificationsRemoteDataSource {
   Future<List<NotificationModel>> getMyNotifications();
   Future<void> markAsRead(String id);
+  Future<void> markAllAsRead();
   Future<void> delete(String id);
 }
 
@@ -34,6 +35,17 @@ class NotificationsRemoteDataSourceImpl implements NotificationsRemoteDataSource
       rethrow;
     } catch (e) {
       throw ServerFailure('Error al marcar la notificación como leída: $e');
+    }
+  }
+
+  @override
+  Future<void> markAllAsRead() async {
+    try {
+      await _client.put('/notifications/read-all');
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al marcar las notificaciones como leídas: $e');
     }
   }
 

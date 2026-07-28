@@ -6,12 +6,31 @@ import '../../../core/time_ago.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
 
-class NotificationsPage extends ConsumerWidget {
+class NotificationsPage extends ConsumerStatefulWidget {
   const NotificationsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationsPage> createState() => _NotificationsPageState();
+}
+
+class _NotificationsPageState extends ConsumerState<NotificationsPage> {
+  bool _markedAllRead = false;
+
+  /// Al abrir la pantalla, todo lo que se ve pasa a "leído" -- antes se
+  /// quedaban como no leídas para siempre a menos que tocaras cada una,
+  /// y seguían contando en el badge/reapareciendo como pendientes.
+  void _maybeMarkAllRead(NotificationsState state) {
+    if (_markedAllRead || state.status != NotificationsStatus.loaded) return;
+    _markedAllRead = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(notificationsControllerProvider.notifier).markAllAsRead();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(notificationsControllerProvider);
+    _maybeMarkAllRead(state);
 
     return Scaffold(
       backgroundColor: VaultColors.background,

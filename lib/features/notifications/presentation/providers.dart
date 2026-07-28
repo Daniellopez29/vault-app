@@ -28,6 +28,10 @@ final deleteNotificationUseCaseProvider = Provider<DeleteNotificationUseCase>((r
   return DeleteNotificationUseCase(ref.read(notificationsRepositoryProvider));
 });
 
+final markAllNotificationsAsReadUseCaseProvider = Provider<MarkAllNotificationsAsReadUseCase>((ref) {
+  return MarkAllNotificationsAsReadUseCase(ref.read(notificationsRepositoryProvider));
+});
+
 enum NotificationsStatus { loading, loaded, error }
 
 class NotificationsState {
@@ -57,12 +61,14 @@ class NotificationsState {
 class NotificationsController extends StateNotifier<NotificationsState> {
   final GetMyNotificationsUseCase _getMyNotifications;
   final MarkNotificationAsReadUseCase _markAsRead;
+  final MarkAllNotificationsAsReadUseCase _markAllAsRead;
   final DeleteNotificationUseCase _delete;
   StreamSubscription<NotificationEntity>? _subscription;
 
   NotificationsController(
     this._getMyNotifications,
     this._markAsRead,
+    this._markAllAsRead,
     this._delete,
     NotificationsRepository repository,
   ) : super(const NotificationsState()) {
@@ -109,6 +115,23 @@ class NotificationsController extends StateNotifier<NotificationsState> {
     );
   }
 
+  /// Marca todo lo pendiente como leído -- se llama al abrir la pantalla,
+  /// para que las notificaciones viejas dejen de contarse como pendientes
+  /// (badge de la barra inferior) sin tener que tocarlas una por una.
+  Future<void> markAllAsRead() async {
+    final current = state.notifications;
+    if (current.every((n) => n.read)) return;
+
+    final optimistic = current.map((n) => n.copyWith(read: true)).toList();
+    state = state.copyWith(notifications: optimistic);
+
+    final result = await _markAllAsRead(const NoParams());
+    result.fold(
+      (failure) => state = state.copyWith(notifications: current, errorMessage: failure.message),
+      (_) {},
+    );
+  }
+
   Future<void> delete(String id) async {
     final current = state.notifications;
     state = state.copyWith(notifications: current.where((n) => n.id != id).toList());
@@ -126,6 +149,7 @@ final notificationsControllerProvider =
   return NotificationsController(
     ref.read(getMyNotificationsUseCaseProvider),
     ref.read(markNotificationAsReadUseCaseProvider),
+    ref.read(markAllNotificationsAsReadUseCaseProvider),
     ref.read(deleteNotificationUseCaseProvider),
     ref.read(notificationsRepositoryProvider),
   );

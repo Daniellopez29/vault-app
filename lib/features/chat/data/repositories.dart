@@ -190,6 +190,30 @@ class ChatRepositoryImpl implements ChatRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, void>> deleteMessage(String messageId) async {
+    try {
+      await _remote.deleteMessage(messageId);
+      return const Right(null);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error al eliminar el mensaje: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteConversation(String otherUserId) async {
+    try {
+      await _remote.deleteConversation(otherUserId);
+      return const Right(null);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error al eliminar la conversación: $e'));
+    }
+  }
+
   Future<String?> _ownPrivateKeyString() async {
     final userId = _currentUserId;
     if (userId == null) {
