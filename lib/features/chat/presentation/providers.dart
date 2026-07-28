@@ -150,17 +150,28 @@ class ConversationController extends StateNotifier<ConversationState> {
   }
 
   /// Envío optimista: el mensaje propio aparece de inmediato, sin esperar
-  /// la respuesta del servidor.
-  Future<void> send(String text) async {
+  /// la respuesta del servidor. Devuelve `null` si se envió con éxito, o el
+  /// mensaje de error si falló -- antes el error solo quedaba guardado en
+  /// `state.errorMessage`, que `_MessagesBody` nunca mostraba fuera del
+  /// estado `error` (ese caso es solo para la carga inicial), así que
+  /// cualquier falla al enviar (llave del destinatario no registrada,
+  /// llave propia no lista, error de red) se perdía en silencio.
+  Future<String?> send(String text) async {
     final trimmed = text.trim();
-    if (trimmed.isEmpty) return;
+    if (trimmed.isEmpty) return null;
 
     final result = await _sendMessage(
       SendMessageParams(recipientId: _otherUserId, plainText: trimmed),
     );
-    result.fold(
-      (failure) => state = state.copyWith(errorMessage: failure.message),
-      (message) => state = state.copyWith(messages: [...state.messages, message]),
+    return result.fold(
+      (failure) {
+        state = state.copyWith(errorMessage: failure.message);
+        return failure.message;
+      },
+      (message) {
+        state = state.copyWith(messages: [...state.messages, message]);
+        return null;
+      },
     );
   }
 

@@ -149,7 +149,9 @@ class _MessageBubble extends StatelessWidget {
 /// Barra inferior para escribir un mensaje, mismo lenguaje visual que
 /// `CommentInputBar` (ver `features/comments/presentation/widgets.dart`).
 class _ChatInputBar extends StatefulWidget {
-  final ValueChanged<String> onSend;
+  /// Devuelve `null` si se envió con éxito, o el mensaje de error si falló
+  /// (ver `ConversationController.send`).
+  final Future<String?> Function(String) onSend;
 
   const _ChatInputBar({required this.onSend});
 
@@ -160,6 +162,7 @@ class _ChatInputBar extends StatefulWidget {
 class _ChatInputBarState extends State<_ChatInputBar> {
   final _controller = TextEditingController();
   bool _canSend = false;
+  bool _sending = false;
 
   @override
   void initState() {
@@ -176,11 +179,26 @@ class _ChatInputBarState extends State<_ChatInputBar> {
     super.dispose();
   }
 
-  void _send() {
+  /// Antes esto vaciaba el campo de texto de inmediato sin esperar el
+  /// resultado, así que un envío fallido (llave del destinatario no
+  /// registrada, sin conexión, etc.) se veía idéntico a uno exitoso -- el
+  /// texto desaparecía y el mensaje simplemente nunca llegaba, sin ningún
+  /// aviso. Ahora se espera la respuesta: solo se limpia si se envió, y si
+  /// falló se conserva el texto y se muestra el error.
+  Future<void> _send() async {
     final text = _controller.text.trim();
-    if (text.isEmpty) return;
-    widget.onSend(text);
-    _controller.clear();
+    if (text.isEmpty || _sending) return;
+    setState(() => _sending = true);
+    final error = await widget.onSend(text);
+    if (!mounted) return;
+    setState(() => _sending = false);
+    if (error == null) {
+      _controller.clear();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo enviar: $error')),
+      );
+    }
   }
 
   @override
@@ -215,13 +233,22 @@ class _ChatInputBarState extends State<_ChatInputBar> {
               ),
             ),
             const SizedBox(width: VaultSpacing.sm),
-            IconButton(
-              onPressed: _canSend ? _send : null,
-              icon: Icon(
-                Icons.send,
-                color: _canSend ? VaultColors.primary : VaultColors.textSecondary,
-              ),
-            ),
+            _sending
+                ? const Padding(
+                    padding: EdgeInsets.all(VaultSpacing.sm),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : IconButton(
+                    onPressed: _canSend ? _send : null,
+                    icon: Icon(
+                      Icons.send,
+                      color: _canSend ? VaultColors.primary : VaultColors.textSecondary,
+                    ),
+                  ),
           ],
         ),
       ),

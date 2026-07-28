@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'core/api_config.dart';
+import 'core/providers.dart';
 import 'core/realtime_config.dart';
 import 'core/router.dart';
 import 'core/stripe_config.dart';
@@ -25,11 +26,40 @@ void main() async {
   runApp(const ProviderScope(child: VaultApp()));
 }
 
-class VaultApp extends ConsumerWidget {
+class VaultApp extends ConsumerStatefulWidget {
   const VaultApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<VaultApp> createState() => _VaultAppState();
+}
+
+class _VaultAppState extends ConsumerState<VaultApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // El SO suele matar el socket de tiempo real mientras la app está en
+    // segundo plano sin que el cliente se entere -- sin esto, el chat y las
+    // notificaciones podían quedarse "congelados" hasta que el backoff
+    // interno de RealtimeSocket reconectara solo (hasta 30s) o hasta reabrir
+    // sesión. Al volver a primer plano se fuerza una reconexión inmediata.
+    if (state == AppLifecycleState.resumed) {
+      ref.read(realtimeSocketProvider).kick();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Si el estado deja de estar autenticado (logout manual, cierre por
     // inactividad, o borrado de cuenta) y no hay un BuildContext específico
     // que ya esté navegando, vuelve a la pantalla de login.
