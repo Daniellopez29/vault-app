@@ -10,10 +10,12 @@ class OrderModel extends OrderEntity {
     required super.sellerAmountCents,
     required super.currency,
     required super.status,
+    required super.createdAt,
   });
 
-  /// Decodifica `OrderResponse` de `POST /orders` -- respuesta plana, sin
-  /// envoltura (igual que `POST /subscriptions`).
+  /// Decodifica `OrderResponse` de `POST /orders`, `GET /orders/mine` y
+  /// `GET /orders/selling` -- misma forma plana en los tres casos (ver
+  /// `OrderResponse.go`).
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
       id: json['id'] as String,
@@ -24,6 +26,7 @@ class OrderModel extends OrderEntity {
       sellerAmountCents: (json['seller_amount_cents'] as num?)?.toInt() ?? 0,
       currency: json['currency'] as String? ?? 'mxn',
       status: json['status'] as String? ?? '',
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
     );
   }
 }

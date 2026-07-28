@@ -32,4 +32,52 @@ class OrderRepositoryImpl implements OrderRepository {
       return Left(ServerFailure('Error al procesar el pago: $e'));
     }
   }
+
+  @override
+  Future<Either<Failure, List<OrderEntity>>> getMyOrders() async {
+    try {
+      final orders = await _remote.getMyOrders();
+      return Right(orders);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error al cargar tus pedidos: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<OrderEntity>>> getMySales() async {
+    try {
+      final orders = await _remote.getMySales();
+      return Right(orders);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error al cargar tus ventas: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, OrderEntity>> confirmOrder(String id) async {
+    try {
+      final order = await _remote.confirmOrder(id);
+      return Right(order);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error al confirmar el pedido: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, OrderEntity>> shipOrder(String id) async {
+    try {
+      final order = await _remote.shipOrder(id);
+      return Right(order);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error al marcar el pedido como enviado: $e'));
+    }
+  }
 }

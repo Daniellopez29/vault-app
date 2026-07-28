@@ -43,6 +43,11 @@ class SettingsPage extends ConsumerWidget {
               title: 'Compras',
               children: [
                 _SettingsTile(
+                  icon: Icons.receipt_long_outlined,
+                  label: 'Mis pedidos',
+                  onTap: () => context.push(AppRoutes.myOrders),
+                ),
+                _SettingsTile(
                   icon: Icons.location_on_outlined,
                   label: 'Direcciones de envío',
                   onTap: () => context.push(AppRoutes.addresses),

@@ -12,6 +12,7 @@ import '../../cart/domain/entities.dart';
 import '../../cart/presentation/providers.dart';
 import '../../chat/presentation/providers.dart' show conversationsControllerProvider;
 import '../../notifications/presentation/providers.dart' show notificationsControllerProvider;
+import '../../subscription/presentation/providers.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
 import '../../../core/widgets/search_header.dart';
@@ -43,6 +44,8 @@ class ShopTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(shopControllerProvider);
     final ads = ref.watch(activeAdsControllerProvider(AdSection.marketplace)).ads;
+    final hasActiveSubscription =
+        ref.watch(subscriptionStatusControllerProvider).subscription?.isActive ?? false;
     final unreadNotifications =
         ref.watch(notificationsControllerProvider).notifications.where((n) => !n.read).length;
     final unreadChats = ref
@@ -120,7 +123,14 @@ class ShopTab extends ConsumerWidget {
                         VaultSpacing.xs,
                       ),
                       child: PromoCarousel(
-                        slides: [...state.slides, ...ads.map(AdSlide.new)],
+                        slides: [
+                          // Ya suscrito, no tiene caso seguir ofreciéndole
+                          // el mismo plan que ya compró.
+                          ...state.slides.where(
+                            (s) => s is! SubscriptionSlide || !hasActiveSubscription,
+                          ),
+                          ...ads.map(AdSlide.new),
+                        ],
                       ),
                     ),
                   ),

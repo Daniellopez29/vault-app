@@ -31,3 +31,31 @@ class CreateOrderUseCase {
         paymentMethodId: params.paymentMethodId,
       );
 }
+
+class GetMyOrdersUseCase {
+  final OrderRepository repository;
+  const GetMyOrdersUseCase(this.repository);
+
+  Future<Either<Failure, List<OrderEntity>>> call() => repository.getMyOrders();
+}
+
+class GetMySalesUseCase {
+  final OrderRepository repository;
+  const GetMySalesUseCase(this.repository);
+
+  Future<Either<Failure, List<OrderEntity>>> call() => repository.getMySales();
+}
+
+class ConfirmOrderUseCase {
+  final OrderRepository repository;
+  const ConfirmOrderUseCase(this.repository);
+
+  Future<Either<Failure, OrderEntity>> call(String id) => repository.confirmOrder(id);
+}
+
+class ShipOrderUseCase {
+  final OrderRepository repository;
+  const ShipOrderUseCase(this.repository);
+
+  Future<Either<Failure, OrderEntity>> call(String id) => repository.shipOrder(id);
+}

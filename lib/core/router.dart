@@ -33,6 +33,8 @@ import '../features/subscription/presentation/subscription_checkout_page.dart';
 import '../features/subscription/presentation/subscription_management_page.dart';
 import '../features/connect/presentation/connect_onboarding_page.dart';
 import '../features/ads/presentation/my_ads_page.dart';
+import '../features/orders/presentation/my_orders_page.dart';
+import '../features/orders/presentation/my_sales_page.dart';
 import '../features/shell/presentation/home_page.dart';
 import '../features/profile/presentation/asset_detail_page.dart';
 import '../features/profile/presentation/edit_asset_page.dart';
@@ -69,6 +71,8 @@ abstract class AppRoutes {
   static const subscriptionManagement = '/subscription-management';
   static const connectOnboarding = '/connect-onboarding';
   static const myAds = '/my-ads';
+  static const myOrders = '/my-orders';
+  static const mySales = '/my-sales';
   static const stats         = '/stats';
   static const productDetail = '/product-detail';
   static const commerce      = '/commerce';
@@ -138,6 +142,14 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.myAds,
       builder: (context, state) => const MyAdsPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.myOrders,
+      builder: (context, state) => const MyOrdersPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.mySales,
+      builder: (context, state) => const MySalesPage(),
     ),
     GoRoute(
       path: AppRoutes.subscriptionCheckout,

@@ -10,6 +10,7 @@ import '../../orders/domain/usecases.dart';
 import '../../orders/presentation/providers.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
+import 'widgets.dart';
 
 /// Ícono representativo de cada tipo de pago. Único lugar que lo decide.
 IconData _iconFor(PaymentType type) {
@@ -31,12 +32,14 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
   String? _selectedId;
   PaymentType? _selectedType;
   bool _paying = false;
+  bool _cardComplete = false;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final total = ref.watch(cartControllerProvider).summary.total;
+    final summary = ref.watch(cartControllerProvider).summary;
     final methodsAsync = ref.watch(paymentMethodsProvider);
+    final isCardSelected = _selectedType == PaymentType.card;
 
     return Scaffold(
       backgroundColor: VaultColors.background,
@@ -50,52 +53,80 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: VaultSpacing.md),
-              Text('TOTAL', style: tt.bodyMedium, textAlign: TextAlign.center),
-              Text(
-                '\$${total.toStringAsFixed(0)}',
-                style: tt.headlineLarge,
-                textAlign: TextAlign.center,
+              const SizedBox(height: VaultSpacing.sm),
+              // Desglose ANTES de pagar -- sin esto, el total no coincidía
+              // con la suma de los artículos y no había forma de saber que
+              // la diferencia era la tarifa de uso de la plataforma.
+              SummaryRow(label: 'Subtotal', value: '\$${summary.subtotal.toStringAsFixed(0)}'),
+              SummaryRow(
+                label: 'Tarifa de uso (${(OrderSummaryEntity.usageFeeRate * 100).toStringAsFixed(0)}%)',
+                value: '\$${summary.fee.toStringAsFixed(0)}',
               ),
-              const SizedBox(height: VaultSpacing.xl),
+              if (summary.discount > 0)
+                SummaryRow(label: 'Descuento', value: '-\$${summary.discount.toStringAsFixed(0)}'),
+              const Divider(color: VaultColors.divider),
+              SummaryRow(
+                label: 'Total',
+                value: '\$${summary.total.toStringAsFixed(0)}',
+                emphasized: true,
+              ),
+              const SizedBox(height: VaultSpacing.lg),
               Expanded(
-                child: methodsAsync.when(
-                  loading: () =>
-                  const Center(child: CircularProgressIndicator()),
-                  error: (_, _) => Center(
-                    child: Text(
-                      'Error al cargar los métodos de pago',
-                      style: tt.bodyMedium,
+                child: SingleChildScrollView(
+                  child: methodsAsync.when(
+                    loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                    error: (_, _) => Center(
+                      child: Text(
+                        'Error al cargar los métodos de pago',
+                        style: tt.bodyMedium,
+                      ),
                     ),
+                    data: (methods) {
+                      // Preselecciona el primero si aún no hay selección.
+                      if (_selectedId == null && methods.isNotEmpty) {
+                        _selectedId = methods.first.id;
+                        _selectedType = methods.first.type;
+                      }
+                      return Column(
+                        children: [
+                          for (final method in methods) ...[
+                            _PaymentTile(
+                              method: method,
+                              selected: method.id == _selectedId,
+                              onTap: () => setState(() {
+                                _selectedId = method.id;
+                                _selectedType = method.type;
+                              }),
+                            ),
+                            const SizedBox(height: VaultSpacing.md),
+                          ],
+                          if (isCardSelected)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.md),
+                              decoration: BoxDecoration(
+                                color: VaultColors.surface,
+                                borderRadius: VaultRadius.cardBorder,
+                                border: Border.all(color: VaultColors.divider),
+                              ),
+                              child: stripe.CardField(
+                                enablePostalCode: true,
+                                onCardChanged: (details) {
+                                  setState(() => _cardComplete = details?.complete ?? false);
+                                },
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   ),
-                  data: (methods) {
-                    // Preselecciona el primero si aún no hay selección.
-                    if (_selectedId == null && methods.isNotEmpty) {
-                      _selectedId = methods.first.id;
-                      _selectedType = methods.first.type;
-                    }
-                    return ListView.separated(
-                      itemCount: methods.length,
-                      separatorBuilder: (_, _) =>
-                      const SizedBox(height: VaultSpacing.md),
-                      itemBuilder: (context, index) {
-                        final method = methods[index];
-                        return _PaymentTile(
-                          method: method,
-                          selected: method.id == _selectedId,
-                          onTap: () => setState(() {
-                            _selectedId = method.id;
-                            _selectedType = method.type;
-                          }),
-                        );
-                      },
-                    );
-                  },
                 ),
               ),
               const SizedBox(height: VaultSpacing.md),
               ElevatedButton.icon(
-                onPressed: (_selectedType == null || _paying)
+                onPressed: (_selectedType == null ||
+                        _paying ||
+                        (isCardSelected && !_cardComplete))
                     ? null
                     : () => _onPay(_selectedType!),
                 style: ElevatedButton.styleFrom(
@@ -110,17 +141,6 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                       )
                     : const Icon(Icons.lock_outline),
                 label: Text(_paying ? 'Procesando...' : 'Pagar ahora'),
-              ),
-              const SizedBox(height: VaultSpacing.sm),
-              TextButton.icon(
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Añadir método (próximamente)')),
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: VaultColors.accent,
-                ),
-                icon: const Icon(Icons.add),
-                label: const Text('Añadir nuevo'),
               ),
             ],
           ),

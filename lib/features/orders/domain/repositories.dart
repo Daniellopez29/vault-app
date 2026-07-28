@@ -14,4 +14,12 @@ abstract class OrderRepository {
     required String buyerEmail,
     required String paymentMethodId,
   });
+
+  Future<Either<Failure, List<OrderEntity>>> getMyOrders();
+
+  Future<Either<Failure, List<OrderEntity>>> getMySales();
+
+  Future<Either<Failure, OrderEntity>> confirmOrder(String id);
+
+  Future<Either<Failure, OrderEntity>> shipOrder(String id);
 }

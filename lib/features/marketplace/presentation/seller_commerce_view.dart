@@ -6,6 +6,7 @@ import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../business/presentation/my_business_tab.dart';
 import '../../subscription/domain/entities.dart';
+import '../../subscription/presentation/providers.dart';
 import '../../profile/presentation/asset_widgets.dart';
 import '../../profile/presentation/providers.dart';
 import '../../ads/presentation/advertise_flow.dart';
@@ -61,18 +62,34 @@ class _ProductsForSaleTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(profileAssetsControllerProvider);
     final forSale = state.assets.where((a) => a.isForSale).toList();
+    final hasActiveSubscription =
+        ref.watch(subscriptionStatusControllerProvider).subscription?.isActive ?? false;
 
     return ListView(
       padding: const EdgeInsets.all(VaultSpacing.md),
       children: [
-        _ProductSubscriptionCard(
-          onTap: () => startAdvertiseFlow(context, ref, type: SubscriptionType.product),
-        ),
+        // Ya suscrito: no tiene caso seguir mostrando el anuncio para
+        // comprar el mismo plan -- se deja un link directo a administrarla.
+        if (hasActiveSubscription)
+          TextButton.icon(
+            onPressed: () => context.push(AppRoutes.subscriptionManagement),
+            icon: Icon(Icons.workspace_premium, color: VaultColors.success),
+            label: const Text('Suscripción activa · Ver detalles'),
+          )
+        else
+          _ProductSubscriptionCard(
+            onTap: () => startAdvertiseFlow(context, ref, type: SubscriptionType.product),
+          ),
         const SizedBox(height: VaultSpacing.sm),
         TextButton.icon(
           onPressed: () => context.push(AppRoutes.myAds),
           icon: const Icon(Icons.campaign_outlined),
           label: const Text('Ver mis anuncios'),
+        ),
+        TextButton.icon(
+          onPressed: () => context.push(AppRoutes.mySales),
+          icon: const Icon(Icons.local_shipping_outlined),
+          label: const Text('Ver mis ventas'),
         ),
         const SizedBox(height: VaultSpacing.md),
         switch (state.status) {

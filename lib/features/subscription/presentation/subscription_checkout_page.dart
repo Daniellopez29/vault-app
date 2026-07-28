@@ -50,6 +50,10 @@ class _SubscriptionCheckoutPageState
         );
       }
       if (next.status == CheckoutStatus.success) {
+        // Sin esto, "Mi suscripción" y el flujo de "Anunciar" seguían
+        // viendo el estado de antes de pagar (subscriptionStatusControllerProvider
+        // solo se cargaba una vez, nunca se refrescaba solo).
+        ref.invalidate(subscriptionStatusControllerProvider);
         showDialog(
           context: context,
           barrierDismissible: false,
