@@ -18,6 +18,8 @@ import '../../favorites/presentation/providers.dart' show favoritesControllerPro
 import '../../home/presentation/providers.dart' show feedControllerProvider;
 import '../../notifications/presentation/providers.dart'
     show notificationsControllerProvider, notificationsRepositoryProvider;
+import '../../orders/presentation/providers.dart'
+    show myOrdersControllerProvider, mySalesControllerProvider;
 import '../../profile/presentation/providers.dart'
     show profileAssetsControllerProvider, restorerProfileControllerProvider;
 import '../data/datasources.dart';
@@ -189,6 +191,10 @@ class AuthController extends StateNotifier<AuthState> {
     // instancia cacheada y mostraría los mensajes de la cuenta anterior.
     // invalidate() sin argumentos limpia TODAS las instancias del family.
     _ref.invalidate(conversationControllerProvider);
+    // Mismo criterio: si la siguiente cuenta en este dispositivo también
+    // compra o vende, no debe heredar los pedidos/ventas de la anterior.
+    _ref.invalidate(myOrdersControllerProvider);
+    _ref.invalidate(mySalesControllerProvider);
     // El socket de eventos en vivo (chat + notificaciones, ver
     // RealtimeSocket) se conecta una sola vez con el token vigente en ese
     // momento y se queda así indefinidamente. Sin esto, la siguiente cuenta
