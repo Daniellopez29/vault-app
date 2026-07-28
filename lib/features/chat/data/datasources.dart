@@ -18,6 +18,12 @@ abstract class ChatRemoteDataSource {
   /// Marca un mensaje como leído (para que baje del contador de no leídos
   /// en la bandeja de conversaciones).
   Future<void> markAsRead(String messageId);
+
+  /// Elimina el mensaje solo de tu lado -- la otra persona lo sigue viendo.
+  Future<void> deleteMessage(String messageId);
+
+  /// Elimina toda la conversación con [otherUserId] solo de tu lado.
+  Future<void> deleteConversation(String otherUserId);
 }
 
 class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
@@ -105,6 +111,28 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       rethrow;
     } catch (e) {
       throw ServerFailure('Error al marcar el mensaje como leído: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteMessage(String messageId) async {
+    try {
+      await _client.delete('/chat/messages/$messageId');
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al eliminar el mensaje: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteConversation(String otherUserId) async {
+    try {
+      await _client.delete('/conversations/$otherUserId');
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al eliminar la conversación: $e');
     }
   }
 }

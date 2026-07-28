@@ -88,6 +88,7 @@ class ProductDetailPage extends ConsumerWidget {
         ],
       ),
       bottomNavigationBar: _BuyBar(
+        isOwnItem: isOwnItem,
         onChatTap: isOwnItem
             ? null
             : () => context.push(
@@ -381,11 +382,13 @@ class _SpecRow extends StatelessWidget {
 /// Barra inferior fija con las acciones de compra. [onChatTap] es `null`
 /// cuando el producto es propio -- no tiene sentido contactarte a ti mismo.
 class _BuyBar extends StatelessWidget {
+  final bool isOwnItem;
   final VoidCallback? onChatTap;
   final VoidCallback onCartTap;
   final VoidCallback onBuyTap;
 
   const _BuyBar({
+    required this.isOwnItem,
     required this.onChatTap,
     required this.onCartTap,
     required this.onBuyTap,
@@ -393,6 +396,31 @@ class _BuyBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
+    // Es tu propio producto: no tiene sentido comprarlo ni agregarlo al
+    // carrito (el backend lo rechaza igual, pero ocultarlo evita el viaje
+    // redondo de agregar al carrito para enterarte hasta pagar).
+    if (isOwnItem) {
+      return Container(
+        decoration: const BoxDecoration(
+          color: VaultColors.surface,
+          border: Border(top: BorderSide(color: VaultColors.divider)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(VaultSpacing.md),
+            child: Text(
+              'Este es tu producto en venta',
+              style: tt.bodyMedium?.copyWith(color: VaultColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Container(
       decoration: const BoxDecoration(
         color: VaultColors.surface,

@@ -26,6 +26,17 @@ class MarkNotificationAsReadUseCase implements UseCase<Unit, String> {
   }
 }
 
+class MarkAllNotificationsAsReadUseCase implements UseCase<Unit, NoParams> {
+  final NotificationsRepository repository;
+
+  MarkAllNotificationsAsReadUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, Unit>> call(NoParams params) {
+    return repository.markAllAsRead();
+  }
+}
+
 class DeleteNotificationUseCase implements UseCase<Unit, String> {
   final NotificationsRepository repository;
 

@@ -49,3 +49,18 @@ class MarkMessagesAsReadUseCase {
   Future<Either<Failure, void>> call(List<String> messageIds) =>
       repository.markMessagesAsRead(messageIds);
 }
+
+class DeleteMessageUseCase {
+  final ChatRepository repository;
+  const DeleteMessageUseCase(this.repository);
+
+  Future<Either<Failure, void>> call(String messageId) => repository.deleteMessage(messageId);
+}
+
+class DeleteConversationUseCase {
+  final ChatRepository repository;
+  const DeleteConversationUseCase(this.repository);
+
+  Future<Either<Failure, void>> call(String otherUserId) =>
+      repository.deleteConversation(otherUserId);
+}

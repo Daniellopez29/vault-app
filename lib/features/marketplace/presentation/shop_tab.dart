@@ -8,6 +8,7 @@ import '../../ads/domain/entities.dart';
 import '../../ads/presentation/ad_impression_tracker.dart';
 import '../../ads/presentation/ad_interleave.dart';
 import '../../ads/presentation/providers.dart';
+import '../../auth/presentation/providers.dart';
 import '../../cart/domain/entities.dart';
 import '../../cart/presentation/providers.dart';
 import '../../chat/presentation/providers.dart' show conversationsControllerProvider;
@@ -43,6 +44,7 @@ class ShopTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(shopControllerProvider);
+    final currentUserId = ref.watch(authControllerProvider).user?.id;
     final ads = ref.watch(activeAdsControllerProvider(AdSection.marketplace)).ads;
     final hasActiveSubscription =
         ref.watch(subscriptionStatusControllerProvider).subscription?.isActive ?? false;
@@ -192,6 +194,8 @@ class ShopTab extends ConsumerWidget {
                             );
                           }
                           final item = cell as MarketplaceItemEntity;
+                          final isOwnItem = currentUserId != null &&
+                              currentUserId == item.sellerId;
                           return GestureDetector(
                             onTap: () => context.push(
                               AppRoutes.productDetail,
@@ -199,7 +203,9 @@ class ShopTab extends ConsumerWidget {
                             ),
                             child: MarketplaceCard(
                               item: item,
-                              onCartTap: () => _addToCart(context, ref, item),
+                              onCartTap: isOwnItem
+                                  ? null
+                                  : () => _addToCart(context, ref, item),
                             ),
                           );
                         },

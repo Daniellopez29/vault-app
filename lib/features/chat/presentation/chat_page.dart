@@ -41,7 +41,13 @@ class ChatPage extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          Expanded(child: _MessagesBody(state: state, currentUserId: currentUserId)),
+          Expanded(
+            child: _MessagesBody(
+              state: state,
+              currentUserId: currentUserId,
+              otherUserId: args.recipientId,
+            ),
+          ),
           _ChatInputBar(
             onSend: (text) => ref
                 .read(conversationControllerProvider(args.recipientId).notifier)
@@ -53,14 +59,44 @@ class ChatPage extends ConsumerWidget {
   }
 }
 
-class _MessagesBody extends StatelessWidget {
+class _MessagesBody extends ConsumerWidget {
   final ConversationState state;
   final String? currentUserId;
+  final String otherUserId;
 
-  const _MessagesBody({required this.state, required this.currentUserId});
+  const _MessagesBody({
+    required this.state,
+    required this.currentUserId,
+    required this.otherUserId,
+  });
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, String messageId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar mensaje'),
+        content: const Text(
+          'Solo se elimina de tu lado, la otra persona lo sigue viendo.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await ref.read(conversationControllerProvider(otherUserId).notifier).deleteMessage(messageId);
+    }
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     switch (state.status) {
       case ConversationStatus.initial:
       case ConversationStatus.loading:
@@ -98,6 +134,7 @@ class _MessagesBody extends StatelessWidget {
             return _MessageBubble(
               message: message,
               isMine: message.senderId == currentUserId,
+              onLongPress: () => _confirmDelete(context, ref, message.id),
             );
           },
         );
@@ -108,8 +145,13 @@ class _MessagesBody extends StatelessWidget {
 class _MessageBubble extends StatelessWidget {
   final MessageEntity message;
   final bool isMine;
+  final VoidCallback onLongPress;
 
-  const _MessageBubble({required this.message, required this.isMine});
+  const _MessageBubble({
+    required this.message,
+    required this.isMine,
+    required this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -120,25 +162,28 @@ class _MessageBubble extends StatelessWidget {
     final text = message.plainText ??
         (isMine ? 'Mensaje enviado (no se puede volver a mostrar)' : '⚠ No se pudo descifrar');
 
-    return Align(
-      alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: VaultSpacing.xs),
-        padding: const EdgeInsets.symmetric(
-          horizontal: VaultSpacing.md,
-          vertical: VaultSpacing.sm,
-        ),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        decoration: BoxDecoration(
-          color: isMine ? VaultColors.primary : VaultColors.surface,
-          borderRadius: BorderRadius.circular(VaultRadius.card),
-          border: isMine ? null : Border.all(color: VaultColors.divider),
-        ),
-        child: Text(
-          text,
-          style: tt.bodyMedium?.copyWith(
-            color: isMine ? Colors.white : VaultColors.textPrimary,
-            fontStyle: message.plainText == null ? FontStyle.italic : FontStyle.normal,
+    return GestureDetector(
+      onLongPress: onLongPress,
+      child: Align(
+        alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: VaultSpacing.xs),
+          padding: const EdgeInsets.symmetric(
+            horizontal: VaultSpacing.md,
+            vertical: VaultSpacing.sm,
+          ),
+          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+          decoration: BoxDecoration(
+            color: isMine ? VaultColors.primary : VaultColors.surface,
+            borderRadius: BorderRadius.circular(VaultRadius.card),
+            border: isMine ? null : Border.all(color: VaultColors.divider),
+          ),
+          child: Text(
+            text,
+            style: tt.bodyMedium?.copyWith(
+              color: isMine ? Colors.white : VaultColors.textPrimary,
+              fontStyle: message.plainText == null ? FontStyle.italic : FontStyle.normal,
+            ),
           ),
         ),
       ),

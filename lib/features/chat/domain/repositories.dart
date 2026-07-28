@@ -36,4 +36,10 @@ abstract class ChatRepository {
   /// no leídos que se muestra en la bandeja. Best-effort: no falla si algún
   /// id individual no se pudo marcar.
   Future<Either<Failure, void>> markMessagesAsRead(List<String> messageIds);
+
+  /// Elimina el mensaje solo de tu lado -- la otra persona lo sigue viendo.
+  Future<Either<Failure, void>> deleteMessage(String messageId);
+
+  /// Elimina toda la conversación con [otherUserId] solo de tu lado.
+  Future<Either<Failure, void>> deleteConversation(String otherUserId);
 }

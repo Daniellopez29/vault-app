@@ -7,7 +7,7 @@ import 'item_image.dart';
 /// Tarjeta de un artículo del marketplace (grid de 2 columnas).
 class MarketplaceCard extends StatelessWidget {
   final MarketplaceItemEntity item;
-  final VoidCallback onCartTap;
+  final VoidCallback? onCartTap;
 
   const MarketplaceCard({
     super.key,
@@ -63,14 +63,19 @@ class MarketplaceCard extends StatelessWidget {
                     Text(item.rating.toStringAsFixed(1), style: tt.titleMedium),
                   ],
                 ),
-                InkWell(
-                  onTap: onCartTap,
-                  child: const Icon(
-                    Icons.shopping_cart_outlined,
-                    size: VaultIconSize.md,
-                    color: VaultColors.primary,
-                  ),
-                ),
+                // onCartTap es null cuando el producto es tuyo -- no tiene
+                // sentido dejarte agregarlo al carrito.
+                if (onCartTap != null)
+                  InkWell(
+                    onTap: onCartTap,
+                    child: const Icon(
+                      Icons.shopping_cart_outlined,
+                      size: VaultIconSize.md,
+                      color: VaultColors.primary,
+                    ),
+                  )
+                else
+                  Text('Tuyo', style: tt.labelSmall),
               ],
             ),
           ),

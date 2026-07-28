@@ -66,8 +66,42 @@ class ConversationsListPage extends ConsumerWidget {
                     color: VaultColors.divider,
                     indent: 72,
                   ),
-                  itemBuilder: (context, index) =>
-                      _ConversationTile(conversation: state.conversations[index]),
+                  itemBuilder: (context, index) {
+                    final conversation = state.conversations[index];
+                    return Dismissible(
+                      key: ValueKey(conversation.otherUserId),
+                      direction: DismissDirection.endToStart,
+                      confirmDismiss: (_) => showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Eliminar conversación'),
+                          content: const Text(
+                            'Solo se elimina de tu lado, la otra persona la sigue viendo.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancelar'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text('Eliminar'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.md),
+                        color: Colors.red.shade400,
+                        child: const Icon(Icons.delete_outline, color: Colors.white),
+                      ),
+                      onDismissed: (_) => ref
+                          .read(conversationsControllerProvider.notifier)
+                          .deleteConversation(conversation.otherUserId),
+                      child: _ConversationTile(conversation: conversation),
+                    );
+                  },
                 ),
               ),
       },

@@ -43,6 +43,18 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
   }
 
   @override
+  Future<Either<Failure, Unit>> markAllAsRead() async {
+    try {
+      await remoteDataSource.markAllAsRead();
+      return const Right(unit);
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (_) {
+      return const Left(ServerFailure('Error al marcar las notificaciones como leídas.'));
+    }
+  }
+
+  @override
   Future<Either<Failure, Unit>> delete(String id) async {
     try {
       await remoteDataSource.delete(id);

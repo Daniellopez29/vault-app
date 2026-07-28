@@ -13,7 +13,6 @@ import '../domain/entities.dart';
 import 'providers.dart';
 import 'widgets.dart';
 
-/// Ícono representativo de cada tipo de pago. Único lugar que lo decide.
 IconData _iconFor(PaymentType type) {
   switch (type) {
     case PaymentType.card:     return Icons.credit_card;
@@ -160,8 +159,7 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
     if (email == null || email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content:
-                Text('No se pudo identificar tu cuenta para procesar el pago')),
+            content: Text('No se pudo identificar tu cuenta para procesar el pago')),
       );
       return;
     }
@@ -179,16 +177,14 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
       if (!mounted) return;
       setState(() => _paying = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('No se pudo procesar la tarjeta: ${e.message}')),
+        SnackBar(content: Text('No se pudo procesar la tarjeta: ${e.message}')),
       );
       return;
     } catch (e) {
       if (!mounted) return;
       setState(() => _paying = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Error inesperado al leer la tarjeta: $e')),
+        SnackBar(content: Text('Error inesperado al leer la tarjeta: $e')),
       );
       return;
     }
