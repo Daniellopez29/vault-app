@@ -11,6 +11,7 @@ class UserModel extends UserEntity {
     super.role,
     super.avatarUrl,
     super.roles,
+    super.isNewUser,
     this.token = '',
   });
 
@@ -30,6 +31,7 @@ class UserModel extends UserEntity {
       role: role,
       avatarUrl: json['avatar_url'] as String? ?? '',
       roles: roles.isEmpty ? [role] : roles,
+      isNewUser: json['is_new_user'] as bool? ?? false,
       token: json['token'] as String? ?? '',
     );
   }

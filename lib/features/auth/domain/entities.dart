@@ -13,6 +13,12 @@ class UserEntity extends Equatable {
   /// reciente/principal.
   final List<UserRole> roles;
 
+  /// Solo lo llena el login con Google, para esa única respuesta -- señala
+  /// si la cuenta se acaba de crear (debe pasar por selección de rol) o ya
+  /// existía (debe entrar directo). No se persiste entre sesiones: al
+  /// restaurar la sesión guardada siempre vale `false`.
+  final bool isNewUser;
+
   const UserEntity({
     required this.id,
     required this.email,
@@ -20,8 +26,10 @@ class UserEntity extends Equatable {
     this.role = UserRole.user,
     this.avatarUrl = '',
     this.roles = const [],
+    this.isNewUser = false,
   });
 
   @override
-  List<Object?> get props => [id, email, fullName, role, avatarUrl, roles];
+  List<Object?> get props =>
+      [id, email, fullName, role, avatarUrl, roles, isNewUser];
 }

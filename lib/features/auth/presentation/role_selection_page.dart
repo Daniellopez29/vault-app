@@ -85,9 +85,9 @@ class _RoleSelectionPageState extends ConsumerState<RoleSelectionPage> {
   }
 
   /// Al elegir una opción hay dos caminos:
-  /// - Flujo Google: el usuario ya existe (estado roleSelection) → guarda
-  ///   el rol y esta misma pantalla redirige a Home (ver build()). Google
-  ///   no está disponible todavía, así que este camino no se alcanza hoy.
+  /// - Flujo Google: solo llega aquí una cuenta recién creada (ver
+  ///   AuthController.loginWithGoogle, que ahora filtra por is_new_user) →
+  ///   guarda el rol y esta misma pantalla redirige a Home (ver build()).
   /// - Flujo registro por correo: aún no hay cuenta → va al formulario con
   ///   el rol inicial y el destino final ya decididos.
   void _onOptionSelected(BuildContext context, WidgetRef ref, _SignupOption option) {

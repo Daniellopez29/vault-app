@@ -116,6 +116,31 @@ class AssetCard extends ConsumerWidget {
     );
   }
 
+  void _confirmDelete(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Eliminar activo'),
+        content: Text(
+          '¿Estás seguro que deseas eliminar "${asset.name}"? Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              ref.read(profileAssetsControllerProvider.notifier).deleteAsset(asset.id);
+            },
+            child: Text('Eliminar', style: TextStyle(color: VaultColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _openSellSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -132,7 +157,6 @@ class AssetCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tt = Theme.of(context).textTheme;
-    final notifier = ref.read(profileAssetsControllerProvider.notifier);
 
     return Container(
       decoration: BoxDecoration(
@@ -220,7 +244,7 @@ class AssetCard extends ConsumerWidget {
                 _CardAction(
                   icon: Icons.delete_outline,
                   color: VaultColors.textSecondary,
-                  onTap: () => notifier.deleteAsset(asset.id),
+                  onTap: () => _confirmDelete(context, ref),
                 ),
               ],
             ),

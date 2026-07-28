@@ -2,157 +2,28 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
+import 'api_config.dart';
 import 'error.dart';
+import 'token_storage.dart';
 
-/// URL base del API de Go, ajustable en tiempo de ejecución (ver
-/// [ApiConfig.setOverride]). El default apunta al backend ya desplegado en
-/// Railway (HTTPS, alcanzable desde cualquier red, no solo la LAN del
-/// desarrollador) -- por eso ya no hace falta distinguir emulador/celular
-/// físico ni el permiso de tráfico sin cifrar para el caso normal. El
-/// override en Configuración sigue sirviendo para apuntar a un backend
-/// local (p.ej. `http://192.168.x.x:8080/api/v1`) mientras se depura algo
-/// que no se puede probar contra producción.
-class ApiConfig {
-  static const _overrideKey = 'vault_api_base_url';
-
-  static const _productionDefault =
-      'https://humorous-nurturing-production-9cd4.up.railway.app/api/v1';
-
-  static String? _override;
-
-  static String get baseUrl {
-    if (_override != null && _override!.isNotEmpty) return _override!;
-    return _productionDefault;
-  }
-
-  /// Se llama una vez al arrancar la app (ver main.dart) para recuperar
-  /// una URL guardada manualmente desde Configuración.
-  static Future<void> loadOverride() async {
-    final prefs = await SharedPreferences.getInstance();
-    _override = prefs.getString(_overrideKey);
-  }
-
-  static Future<void> setOverride(String? url) async {
-    _override = (url == null || url.trim().isEmpty) ? null : url.trim();
-    final prefs = await SharedPreferences.getInstance();
-    if (_override == null) {
-      await prefs.remove(_overrideKey);
-    } else {
-      await prefs.setString(_overrideKey, _override!);
-    }
-  }
-}
-
-/// `payment/` (Stripe: suscripciones, ads, órdenes) es un servicio Go
-/// separado de `api/`, desplegado en Railway como `steadfast-kindness` y
-/// ruteado por el mismo gateway que `api/` -- `gateway/nginx.conf` manda
-/// `/api/v1/subscriptions`, `/ads`, `/connect` y `/orders` para allá, así
-/// que el default es el mismo host que [ApiConfig]. El override en
-/// Configuración sigue sirviendo para apuntar a un `payment/` corriendo
-/// localmente (`PORT=8005` por default) mientras se depura algo.
-class PaymentApiConfig {
-  static const _overrideKey = 'vault_payment_api_base_url';
-
-  static const _productionDefault =
-      'https://humorous-nurturing-production-9cd4.up.railway.app/api/v1';
-
-  static String? _override;
-
-  static String get baseUrl {
-    if (_override != null && _override!.isNotEmpty) return _override!;
-    return _productionDefault;
-  }
-
-  static Future<void> loadOverride() async {
-    final prefs = await SharedPreferences.getInstance();
-    _override = prefs.getString(_overrideKey);
-  }
-
-  static Future<void> setOverride(String? url) async {
-    _override = (url == null || url.trim().isEmpty) ? null : url.trim();
-    final prefs = await SharedPreferences.getInstance();
-    if (_override == null) {
-      await prefs.remove(_overrideKey);
-    } else {
-      await prefs.setString(_overrideKey, _override!);
-    }
-  }
-}
-
-/// URL del WebSocket de `realtime/` (notificaciones + chat). El gateway
-/// (`gateway/nginx.conf` en el repo backend) ya rutea `location /ws` al
-/// servicio `realtime` desplegado, en el mismo host que [ApiConfig] -- no
-/// es un servicio nuevo que haya que exponer aparte.
-class RealtimeConfig {
-  static const _overrideKey = 'vault_realtime_ws_url';
-
-  static String? _override;
-
-  /// Deriva `wss://<mismo host>/ws` a partir de [ApiConfig.baseUrl]
-  /// (quitando el sufijo `/api/v1` y cambiando el esquema a `wss`).
-  static String get wsUrl {
-    if (_override != null && _override!.isNotEmpty) return _override!;
-    final base = ApiConfig.baseUrl.replaceFirst(RegExp(r'/api/v1/?$'), '');
-    return '${base.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://')}/ws';
-  }
-
-  static Future<void> loadOverride() async {
-    final prefs = await SharedPreferences.getInstance();
-    _override = prefs.getString(_overrideKey);
-  }
-
-  static Future<void> setOverride(String? url) async {
-    _override = (url == null || url.trim().isEmpty) ? null : url.trim();
-    final prefs = await SharedPreferences.getInstance();
-    if (_override == null) {
-      await prefs.remove(_overrideKey);
-    } else {
-      await prefs.setString(_overrideKey, _override!);
-    }
-  }
-}
-
-/// Cliente HTTP central: agrega el token de sesión, decodifica JSON y
-/// traduce códigos de estado a los [Failure] que ya entiende el resto de
-/// la app (dartz Either en los repositorios).
 class ApiClient {
   final http.Client _http;
+  final TokenStorage _tokenStorage;
 
-  /// Si es `null`, usa [ApiConfig.baseUrl] (el backend de `api/`). Pásalo
-  /// para apuntar a otro servicio, p.ej. [PaymentApiConfig.baseUrl] para
-  /// `payment/`.
-  final String? _baseUrlOverride;
-
-  /// Sin esto, un servidor inalcanzable (IP equivocada, backend caído,
-  /// firewall que descarta paquetes en silencio) deja el Future de la
-  /// petición colgado indefinidamente -- la UI se queda "cargando" para
-  /// siempre en vez de mostrar un error.
   static const _requestTimeout = Duration(seconds: 15);
 
-  ApiClient({http.Client? httpClient, String? baseUrlOverride})
+  ApiClient({http.Client? httpClient, TokenStorage? tokenStorage})
       : _http = httpClient ?? http.Client(),
-        _baseUrlOverride = baseUrlOverride;
+        _tokenStorage = tokenStorage ?? TokenStorage();
 
-  String get baseUrl => _baseUrlOverride ?? ApiConfig.baseUrl;
+  String get baseUrl => ApiConfig.baseUrl;
 
-  static const _tokenKey = 'vault_auth_token';
+  Future<void> saveToken(String token) => _tokenStorage.save(token);
 
-  Future<void> saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-  }
+  Future<String?> getToken() => _tokenStorage.read();
 
-  Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
-  }
-
-  Future<void> clearToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-  }
+  Future<void> clearToken() => _tokenStorage.clear();
 
   Future<Map<String, String>> _headers({bool withAuth = true}) async {
     final headers = {'Content-Type': 'application/json'};
@@ -166,9 +37,6 @@ class ApiClient {
   Uri _uri(String path, [Map<String, String>? query]) =>
       Uri.parse('$baseUrl$path').replace(queryParameters: query);
 
-  /// Devuelve el body decodificado: `Map<String, dynamic>` para un objeto,
-  /// `List<dynamic>` para un arreglo, o `null` si el body viene vacío
-  /// (204, o respuestas sin contenido).
   dynamic _decode(http.Response response) {
     if (response.body.isEmpty) return null;
     return jsonDecode(response.body);
@@ -268,9 +136,6 @@ class ApiClient {
     }
   }
 
-  /// Sube un archivo como multipart/form-data. [fieldName] debe coincidir
-  /// con el nombre que el backend espera en el form (p.ej. "image" en
-  /// PUT /users/{id}/image o POST /posts/{id}/photos).
   Future<dynamic> _multipart(
     String method,
     String path, {

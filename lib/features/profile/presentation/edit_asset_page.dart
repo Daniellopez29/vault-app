@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -181,6 +182,7 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
                 controller: _nameController,
                 label: 'Nombre / Modelo',
                 icon: Icons.label_outline,
+                maxLength: 60,
                 validator: (v) => v == null || v.trim().isEmpty ? 'Ingresa el nombre' : null,
               ),
               const SizedBox(height: VaultSpacing.md),
@@ -188,6 +190,7 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
                 controller: _brandController,
                 label: 'Marca',
                 icon: Icons.sell_outlined,
+                maxLength: 40,
                 validator: (v) => v == null || v.trim().isEmpty ? 'Ingresa la marca' : null,
               ),
               const SizedBox(height: VaultSpacing.md),
@@ -198,7 +201,11 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
                       controller: _priceController,
                       label: 'Precio de compra',
                       icon: Icons.attach_money,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                      ],
+                      maxLength: 10,
                     ),
                   ),
                   const SizedBox(width: VaultSpacing.md),
@@ -207,6 +214,7 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
                       controller: _storeController,
                       label: 'Tienda',
                       icon: Icons.storefront_outlined,
+                      maxLength: 50,
                     ),
                   ),
                 ],
@@ -224,6 +232,7 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
                 controller: _sizeController,
                 label: 'Talla',
                 icon: Icons.straighten_outlined,
+                maxLength: 15,
               ),
               const SizedBox(height: VaultSpacing.md),
               _AssetField(
@@ -231,6 +240,7 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
                 label: 'Comentario',
                 icon: Icons.chat_bubble_outline,
                 maxLines: 3,
+                maxLength: 300,
               ),
               const SizedBox(height: VaultSpacing.xl),
 
@@ -416,7 +426,9 @@ class _AssetField extends StatelessWidget {
   final String label;
   final IconData icon;
   final int maxLines;
+  final int? maxLength;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
   final String? Function(String?)? validator;
 
   const _AssetField({
@@ -424,7 +436,9 @@ class _AssetField extends StatelessWidget {
     required this.label,
     required this.icon,
     this.maxLines = 1,
+    this.maxLength,
     this.keyboardType,
+    this.inputFormatters,
     this.validator,
   });
 
@@ -433,7 +447,9 @@ class _AssetField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
+      maxLength: maxLength,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       style: const TextStyle(color: VaultColors.primary),
       decoration: InputDecoration(
         labelText: label,

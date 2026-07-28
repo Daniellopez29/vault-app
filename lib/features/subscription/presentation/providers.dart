@@ -9,7 +9,7 @@ import '../domain/usecases.dart';
 
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
   return SubscriptionRepositoryImpl(
-    dataSource: SubscriptionRemoteDataSource(ref.read(paymentApiClientProvider)),
+    dataSource: SubscriptionRemoteDataSource(ref.read(apiClientProvider)),
   );
 });
 

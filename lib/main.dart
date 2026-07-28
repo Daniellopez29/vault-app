@@ -2,7 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import 'core/api_client.dart';
+import 'core/api_config.dart';
+import 'core/realtime_config.dart';
 import 'core/router.dart';
 import 'core/stripe_config.dart';
 import 'core/theme.dart';
@@ -18,7 +19,6 @@ void main() async {
   // Recupera la URL del backend si se ajustó manualmente desde
   // Configuración (celular físico en otra red, IP distinta, etc).
   await ApiConfig.loadOverride();
-  await PaymentApiConfig.loadOverride();
   await RealtimeConfig.loadOverride();
   Stripe.publishableKey = StripeConfig.publishableKey;
   await Stripe.instance.applySettings();

@@ -251,8 +251,12 @@ class AuthController extends StateNotifier<AuthState> {
     result.fold(
           (failure) => state = state.copyWith(
           status: AuthStatus.error, errorMessage: failure.message),
+          // Solo una cuenta recién creada por este login necesita elegir rol
+          // -- una que ya existía entraba antes siempre por roleSelection de
+          // nuevo, sin importar que is_new_user viniera en false.
           (user) => state = state.copyWith(
-          status: AuthStatus.roleSelection, user: user),
+          status: user.isNewUser ? AuthStatus.roleSelection : AuthStatus.authenticated,
+          user: user),
     );
   }
 
