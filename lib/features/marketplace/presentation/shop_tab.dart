@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
+import '../../ads/domain/entities.dart';
+import '../../ads/presentation/providers.dart';
 import '../../cart/domain/entities.dart';
 import '../../cart/presentation/providers.dart';
 import '../../chat/presentation/providers.dart' show conversationsControllerProvider;
@@ -14,6 +16,7 @@ import '../../../core/widgets/search_header.dart';
 import 'shop_skeleton.dart';
 import 'marketplace_card.dart';
 import 'promo_carousel.dart';
+import 'item_image.dart';
 
 class ShopTab extends ConsumerWidget {
   const ShopTab({super.key});
@@ -36,6 +39,7 @@ class ShopTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(shopControllerProvider);
+    final ads = ref.watch(activeAdsControllerProvider(AdSection.marketplace)).ads;
     final unreadNotifications =
         ref.watch(notificationsControllerProvider).notifications.where((n) => !n.read).length;
     final unreadChats = ref
@@ -73,6 +77,10 @@ class ShopTab extends ConsumerWidget {
       case ShopStatus.loaded:
         final controller = ref.read(shopControllerProvider.notifier);
         final isSearching = state.searchQuery.trim().isNotEmpty;
+        // Durante una búsqueda no se intercalan anuncios -- mismo criterio
+        // que el carrusel, que tampoco se muestra mientras se busca.
+        final gridCells =
+            isSearching ? state.items : _interleaveAds(state.items, ads);
 
         return Scaffold(
           backgroundColor: VaultColors.background,
@@ -108,7 +116,9 @@ class ShopTab extends ConsumerWidget {
                         VaultSpacing.md,
                         VaultSpacing.xs,
                       ),
-                      child: PromoCarousel(slides: state.slides),
+                      child: PromoCarousel(
+                        slides: [...state.slides, ...ads.map(AdSlide.new)],
+                      ),
                     ),
                   ),
                 if (isSearching && state.items.isEmpty)
@@ -138,7 +148,11 @@ class ShopTab extends ConsumerWidget {
                       ),
                       delegate: SliverChildBuilderDelegate(
                             (context, index) {
-                          final item = state.items[index];
+                          final cell = gridCells[index];
+                          if (cell is AdEntity) {
+                            return _AdGridCard(ad: cell);
+                          }
+                          final item = cell as MarketplaceItemEntity;
                           return GestureDetector(
                             onTap: () => context.push(
                               AppRoutes.productDetail,
@@ -150,7 +164,7 @@ class ShopTab extends ConsumerWidget {
                             ),
                           );
                         },
-                        childCount: state.items.length,
+                        childCount: gridCells.length,
                       ),
                     ),
                   ),
@@ -159,6 +173,75 @@ class ShopTab extends ConsumerWidget {
           ),
         );
     }
+  }
+}
+
+/// Cada cuántos productos se intercala un anuncio en el grid -- lo bastante
+/// espaciado para que no se sienta invasivo (nunca dos anuncios seguidos).
+const _adSpacing = 8;
+
+/// Mezcla [items] con [ads] cada [_adSpacing] posiciones, rotando entre los
+/// anuncios disponibles (con más de `_adSpacing` productos, el mismo
+/// anuncio puede repetirse más adelante, pero nunca dos veces seguidas).
+/// Sin anuncios activos, devuelve [items] tal cual.
+List<Object> _interleaveAds(List<MarketplaceItemEntity> items, List<AdEntity> ads) {
+  if (ads.isEmpty) return items;
+
+  final cells = <Object>[];
+  var adCursor = 0;
+  for (var i = 0; i < items.length; i++) {
+    cells.add(items[i]);
+    if ((i + 1) % _adSpacing == 0) {
+      cells.add(ads[adCursor % ads.length]);
+      adCursor++;
+    }
+  }
+  return cells;
+}
+
+/// Card de anuncio dentro del grid de productos -- mismo tamaño que
+/// [MarketplaceCard] (`mainAxisExtent: 255` en el `SliverGrid`) para no
+/// romper el layout.
+class _AdGridCard extends StatelessWidget {
+  final AdEntity ad;
+
+  const _AdGridCard({required this.ad});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: VaultColors.primary,
+        borderRadius: VaultRadius.cardBorder,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: ItemImage(imageUrl: ad.imageUrl)),
+          Padding(
+            padding: const EdgeInsets.all(VaultSpacing.sm),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Patrocinado',
+                  style: tt.labelSmall?.copyWith(color: Colors.white70),
+                ),
+                Text(
+                  ad.title,
+                  style: tt.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -3,6 +3,7 @@ import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/router.dart';
+import '../../ads/domain/entities.dart';
 import '../../subscription/domain/entities.dart';
 import '../domain/entities.dart';
 import 'item_image.dart';
@@ -70,11 +71,76 @@ class _PromoCarouselState extends State<PromoCarousel> {
   Widget _slideCard(BuildContext context, CarouselSlide slide) {
     return switch (slide) {
       PromoSlide(:final banner) => _PromoCard(banner: banner),
+      AdSlide(:final ad) => _AdCard(ad: ad),
       SubscriptionSlide(:final type) => _SubscriptionCard(
         type: type,
         onTap: () => context.push(AppRoutes.subscription, extra: type),
       ),
     };
+  }
+}
+
+/// Card de un anuncio real (ver `features/ads/`). Mismo alto (120) que el
+/// resto de los slides del carrusel; a diferencia de `_PromoCard`, un anuncio
+/// no tiene precio/precio anterior -- solo título, descripción e imagen.
+class _AdCard extends StatelessWidget {
+  final AdEntity ad;
+
+  const _AdCard({required this.ad});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: VaultColors.primary,
+        borderRadius: VaultRadius.cardBorder,
+      ),
+      padding: const EdgeInsets.all(VaultSpacing.md),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Patrocinado',
+                  style: tt.labelSmall?.copyWith(color: cs.onPrimary.withValues(alpha: 0.7)),
+                ),
+                Text(
+                  ad.title,
+                  style: tt.titleMedium?.copyWith(color: cs.onPrimary, fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (ad.description.isNotEmpty) ...[
+                  const SizedBox(height: VaultSpacing.xs),
+                  Text(
+                    ad.description,
+                    style: tt.bodySmall?.copyWith(color: cs.onPrimary.withValues(alpha: 0.85)),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: VaultSpacing.sm),
+          SizedBox(
+            width: 84,
+            height: double.infinity,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(VaultRadius.button),
+              child: ItemImage(imageUrl: ad.imageUrl),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

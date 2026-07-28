@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
+import '../../ads/presentation/advertise_flow.dart';
 import '../../marketplace/presentation/item_image.dart';
 import '../../subscription/domain/entities.dart';
 import '../domain/entities.dart';
@@ -348,9 +349,11 @@ class _AdminViewState extends ConsumerState<_AdminView> {
         ),
         const SizedBox(height: VaultSpacing.lg),
         _BusinessSubscriptionCard(
-          onTap: () => context.push(
-            AppRoutes.subscription,
-            extra: SubscriptionType.business,
+          onTap: () => startAdvertiseFlow(
+            context,
+            ref,
+            type: SubscriptionType.business,
+            business: business,
           ),
         ),
       ],

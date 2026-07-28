@@ -11,6 +11,11 @@ abstract class SubscriptionDataSource {
     required String email,
     required String paymentMethodId,
   });
+
+  /// `null` si el usuario nunca se ha suscrito (ver GetSubscriptionStatusUseCase.go).
+  Future<SubscriptionStatusModel?> getStatus();
+
+  Future<void> cancel();
 }
 
 /// `payment/` vende 3 planes fijos (básico/pro/premium), sin distinguir por
@@ -53,6 +58,33 @@ class SubscriptionRemoteDataSource implements SubscriptionDataSource {
       rethrow;
     } catch (e) {
       throw ServerFailure('Error al crear la suscripción: $e');
+    }
+  }
+
+  @override
+  Future<SubscriptionStatusModel?> getStatus() async {
+    try {
+      final body = await _client.get('/subscriptions/me');
+      // El backend envuelve en {"subscription": null|{...}} (ver
+      // GetSubscriptionStatusController.go), no es el objeto plano.
+      final sub = (body as Map<String, dynamic>)['subscription'];
+      if (sub == null) return null;
+      return SubscriptionStatusModel.fromJson(sub as Map<String, dynamic>);
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al consultar tu suscripción: $e');
+    }
+  }
+
+  @override
+  Future<void> cancel() async {
+    try {
+      await _client.delete('/subscriptions');
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al cancelar tu suscripción: $e');
     }
   }
 }

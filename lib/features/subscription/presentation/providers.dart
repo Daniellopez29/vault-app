@@ -23,6 +23,16 @@ final createSubscriptionUseCaseProvider =
   return CreateSubscriptionUseCase(ref.read(subscriptionRepositoryProvider));
 });
 
+final getSubscriptionStatusUseCaseProvider =
+    Provider<GetSubscriptionStatusUseCase>((ref) {
+  return GetSubscriptionStatusUseCase(ref.read(subscriptionRepositoryProvider));
+});
+
+final cancelSubscriptionUseCaseProvider =
+    Provider<CancelSubscriptionUseCase>((ref) {
+  return CancelSubscriptionUseCase(ref.read(subscriptionRepositoryProvider));
+});
+
 enum PlansStatus { loading, loaded, error }
 
 class PlansState {
@@ -157,5 +167,88 @@ final subscriptionCheckoutControllerProvider = StateNotifierProvider.autoDispose
   return SubscriptionCheckoutController(
     ref.read(createSubscriptionUseCaseProvider),
     params,
+  );
+});
+
+// ─── SUSCRIPCIÓN ACTIVA (ver / cancelar) ────────────────────────────────────
+
+enum SubscriptionStatusLoad { loading, loaded, error }
+
+class SubscriptionStatusState {
+  final SubscriptionStatusLoad status;
+  final SubscriptionStatus? subscription;
+  final String? errorMessage;
+  final bool canceling;
+
+  const SubscriptionStatusState({
+    this.status = SubscriptionStatusLoad.loading,
+    this.subscription,
+    this.errorMessage,
+    this.canceling = false,
+  });
+
+  SubscriptionStatusState copyWith({
+    SubscriptionStatusLoad? status,
+    SubscriptionStatus? subscription,
+    String? errorMessage,
+    bool? canceling,
+  }) {
+    return SubscriptionStatusState(
+      status: status ?? this.status,
+      subscription: subscription,
+      errorMessage: errorMessage,
+      canceling: canceling ?? this.canceling,
+    );
+  }
+}
+
+/// Estado de la suscripción propia -- alimenta la pantalla "Mi suscripción"
+/// y decide si el flujo de "anunciar" deja elegir qué promocionar o manda
+/// primero a comprar un plan (ver features/ads).
+class SubscriptionStatusController extends StateNotifier<SubscriptionStatusState> {
+  final GetSubscriptionStatusUseCase _getStatus;
+  final CancelSubscriptionUseCase _cancel;
+
+  SubscriptionStatusController(this._getStatus, this._cancel)
+      : super(const SubscriptionStatusState()) {
+    load();
+  }
+
+  Future<void> load() async {
+    state = state.copyWith(status: SubscriptionStatusLoad.loading);
+    final result = await _getStatus();
+    result.fold(
+      (failure) => state = state.copyWith(
+        status: SubscriptionStatusLoad.error,
+        errorMessage: failure.message,
+      ),
+      (subscription) => state = SubscriptionStatusState(
+        status: SubscriptionStatusLoad.loaded,
+        subscription: subscription,
+      ),
+    );
+  }
+
+  Future<bool> cancel() async {
+    state = state.copyWith(canceling: true, errorMessage: null);
+    final result = await _cancel();
+    return result.fold(
+      (failure) {
+        state = state.copyWith(canceling: false, errorMessage: failure.message);
+        return false;
+      },
+      (_) {
+        state = SubscriptionStatusState(status: SubscriptionStatusLoad.loaded);
+        return true;
+      },
+    );
+  }
+}
+
+final subscriptionStatusControllerProvider = StateNotifierProvider<
+    SubscriptionStatusController, SubscriptionStatusState>((ref) {
+  return SubscriptionStatusController(
+    ref.read(getSubscriptionStatusUseCaseProvider),
+    ref.read(cancelSubscriptionUseCaseProvider),
   );
 });

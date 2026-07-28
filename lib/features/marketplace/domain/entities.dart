@@ -1,4 +1,5 @@
 ﻿import 'package:equatable/equatable.dart';
+import '../../ads/domain/entities.dart';
 import '../../subscription/domain/entities.dart';
 
 /// ArtÃ­culo publicado en el marketplace (tienda).
@@ -96,5 +97,17 @@ class SubscriptionSlide extends CarouselSlide {
 
   @override
   List<Object?> get props => [type];
+}
+
+/// Slide que muestra un anuncio real, pagado por un vendedor/negocio (ver
+/// `features/ads/`). Se agrega junto a los demás cuando hay anuncios
+/// activos en la sección "marketplace".
+class AdSlide extends CarouselSlide {
+  final AdEntity ad;
+
+  const AdSlide(this.ad);
+
+  @override
+  List<Object?> get props => [ad];
 }
 

@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/enums.dart';
 import '../../../core/providers.dart';
 import '../../../core/realtime_socket.dart';
 import '../../../core/usecase.dart';
+import '../../auth/presentation/providers.dart';
 import '../data/datasources.dart';
 import '../data/repositories.dart';
 import '../domain/entities.dart';
@@ -118,6 +121,12 @@ StateNotifierProvider<ProfileAssetsController, ProfileAssetsState>((ref) {
     uploadAssetPhotoUseCase: ref.read(uploadAssetPhotoUseCaseProvider),
     deleteAssetPhotoUseCase: ref.read(deleteAssetPhotoUseCaseProvider),
     realtimeSocket: ref.read(realtimeSocketProvider),
+    onSellerThresholdReached: () {
+      final roles = ref.read(authControllerProvider).user?.roles ?? const [];
+      if (!roles.contains(UserRole.seller)) {
+        ref.read(authControllerProvider.notifier).addRoles([UserRole.seller]);
+      }
+    },
   );
 });
 
@@ -130,6 +139,7 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
   final EditAssetUseCase _editAsset;
   final UploadAssetPhotoUseCase _uploadAssetPhoto;
   final DeleteAssetPhotoUseCase _deleteAssetPhoto;
+  final VoidCallback? _onSellerThresholdReached;
   StreamSubscription<Map<String, dynamic>>? _blockchainSubscription;
 
   ProfileAssetsController({
@@ -142,6 +152,7 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
     required UploadAssetPhotoUseCase uploadAssetPhotoUseCase,
     required DeleteAssetPhotoUseCase deleteAssetPhotoUseCase,
     required RealtimeSocket realtimeSocket,
+    VoidCallback? onSellerThresholdReached,
   })  : _getUserAssets = getUserAssetsUseCase,
         _addAsset = addAssetUseCase,
         _deleteAsset = deleteAssetUseCase,
@@ -150,6 +161,7 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
         _editAsset = editAssetUseCase,
         _uploadAssetPhoto = uploadAssetPhotoUseCase,
         _deleteAssetPhoto = deleteAssetPhotoUseCase,
+        _onSellerThresholdReached = onSellerThresholdReached,
         super(const ProfileAssetsState()) {
     loadAssets();
     // Cuando termina la certificación en Vara (async, 10-30s), el activo ya
@@ -226,7 +238,19 @@ class ProfileAssetsController extends StateNotifier<ProfileAssetsState> {
     result.fold((failure) {
       state = state.copyWith(errorMessage: failure.message);
       loadAssets();
-    }, (_) {});
+    }, (_) {
+      if (forSale) _checkSellerThreshold();
+    });
+  }
+
+  /// Asigna el rol "Vendedor" (acumulativo, no reemplaza los que ya tenga)
+  /// en cuanto la cuenta supera 5 artículos en venta a la vez -- quien elige
+  /// "Vendedor" al registrarse ya lo tiene desde ese momento
+  /// (ver role_selection_page.dart), esto solo cubre a quien llega a ese
+  /// volumen sin haberlo elegido antes.
+  void _checkSellerThreshold() {
+    final forSaleCount = state.assets.where((a) => a.isForSale).length;
+    if (forSaleCount > 5) _onSellerThresholdReached?.call();
   }
 
   /// Publica o despublica un activo en el Feed (actualizaciÃ³n optimista).

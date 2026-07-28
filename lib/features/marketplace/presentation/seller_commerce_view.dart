@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
 import '../../business/presentation/my_business_tab.dart';
-import 'package:go_router/go_router.dart';
-import '../../../core/router.dart';
 import '../../subscription/domain/entities.dart';
 import '../../profile/presentation/asset_widgets.dart';
 import '../../profile/presentation/providers.dart';
+import '../../ads/presentation/advertise_flow.dart';
 
 /// Vista de comercio del vendedor. Contiene dos apartados:
 /// 1) "En venta": sus productos publicados + suscripción para destacarlos.
@@ -65,10 +64,7 @@ class _ProductsForSaleTab extends ConsumerWidget {
       padding: const EdgeInsets.all(VaultSpacing.md),
       children: [
         _ProductSubscriptionCard(
-          onTap: () => context.push(
-            AppRoutes.subscription,
-            extra: SubscriptionType.product,
-          ),
+          onTap: () => startAdvertiseFlow(context, ref, type: SubscriptionType.product),
         ),
         const SizedBox(height: VaultSpacing.lg),
         switch (state.status) {

@@ -18,4 +18,11 @@ abstract class SubscriptionRepository {
     required String email,
     required String paymentMethodId,
   });
+
+  /// La suscripción activa (o más reciente) del usuario, o `null` si nunca
+  /// se ha suscrito.
+  Future<Either<Failure, SubscriptionStatus?>> getStatus();
+
+  /// Cancela la suscripción activa en Stripe y desactiva sus anuncios.
+  Future<Either<Failure, void>> cancel();
 }

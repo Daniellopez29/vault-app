@@ -197,9 +197,13 @@ class AssetCard extends ConsumerWidget {
                 Positioned(
                   bottom: VaultSpacing.xs,
                   left: VaultSpacing.xs,
-                  child: _StatusBadge(
-                    label: asset.isVerified ? 'Verificado' : 'Verificando...',
-                    color: asset.isVerified ? VaultColors.success : VaultColors.textSecondary,
+                  // Mismo ícono que usa el marketplace público para
+                  // productos verificados (ver marketplace_card.dart) --
+                  // lenguaje visual consistente entre las dos vistas.
+                  child: Icon(
+                    asset.isVerified ? Icons.verified_user : Icons.hourglass_top,
+                    color: asset.isVerified ? VaultColors.accent : VaultColors.textSecondary,
+                    size: VaultIconSize.md,
                   ),
                 ),
               ],

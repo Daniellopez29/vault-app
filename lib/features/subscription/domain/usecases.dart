@@ -52,3 +52,17 @@ class CreateSubscriptionUseCase
     );
   }
 }
+
+class GetSubscriptionStatusUseCase {
+  final SubscriptionRepository repository;
+  const GetSubscriptionStatusUseCase(this.repository);
+
+  Future<Either<Failure, SubscriptionStatus?>> call() => repository.getStatus();
+}
+
+class CancelSubscriptionUseCase {
+  final SubscriptionRepository repository;
+  const CancelSubscriptionUseCase(this.repository);
+
+  Future<Either<Failure, void>> call() => repository.cancel();
+}

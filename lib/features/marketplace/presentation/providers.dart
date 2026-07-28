@@ -20,10 +20,6 @@ Provider<GetMarketplaceItemsUseCase>((ref) {
   return GetMarketplaceItemsUseCase(ref.read(marketplaceRepositoryProvider));
 });
 
-final getPromoBannersUseCaseProvider = Provider<GetPromoBannersUseCase>((ref) {
-  return GetPromoBannersUseCase(ref.read(marketplaceRepositoryProvider));
-});
-
 enum ShopStatus { initial, loading, loaded, error }
 
 class ShopState {
@@ -60,10 +56,7 @@ class ShopState {
 
 final shopControllerProvider =
 StateNotifierProvider<ShopController, ShopState>((ref) {
-  final controller = ShopController(
-    ref.read(getMarketplaceItemsUseCaseProvider),
-    ref.read(getPromoBannersUseCaseProvider),
-  );
+  final controller = ShopController(ref.read(getMarketplaceItemsUseCaseProvider));
   // Cuando el usuario pone/quita uno de sus activos en venta, el backend ya
   // lo refleja en GET /assets -- basta con recargar el Shop desde cero.
   ref.listen(profileAssetsControllerProvider, (previous, next) {
@@ -74,19 +67,17 @@ StateNotifierProvider<ShopController, ShopState>((ref) {
 
 class ShopController extends StateNotifier<ShopState> {
   final GetMarketplaceItemsUseCase _getItems;
-  final GetPromoBannersUseCase _getBanners;
 
   // Catálogo cacheado, para no volver a pedirlo al filtrar por búsqueda.
   List<MarketplaceItemEntity> _items = const [];
 
-  ShopController(this._getItems, this._getBanners) : super(const ShopState()) {
+  ShopController(this._getItems) : super(const ShopState()) {
     loadShop();
   }
 
   Future<void> loadShop() async {
     state = state.copyWith(status: ShopStatus.loading);
 
-    final bannersResult = await _getBanners(const NoParams());
     final itemsResult = await _getItems(const NoParams());
 
     itemsResult.fold(
@@ -96,26 +87,22 @@ class ShopController extends StateNotifier<ShopState> {
       ),
           (items) {
         _items = items;
-        final banners = bannersResult.fold(
-              (_) => <PromoBannerEntity>[],
-              (list) => list,
-        );
         state = state.copyWith(
           status: ShopStatus.loaded,
           items: _visibleItems(),
-          slides: _buildSlides(banners),
+          slides: _buildSlides(),
         );
       },
     );
   }
 
-  /// Arma los slides del carrusel: primero el anuncio de suscripción de
-  /// productos (CTA fijo de la app), luego las promos que vengan del backend.
-  /// El anuncio no depende del backend: aunque no haya banners, sigue estando.
-  List<CarouselSlide> _buildSlides(List<PromoBannerEntity> banners) {
+  /// Slides fijos del carrusel que no dependen de anuncios reales (el CTA de
+  /// suscripción). Los anuncios activos se agregan aparte en `shop_tab.dart`
+  /// (ver `activeAdsControllerProvider`), para que se actualicen solos en
+  /// cuanto alguien publica/cancela uno, sin recargar todo el Shop.
+  List<CarouselSlide> _buildSlides() {
     return [
       const SubscriptionSlide(SubscriptionType.product),
-      ...banners.map(PromoSlide.new),
     ];
   }
 

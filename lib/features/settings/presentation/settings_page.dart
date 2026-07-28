@@ -57,6 +57,11 @@ class SettingsPage extends ConsumerWidget {
                 label: 'Registra tu negocio',
                 onTap: () => context.push(AppRoutes.registerBusiness),
               ),
+              _SettingsTile(
+                icon: Icons.workspace_premium_outlined,
+                label: 'Mi suscripción',
+                onTap: () => context.push(AppRoutes.subscriptionManagement),
+              ),
             ],
           ),
           _SettingsSection(
