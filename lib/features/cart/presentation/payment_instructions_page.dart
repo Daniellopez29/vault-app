@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -8,19 +10,35 @@ import '../domain/entities.dart';
 
 /// Instrucciones de pago para transferencia y efectivo.
 ///
-/// PENDIENTE DE BACKEND: la referencia y los datos bancarios son de ejemplo.
-/// El backend debe generarlos al crear la orden (ver documento de backend).
-class PaymentInstructionsPage extends StatelessWidget {
+/// La referencia se genera una vez por intento de pago (antes era el mismo
+/// string fijo para cualquier usuario, '9021 4471 8830 2265' -- no servía
+/// para identificar de quién era un depósito). Sigue siendo del lado del
+/// cliente, sin persistir en ningún lado: `POST /orders` es exclusivo de
+/// pagos con tarjeta vía Stripe (ver `CreateOrderUseCase.go` en `payment/`),
+/// no existe todavía un endpoint que registre órdenes de transferencia/
+/// efectivo y las concilie contra un depósito real -- esa es una pieza de
+/// backend aparte, no algo que se resuelva solo del lado de la app.
+class PaymentInstructionsPage extends StatefulWidget {
   final PaymentType type;
 
   const PaymentInstructionsPage({super.key, required this.type});
 
-  /// Referencia de ejemplo. La real la genera el backend por orden.
-  String get _reference => '9021 4471 8830 2265';
+  @override
+  State<PaymentInstructionsPage> createState() => _PaymentInstructionsPageState();
+}
+
+class _PaymentInstructionsPageState extends State<PaymentInstructionsPage> {
+  late final String _reference = _generateReference();
+
+  String _generateReference() {
+    final random = Random();
+    final digits = List.generate(16, (_) => random.nextInt(10)).join();
+    return [for (var i = 0; i < 16; i += 4) digits.substring(i, i + 4)].join(' ');
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isTransfer = type == PaymentType.transfer;
+    final isTransfer = widget.type == PaymentType.transfer;
 
     return Scaffold(
       backgroundColor: VaultColors.background,

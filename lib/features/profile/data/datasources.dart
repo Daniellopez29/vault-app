@@ -20,6 +20,11 @@ abstract class ProfileRemoteDataSource {
     required String description,
     required String location,
   });
+
+  /// Historial completo de certificaciones de un activo (REGISTERED,
+  /// MAINTAINED, RESTORED, TRANSFERRED), no solo la última -- endpoint
+  /// público, no requiere sesión.
+  Future<List<BlockchainCertificateModel>> getCertificateHistory(String assetId);
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -220,6 +225,25 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       rethrow;
     } catch (e) {
       throw ServerFailure('Error al registrar el negocio: $e');
+    }
+  }
+
+  @override
+  Future<List<BlockchainCertificateModel>> getCertificateHistory(String assetId) async {
+    try {
+      final body = await _client.get(
+        '/blockchain-certificates',
+        query: {'asset_id': assetId},
+        auth: false,
+      );
+      final list = body as List<dynamic>? ?? const [];
+      return list
+          .map((e) => BlockchainCertificateModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al cargar el historial de certificación: $e');
     }
   }
 }

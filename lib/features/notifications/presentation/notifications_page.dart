@@ -116,6 +116,8 @@ class _NotificationTile extends StatelessWidget {
         return Icons.verified_outlined;
       case 'comunidad':
         return Icons.dynamic_feed_outlined;
+      case 'suscripcion':
+        return Icons.workspace_premium_outlined;
       default:
         return Icons.notifications_none;
     }

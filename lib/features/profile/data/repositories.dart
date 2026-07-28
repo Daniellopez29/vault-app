@@ -181,6 +181,20 @@ class ProfileRepositoryImpl implements ProfileRepository {
       return const Left(ServerFailure('Error al cargar los servicios.'));
     }
   }
+
+  @override
+  Future<Either<Failure, List<BlockchainCertificateEntity>>> getCertificateHistory(
+    String assetId,
+  ) async {
+    try {
+      final history = await remoteDataSource.getCertificateHistory(assetId);
+      return Right(history);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error al cargar el historial de certificación: $e'));
+    }
+  }
 }
 
 

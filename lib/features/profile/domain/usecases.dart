@@ -167,3 +167,11 @@ class SetPublishedParams {
     this.caption,
   });
 }
+
+class GetCertificateHistoryUseCase {
+  final ProfileRepository repository;
+  const GetCertificateHistoryUseCase(this.repository);
+
+  Future<Either<Failure, List<BlockchainCertificateEntity>>> call(String assetId) =>
+      repository.getCertificateHistory(assetId);
+}

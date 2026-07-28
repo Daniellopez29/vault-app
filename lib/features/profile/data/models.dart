@@ -164,3 +164,27 @@ class RestorerProfileModel extends RestorerProfileEntity {
     );
   }
 }
+
+class BlockchainCertificateModel extends BlockchainCertificateEntity {
+  const BlockchainCertificateModel({
+    required super.id,
+    required super.ownerId,
+    required super.txId,
+    required super.action,
+    required super.network,
+    required super.confirmedAt,
+  });
+
+  /// Decodifica `BlockchainCertificateResponse` de
+  /// `GET /blockchain-certificates?asset_id=` -- lista plana, sin envoltura.
+  factory BlockchainCertificateModel.fromJson(Map<String, dynamic> json) {
+    return BlockchainCertificateModel(
+      id: json['id'] as String,
+      ownerId: json['owner_id'] as String,
+      txId: json['tx_id'] as String,
+      action: json['action'] as String,
+      network: json['network'] as String? ?? 'testnet',
+      confirmedAt: DateTime.parse(json['confirmed_at'] as String),
+    );
+  }
+}

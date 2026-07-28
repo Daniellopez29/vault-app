@@ -29,4 +29,8 @@ abstract class ProfileRepository {
     required String description,
     required String location,
   });
+
+  Future<Either<Failure, List<BlockchainCertificateEntity>>> getCertificateHistory(
+    String assetId,
+  );
 }

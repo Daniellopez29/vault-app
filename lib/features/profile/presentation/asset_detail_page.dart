@@ -10,6 +10,7 @@ import '../../auth/presentation/providers.dart';
 import '../../maintenance/domain/entities.dart';
 import '../../maintenance/presentation/providers.dart';
 import '../domain/entities.dart';
+import 'providers.dart';
 
 /// Detalle de un activo: sus datos + el historial de mantenimiento.
 /// Recibe el AssetEntity por parámetro (viene del perfil).
@@ -158,6 +159,12 @@ class _CertificateSection extends ConsumerWidget {
     final shortTxId =
         txId.length > 14 ? '${txId.substring(0, 8)}…${txId.substring(txId.length - 6)}' : txId;
 
+    // Historial completo (no solo el último tx) -- de ahí sale cuántas
+    // veces cambió de dueño. Se degrada en silencio si todavía no carga o
+    // falla: es información secundaria, no debe tumbar el certificado.
+    final history = ref.watch(certificateHistoryProvider(asset.id)).valueOrNull;
+    final previousOwners = history?.where((c) => c.action == 'TRANSFERRED').length;
+
     return Container(
       padding: const EdgeInsets.all(VaultSpacing.md),
       decoration: BoxDecoration(
@@ -180,6 +187,7 @@ class _CertificateSection extends ConsumerWidget {
           _certRow('Dueño', ownerName),
           _certRow('Producto', '${asset.brand} ${asset.name}'),
           _certRow('Categoría', asset.category.displayName),
+          if (previousOwners != null) _certRow('Dueños anteriores', '$previousOwners'),
           const SizedBox(height: VaultSpacing.xs),
           Row(
             children: [

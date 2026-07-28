@@ -66,6 +66,18 @@ final registerBusinessUseCaseProvider = Provider<RegisterBusinessUseCase>((ref) 
   return RegisterBusinessUseCase(ref.read(profileRepositoryProvider));
 });
 
+final getCertificateHistoryUseCaseProvider =
+    Provider((ref) => GetCertificateHistoryUseCase(ref.read(profileRepositoryProvider)));
+
+/// Historial completo de certificación de un activo (`.family` por asset
+/// id) -- se pide una sola vez al entrar al detalle, no necesita un
+/// StateNotifier propio.
+final certificateHistoryProvider =
+    FutureProvider.family<List<BlockchainCertificateEntity>, String>((ref, assetId) async {
+  final result = await ref.read(getCertificateHistoryUseCaseProvider)(assetId);
+  return result.fold((failure) => throw failure, (history) => history);
+});
+
 // â”€â”€â”€ ASSETS STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 enum ProfileAssetsStatus { initial, loading, loaded, error }

@@ -216,3 +216,28 @@ class RestorerProfileEntity extends Equatable {
   List<Object?> get props =>
       [userId, bio, specialties, services, rating, reviewsCount, name, avatarUrl];
 }
+
+/// Una entrada del historial de certificación de un activo en Vara
+/// (`GET /blockchain-certificates?asset_id=`, pública). `action` es
+/// REGISTERED/MAINTAINED/RESTORED/TRANSFERRED -- ver
+/// `api/src/features/blockchaincertificates`.
+class BlockchainCertificateEntity extends Equatable {
+  final String id;
+  final String ownerId;
+  final String txId;
+  final String action;
+  final String network;
+  final DateTime confirmedAt;
+
+  const BlockchainCertificateEntity({
+    required this.id,
+    required this.ownerId,
+    required this.txId,
+    required this.action,
+    required this.network,
+    required this.confirmedAt,
+  });
+
+  @override
+  List<Object?> get props => [id, ownerId, txId, action, network, confirmedAt];
+}
