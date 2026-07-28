@@ -14,12 +14,6 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterFragmentActivity() {
     private val CHANNEL = "vault/device_integrity"
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        // 🔒 1. BLOQUEO DE CAPTURAS Y GRABACIÓN DE PANTALLA
-        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-    }
-
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
@@ -29,6 +23,14 @@ class MainActivity : FlutterFragmentActivity() {
                 "isUsbDebuggingEnabled" -> result.success(isUsbDebuggingEnabled())
                 // 🛡️ El dispositivo solo es seguro si NO hay Fake GPS y NO hay depuración USB activa
                 "isDeviceSafe" -> result.success(!isFakeGpsEnabled() && !isUsbDebuggingEnabled())
+                "enableSecureMode" -> {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    result.success(null)
+                }
+                "disableSecureMode" -> {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    result.success(null)
+                }
                 else -> result.notImplemented()
             }
         }
