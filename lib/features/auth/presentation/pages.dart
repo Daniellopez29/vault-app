@@ -110,11 +110,33 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 }
 
 /// Pantalla de inicio de sesión (correo/contraseña + Google).
-class SignInPage extends ConsumerWidget {
+///
+/// ScreenSecurity se activa aquí igual que en LoginPage/RegisterFormPage/
+/// RoleSelectionPage: mientras se muestra el formulario con la contraseña
+/// no se permiten capturas. Al navegar a Home (login exitoso) esta pantalla
+/// se destruye, dispose() corre y disable() libera las capturas.
+class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SignInPage> createState() => _SignInPageState();
+}
+
+class _SignInPageState extends ConsumerState<SignInPage> {
+  @override
+  void initState() {
+    super.initState();
+    ScreenSecurity.enable();
+  }
+
+  @override
+  void dispose() {
+    ScreenSecurity.disable();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
