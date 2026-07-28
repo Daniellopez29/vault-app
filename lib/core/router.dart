@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/enums.dart';
+import '../core/route_transitions.dart';
 import '../features/auth/presentation/pages.dart';
 import '../features/home/presentation/create_post_page.dart';
 import '../features/auth/presentation/role_selection_page.dart';
@@ -40,9 +41,6 @@ import '../features/profile/presentation/asset_detail_page.dart';
 import '../features/profile/presentation/edit_asset_page.dart';
 import '../features/profile/domain/entities.dart';
 
-/// QuÃ© rol se crea y a dÃ³nde ir despuÃ©s de registrarse con Ã©xito. Cada
-/// tarjeta de [RoleSelectionPage] arma uno de estos segÃºn lo que el
-/// usuario eligiÃ³ (Coleccionista/Vendedor/Negocio).
 class RegisterFlowArgs {
   final UserRole role;
   final String destination;
@@ -61,7 +59,7 @@ abstract class AppRoutes {
   static const paymentMethod = '/payment-method';
   static const orderSuccess  = '/order-success';
   static const registerAsset = '/register-asset';
-  static const createPost = '/create-post';
+  static const createPost    = '/create-post';
   static const registerBusiness = '/register-business';
   static const legal         = '/legal';
   static const notifications = '/notifications';
@@ -70,9 +68,9 @@ abstract class AppRoutes {
   static const subscription  = '/subscription';
   static const subscriptionManagement = '/subscription-management';
   static const connectOnboarding = '/connect-onboarding';
-  static const myAds = '/my-ads';
-  static const myOrders = '/my-orders';
-  static const mySales = '/my-sales';
+  static const myAds         = '/my-ads';
+  static const myOrders      = '/my-orders';
+  static const mySales       = '/my-sales';
   static const stats         = '/stats';
   static const productDetail = '/product-detail';
   static const commerce      = '/commerce';
@@ -83,195 +81,272 @@ abstract class AppRoutes {
   static const paymentInstructions = '/payment-instructions';
   static const reviews       = '/reviews';
   static const subscriptionCheckout = '/subscription-checkout';
-  static const assetDetail = '/asset-detail';
-  static const editAsset = '/edit-asset';
+  static const assetDetail   = '/asset-detail';
+  static const editAsset     = '/edit-asset';
 }
 
 final appRouter = GoRouter(
   initialLocation: AppRoutes.login,
   routes: [
-    GoRoute(
-      path: AppRoutes.signIn,
-      builder: (context, state) => const SignInPage(),
-    ),
+    // ── Auth (sin transición custom, entrada directa) ──
     GoRoute(
       path: AppRoutes.login,
       builder: (context, state) => const LoginPage(),
     ),
     GoRoute(
+      path: AppRoutes.signIn,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const SignInPage(),
+      ),
+    ),
+    GoRoute(
       path: AppRoutes.roleSelection,
-      builder: (context, state) => const RoleSelectionPage(),
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const RoleSelectionPage(),
+      ),
     ),
     GoRoute(
       path: AppRoutes.register,
-      builder: (context, state) {
-        final args = state.extra as RegisterFlowArgs;
-        return RegisterFormPage(role: args.role, destination: args.destination);
-      },
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: RegisterFormPage(
+          role: (state.extra as RegisterFlowArgs).role,
+          destination: (state.extra as RegisterFlowArgs).destination,
+        ),
+      ),
     ),
+
+    // ── Home ──
     GoRoute(
       path: AppRoutes.home,
       builder: (context, state) => const HomePage(),
     ),
+
+    // ── Navegación general (fade + slide sutil) ──
     GoRoute(
       path: AppRoutes.settings,
-      builder: (context, state) => const SettingsPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.cart,
-      builder: (context, state) => const CartTab(),
-    ),
-    GoRoute(
-      path: AppRoutes.paymentMethod,
-      builder: (context, state) => const PaymentMethodPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.subscription,
-      builder: (context, state) => SubscriptionPage(
-        type: state.extra as SubscriptionType,
-      ),
-    ),
-    GoRoute(
-      path: AppRoutes.subscriptionManagement,
-      builder: (context, state) => const SubscriptionManagementPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.connectOnboarding,
-      builder: (context, state) => const ConnectOnboardingPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.myAds,
-      builder: (context, state) => const MyAdsPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.myOrders,
-      builder: (context, state) => const MyOrdersPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.mySales,
-      builder: (context, state) => const MySalesPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.subscriptionCheckout,
-      builder: (context, state) => SubscriptionCheckoutPage(
-        plan: state.extra as SubscriptionPlan,
-      ),
-    ),
-    GoRoute(
-      path: AppRoutes.orderSuccess,
-      builder: (context, state) => const OrderSuccessPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.registerAsset,
-      builder: (context, state) => const RegisterAssetPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.createPost,
-      builder: (context, state) => const CreatePostPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.registerBusiness,
-      builder: (context, state) => const RegisterBusinessPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.legal,
-      builder: (context, state) => LegalPage(
-        initialIndex: state.extra as int? ?? 0,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const SettingsPage(),
       ),
     ),
     GoRoute(
       path: AppRoutes.notifications,
-      builder: (context, state) => const NotificationsPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.stats,
-      builder: (context, state) => const StatsPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.productDetail,
-      builder: (context, state) => ProductDetailPage(
-        item: state.extra as MarketplaceItemEntity,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const NotificationsPage(),
       ),
-    ),
-    GoRoute(
-      path: AppRoutes.commerce,
-      builder: (context, state) => const SellerCommerceView(),
-    ),
-    GoRoute(
-      path: AppRoutes.addresses,
-      builder: (context, state) => const AddressesPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.checkoutAddress,
-      builder: (context, state) => const CheckoutAddressPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.paymentInstructions,
-      builder: (context, state) => PaymentInstructionsPage(
-        type: state.extra as PaymentType,
-      ),
-    ),
-    GoRoute(
-      path: AppRoutes.specialists,
-      builder: (context, state) => const TitledPage(
-        title: 'Especialistas',
-        child: ServicesDirectoryPage(),
-      ),
-    ),
-    GoRoute(
-      path: AppRoutes.services,
-      builder: (context, state) => const TitledPage(
-        title: 'Servicios',
-        child: ServicesTab(),
-      ),
-    ),
-    GoRoute(
-      path: AppRoutes.reviews,
-      builder: (context, state) => const TitledPage(
-        title: 'Reseñas',
-        child: ReviewsTab(),
-      ),
-    ),
-    GoRoute(
-      path: AppRoutes.chat,
-      builder: (context, state) {
-        // Defensa por si algo navega aquí sin pasar el destinatario (no
-        // debería pasar -- todos los botones de "Contactar" ya lo hacen --
-        // pero es mejor un mensaje claro que una pantalla roja con "Null").
-        final args = state.extra;
-        if (args is! ChatPageArgs) {
-          return const TitledPage(
-            title: 'Chat',
-            child: Center(child: Text('No se especificó con quién chatear.')),
-          );
-        }
-        return ChatPage(args: args);
-      },
     ),
     GoRoute(
       path: AppRoutes.conversations,
-      builder: (context, state) => const ConversationsListPage(),
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const ConversationsListPage(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.stats,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const StatsPage(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.legal,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: LegalPage(initialIndex: state.extra as int? ?? 0),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.myAds,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const MyAdsPage(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.myOrders,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const MyOrdersPage(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.mySales,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const MySalesPage(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.addresses,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const AddressesPage(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.createPost,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const CreatePostPage(),
+      ),
+    ),
+
+    // ── Flujos modales (slide más pronunciado desde abajo) ──
+    GoRoute(
+      path: AppRoutes.cart,
+      pageBuilder: (context, state) => vaultModalTransitionPage(
+        key: state.pageKey,
+        child: const CartTab(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.checkoutAddress,
+      pageBuilder: (context, state) => vaultModalTransitionPage(
+        key: state.pageKey,
+        child: const CheckoutAddressPage(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.paymentMethod,
+      pageBuilder: (context, state) => vaultModalTransitionPage(
+        key: state.pageKey,
+        child: const PaymentMethodPage(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.paymentInstructions,
+      pageBuilder: (context, state) => vaultModalTransitionPage(
+        key: state.pageKey,
+        child: PaymentInstructionsPage(type: state.extra as PaymentType),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.orderSuccess,
+      pageBuilder: (context, state) => vaultModalTransitionPage(
+        key: state.pageKey,
+        child: const OrderSuccessPage(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.subscription,
+      pageBuilder: (context, state) => vaultModalTransitionPage(
+        key: state.pageKey,
+        child: SubscriptionPage(type: state.extra as SubscriptionType),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.subscriptionManagement,
+      pageBuilder: (context, state) => vaultModalTransitionPage(
+        key: state.pageKey,
+        child: const SubscriptionManagementPage(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.subscriptionCheckout,
+      pageBuilder: (context, state) => vaultModalTransitionPage(
+        key: state.pageKey,
+        child: SubscriptionCheckoutPage(plan: state.extra as SubscriptionPlan),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.connectOnboarding,
+      pageBuilder: (context, state) => vaultModalTransitionPage(
+        key: state.pageKey,
+        child: const ConnectOnboardingPage(),
+      ),
+    ),
+
+    // ── Detalle / registros ──
+    GoRoute(
+      path: AppRoutes.productDetail,
+      pageBuilder: (context, state) => vaultModalTransitionPage(
+        key: state.pageKey,
+        child: ProductDetailPage(item: state.extra as MarketplaceItemEntity),
+      ),
     ),
     GoRoute(
       path: AppRoutes.assetDetail,
-      builder: (context, state) => AssetDetailPage(
-        asset: state.extra as AssetEntity,
+      pageBuilder: (context, state) => vaultModalTransitionPage(
+        key: state.pageKey,
+        child: AssetDetailPage(asset: state.extra as AssetEntity),
       ),
     ),
     GoRoute(
       path: AppRoutes.editAsset,
-      builder: (context, state) => EditAssetPage(
-        asset: state.extra as AssetEntity,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: EditAssetPage(asset: state.extra as AssetEntity),
       ),
+    ),
+    GoRoute(
+      path: AppRoutes.registerAsset,
+      pageBuilder: (context, state) => vaultModalTransitionPage(
+        key: state.pageKey,
+        child: const RegisterAssetPage(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.registerBusiness,
+      pageBuilder: (context, state) => vaultModalTransitionPage(
+        key: state.pageKey,
+        child: const RegisterBusinessPage(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.commerce,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const SellerCommerceView(),
+      ),
+    ),
+
+    // ── Servicios / reseñas / especialistas ──
+    GoRoute(
+      path: AppRoutes.specialists,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const TitledPage(title: 'Especialistas', child: ServicesDirectoryPage()),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.services,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const TitledPage(title: 'Servicios', child: ServicesTab()),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.reviews,
+      pageBuilder: (context, state) => vaultTransitionPage(
+        key: state.pageKey,
+        child: const TitledPage(title: 'Reseñas', child: ReviewsTab()),
+      ),
+    ),
+
+    // ── Chat ──
+    GoRoute(
+      path: AppRoutes.chat,
+      pageBuilder: (context, state) {
+        final args = state.extra;
+        if (args is! ChatPageArgs) {
+          return vaultTransitionPage(
+            key: state.pageKey,
+            child: const TitledPage(
+              title: 'Chat',
+              child: Center(child: Text('No se especificó con quién chatear.')),
+            ),
+          );
+        }
+        return vaultTransitionPage(
+          key: state.pageKey,
+          child: ChatPage(args: args),
+        );
+      },
     ),
   ],
 );
-
-
-
-
-
-
-
-
-

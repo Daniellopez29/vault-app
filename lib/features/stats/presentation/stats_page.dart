@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animated_counter.dart';
 import '../../auth/presentation/providers.dart';
 import '../../business/presentation/providers.dart';
 import '../../profile/domain/entities.dart';
@@ -20,10 +21,6 @@ class StatsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(collectionStatsProvider);
     final userId = ref.watch(authControllerProvider).user?.id;
-    // El conteo de servicios ahora vive en el catálogo del negocio
-    // (businessservices), no en el perfil de restaurador -- rating y
-    // reseñas siguen siendo un concepto aparte (feature reviews), de ahí
-    // que se combinen dos fuentes distintas acá.
     final restorerState = userId == null
         ? null
         : ref.watch(restorerProfileControllerProvider(userId));
@@ -111,7 +108,7 @@ class _EmptyStats extends StatelessWidget {
   }
 }
 
-/// Estadísticas de la colección de activos.
+/// Estadísticas de la colección de activos con contadores animados.
 class _CollectionSection extends StatelessWidget {
   final CollectionStats stats;
 
@@ -127,26 +124,28 @@ class _CollectionSection extends StatelessWidget {
       children: [
         Text('Mi colección', style: tt.titleMedium),
         const SizedBox(height: VaultSpacing.sm),
-        _ValueHighlight(
+        _AnimatedValueHighlight(
           label: 'Valor total',
-          value: money.format(stats.totalValue),
+          targetValue: stats.totalValue,
         ),
         const SizedBox(height: VaultSpacing.md),
         Row(
           children: [
             Expanded(
-              child: _StatCard(
+              child: _AnimatedStatCard(
                 icon: Icons.inventory_2_outlined,
                 label: 'Activos',
-                value: '${stats.totalAssets}',
+                targetValue: stats.totalAssets.toDouble(),
+                formatValue: (v) => '${v.round()}',
               ),
             ),
             const SizedBox(width: VaultSpacing.md),
             Expanded(
-              child: _StatCard(
+              child: _AnimatedStatCard(
                 icon: Icons.payments_outlined,
                 label: 'Valor promedio',
-                value: money.format(stats.averageValue),
+                targetValue: stats.averageValue,
+                formatValue: (v) => money.format(v),
               ),
             ),
           ],
@@ -155,19 +154,21 @@ class _CollectionSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _StatCard(
+              child: _AnimatedStatCard(
                 icon: Icons.sell_outlined,
                 label: 'En venta',
-                value: '${stats.forSaleCount}',
+                targetValue: stats.forSaleCount.toDouble(),
+                formatValue: (v) => '${v.round()}',
                 accent: true,
               ),
             ),
             const SizedBox(width: VaultSpacing.md),
             Expanded(
-              child: _StatCard(
+              child: _AnimatedStatCard(
                 icon: Icons.public,
                 label: 'Publicados',
-                value: '${stats.publishedCount}',
+                targetValue: stats.publishedCount.toDouble(),
+                formatValue: (v) => '${v.round()}',
               ),
             ),
           ],
@@ -176,18 +177,20 @@ class _CollectionSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _StatCard(
+              child: _AnimatedStatCard(
                 icon: Icons.verified_user_outlined,
                 label: 'Verificados',
-                value: '${stats.verifiedCount}',
+                targetValue: stats.verifiedCount.toDouble(),
+                formatValue: (v) => '${v.round()}',
               ),
             ),
             const SizedBox(width: VaultSpacing.md),
             Expanded(
-              child: _StatCard(
+              child: _AnimatedStatCard(
                 icon: Icons.build_outlined,
                 label: 'Mantenimientos',
-                value: '${stats.servicesCount + stats.restorationsCount}',
+                targetValue: (stats.servicesCount + stats.restorationsCount).toDouble(),
+                formatValue: (v) => '${v.round()}',
               ),
             ),
           ],
@@ -195,7 +198,7 @@ class _CollectionSection extends StatelessWidget {
         const SizedBox(height: VaultSpacing.lg),
         Text('Por categoría', style: tt.titleMedium),
         const SizedBox(height: VaultSpacing.sm),
-        _CategoryBreakdown(stats: stats),
+        _AnimatedCategoryBreakdown(stats: stats),
       ],
     );
   }
@@ -220,45 +223,50 @@ class _ServicesSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _StatCard(
+              child: _AnimatedStatCard(
                 icon: Icons.handyman_outlined,
                 label: 'Servicios',
-                value: '$servicesCount',
+                targetValue: servicesCount.toDouble(),
+                formatValue: (v) => '${v.round()}',
               ),
             ),
             const SizedBox(width: VaultSpacing.md),
             Expanded(
-              child: _StatCard(
+              child: _AnimatedStatCard(
                 icon: Icons.star_outline,
                 label: 'Calificación',
-                value: profile.rating > 0
-                    ? profile.rating.toStringAsFixed(1)
-                    : '--',
+                targetValue: profile.rating,
+                formatValue: (v) => v > 0 ? v.toStringAsFixed(1) : '--',
               ),
             ),
           ],
         ),
         const SizedBox(height: VaultSpacing.md),
-        _StatCard(
+        _AnimatedStatCard(
           icon: Icons.reviews_outlined,
           label: 'Reseñas recibidas',
-          value: '${profile.reviewsCount}',
+          targetValue: profile.reviewsCount.toDouble(),
+          formatValue: (v) => '${v.round()}',
         ),
       ],
     );
   }
 }
 
-/// Tarjeta destacada con el valor total, en navy para dar jerarquía.
-class _ValueHighlight extends StatelessWidget {
+/// Tarjeta destacada con el valor total animado, en navy para dar jerarquía.
+class _AnimatedValueHighlight extends StatelessWidget {
   final String label;
-  final String value;
+  final double targetValue;
 
-  const _ValueHighlight({required this.label, required this.value});
+  const _AnimatedValueHighlight({
+    required this.label,
+    required this.targetValue,
+  });
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final money = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
 
     return Container(
       width: double.infinity,
@@ -272,8 +280,10 @@ class _ValueHighlight extends StatelessWidget {
         children: [
           Text(label, style: tt.labelSmall?.copyWith(color: Colors.white70)),
           const SizedBox(height: VaultSpacing.xs),
-          Text(
-            value,
+          AnimatedCounter(
+            end: targetValue,
+            duration: const Duration(milliseconds: 1500),
+            formatValue: (v) => money.format(v),
             style: tt.headlineLarge?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -285,17 +295,19 @@ class _ValueHighlight extends StatelessWidget {
   }
 }
 
-/// Tarjeta de una métrica. [accent] se usa solo para señales de comercio.
-class _StatCard extends StatelessWidget {
+/// Tarjeta de una métrica con contador animado.
+class _AnimatedStatCard extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String value;
+  final double targetValue;
+  final String Function(double) formatValue;
   final bool accent;
 
-  const _StatCard({
+  const _AnimatedStatCard({
     required this.icon,
     required this.label,
-    required this.value,
+    required this.targetValue,
+    required this.formatValue,
     this.accent = false,
   });
 
@@ -316,8 +328,10 @@ class _StatCard extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: VaultIconSize.md),
           const SizedBox(height: VaultSpacing.sm),
-          Text(
-            value,
+          AnimatedCounter(
+            end: targetValue,
+            duration: const Duration(milliseconds: 1200),
+            formatValue: formatValue,
             style: tt.titleLarge?.copyWith(
               color: VaultColors.textPrimary,
               fontWeight: FontWeight.bold,
@@ -333,11 +347,11 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-/// Desglose por categoría con barras proporcionales.
-class _CategoryBreakdown extends StatelessWidget {
+/// Desglose por categoría con barras animadas proporcionales.
+class _AnimatedCategoryBreakdown extends StatelessWidget {
   final CollectionStats stats;
 
-  const _CategoryBreakdown({required this.stats});
+  const _AnimatedCategoryBreakdown({required this.stats});
 
   @override
   Widget build(BuildContext context) {
@@ -355,38 +369,14 @@ class _CategoryBreakdown extends StatelessWidget {
       ),
       child: Column(
         children: [
-          for (final entry in entries)
+          for (var i = 0; i < entries.length; i++)
             Padding(
               padding: const EdgeInsets.only(bottom: VaultSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(entry.key.displayName, style: tt.bodyMedium),
-                      Text(
-                        '${entry.value}',
-                        style: tt.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: VaultColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: VaultSpacing.xs),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(VaultRadius.sm),
-                    child: LinearProgressIndicator(
-                      value: entry.value / maxCount,
-                      minHeight: 6,
-                      backgroundColor: VaultColors.background,
-                      valueColor: const AlwaysStoppedAnimation(
-                        VaultColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
+              child: _AnimatedCategoryRow(
+                category: entries[i].key.displayName,
+                count: entries[i].value,
+                fraction: entries[i].value / maxCount,
+                delay: Duration(milliseconds: 150 * i),
               ),
             ),
         ],
@@ -395,3 +385,89 @@ class _CategoryBreakdown extends StatelessWidget {
   }
 }
 
+/// Fila de categoría individual con barra y contador animados.
+class _AnimatedCategoryRow extends StatefulWidget {
+  final String category;
+  final int count;
+  final double fraction;
+  final Duration delay;
+
+  const _AnimatedCategoryRow({
+    required this.category,
+    required this.count,
+    required this.fraction,
+    required this.delay,
+  });
+
+  @override
+  State<_AnimatedCategoryRow> createState() => _AnimatedCategoryRowState();
+}
+
+class _AnimatedCategoryRowState extends State<_AnimatedCategoryRow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _barAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _barAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+    Future.delayed(widget.delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(widget.category, style: tt.bodyMedium),
+            AnimatedCounter(
+              end: widget.count.toDouble(),
+              duration: const Duration(milliseconds: 1000),
+              formatValue: (v) => '${v.round()}',
+              style: tt.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: VaultColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: VaultSpacing.xs),
+        AnimatedBuilder(
+          animation: _barAnimation,
+          builder: (context, _) {
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(VaultRadius.sm),
+              child: LinearProgressIndicator(
+                value: widget.fraction * _barAnimation.value,
+                minHeight: 6,
+                backgroundColor: VaultColors.background,
+                valueColor: const AlwaysStoppedAnimation(VaultColors.primary),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}

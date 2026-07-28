@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/fill_button.dart';
 import '../../auth/presentation/providers.dart';
 import '../../orders/domain/usecases.dart';
 import '../../orders/presentation/providers.dart';
@@ -41,6 +42,10 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
     final methodsAsync = ref.watch(paymentMethodsProvider);
     final isCardSelected = _selectedType == PaymentType.card;
 
+    final canPay = _selectedType != null &&
+        !_paying &&
+        !(isCardSelected && !_cardComplete);
+
     return Scaffold(
       backgroundColor: VaultColors.background,
       appBar: AppBar(
@@ -54,10 +59,6 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: VaultSpacing.sm),
-              // El comprador paga exactamente el precio listado -- la
-              // comisión de Vault (variable según el plan del vendedor) se
-              // descuenta del pago al vendedor al liberar el escrow, no de
-              // acá. Ver OrderSummaryEntity.
               SummaryRow(label: 'Subtotal', value: '\$${summary.subtotal.toStringAsFixed(0)}'),
               if (summary.discount > 0)
                 SummaryRow(label: 'Descuento', value: '-\$${summary.discount.toStringAsFixed(0)}'),
@@ -72,7 +73,7 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                 child: SingleChildScrollView(
                   child: methodsAsync.when(
                     loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                        const Center(child: CircularProgressIndicator()),
                     error: (_, _) => Center(
                       child: Text(
                         'Error al cargar los métodos de pago',
@@ -80,7 +81,6 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                       ),
                     ),
                     data: (methods) {
-                      // Preselecciona el primero si aún no hay selección.
                       if (_selectedId == null && methods.isNotEmpty) {
                         _selectedId = methods.first.id;
                         _selectedType = methods.first.type;
@@ -100,7 +100,8 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                           ],
                           if (isCardSelected)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.md),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: VaultSpacing.md),
                               decoration: BoxDecoration(
                                 color: VaultColors.surface,
                                 borderRadius: VaultRadius.cardBorder,
@@ -109,7 +110,8 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                               child: stripe.CardField(
                                 enablePostalCode: true,
                                 onCardChanged: (details) {
-                                  setState(() => _cardComplete = details?.complete ?? false);
+                                  setState(() =>
+                                      _cardComplete = details?.complete ?? false);
                                 },
                               ),
                             ),
@@ -120,24 +122,14 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                 ),
               ),
               const SizedBox(height: VaultSpacing.md),
-              ElevatedButton.icon(
-                onPressed: (_selectedType == null ||
-                        _paying ||
-                        (isCardSelected && !_cardComplete))
-                    ? null
-                    : () => _onPay(_selectedType!),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: VaultColors.accent,
-                  foregroundColor: Colors.white,
-                ),
-                icon: _paying
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.lock_outline),
-                label: Text(_paying ? 'Procesando...' : 'Pagar ahora'),
+              FillButton(
+                label: 'Pagar ahora',
+                fillingLabel: 'Procesando pago...',
+                icon: Icons.lock_outline,
+                filling: _paying,
+                enabled: canPay,
+                onPressed: () => _onPay(_selectedType!),
+                onCompleted: _onFillCompleted,
               ),
             ],
           ),
@@ -146,21 +138,27 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
     );
   }
 
-  /// Segun el metodo elegido: la tarjeta cobra de una vez con Stripe, y
-  /// transferencia y efectivo muestran sus instrucciones de pago.
+  /// Cuando la animación de relleno termina, navegamos al resultado.
+  /// Para tarjeta el pago real ya se procesó antes de activar [_paying].
+  /// Para transferencia/efectivo solo mostramos instrucciones.
+  void _onFillCompleted() {
+    // No-op: la navegación ya se hizo en _onPay para no-card,
+    // y en _payWithCard para card al terminar el cobro.
+  }
+
   Future<void> _onPay(PaymentType type) async {
     if (type != PaymentType.card) {
+      setState(() => _paying = true);
+      // Espera a que la animación de relleno avance un poco antes de navegar
+      await Future.delayed(const Duration(milliseconds: 1200));
+      if (!mounted) return;
+      setState(() => _paying = false);
       context.push(AppRoutes.paymentInstructions, extra: type);
       return;
     }
     await _payWithCard();
   }
 
-  /// El carrito puede tener artículos de distintos vendedores -- cada uno
-  /// implica un cargo/escrow independiente (`POST /orders` por artículo,
-  /// ver `CreateOrderUseCase.go`). Si alguno falla a media, NO se reintenta
-  /// todo desde cero: solo se quitan del carrito los que sí se cobraron,
-  /// para que un segundo intento no vuelva a cobrar lo mismo dos veces.
   Future<void> _payWithCard() async {
     final items = ref.read(cartControllerProvider).items;
     if (items.isEmpty) return;
@@ -168,7 +166,9 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
     final email = ref.read(authControllerProvider).user?.email;
     if (email == null || email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo identificar tu cuenta para procesar el pago')),
+        const SnackBar(
+            content:
+                Text('No se pudo identificar tu cuenta para procesar el pago')),
       );
       return;
     }
@@ -186,14 +186,16 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
       if (!mounted) return;
       setState(() => _paying = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo procesar la tarjeta: ${e.message}')),
+        SnackBar(
+            content: Text('No se pudo procesar la tarjeta: ${e.message}')),
       );
       return;
     } catch (e) {
       if (!mounted) return;
       setState(() => _paying = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error inesperado al leer la tarjeta: $e')),
+        SnackBar(
+            content: Text('Error inesperado al leer la tarjeta: $e')),
       );
       return;
     }
@@ -203,10 +205,6 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
     final succeededIds = <String>[];
 
     for (final item in items) {
-      // El comprador paga exactamente el precio listado -- la comisión de
-      // Vault se descuenta del lado del vendedor al liberar el escrow (ver
-      // CreateOrderUseCase.go / SellerCommissionAdapter.go en payment/), no
-      // se le agrega nada al comprador acá.
       final amountCents = (item.lineTotal * 100).round();
       final result = await createOrder(CreateOrderParams(
         sellerId: item.sellerId,
@@ -225,8 +223,6 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
     setState(() => _paying = false);
 
     if (failures.isEmpty) {
-      // Éxito total: OrderSuccessPage lee el resumen del carrito (todavía
-      // completo) y lo vacía ella misma -- no se toca acá.
       context.push(AppRoutes.orderSuccess);
       return;
     }

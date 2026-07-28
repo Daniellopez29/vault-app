@@ -1,9 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/router.dart';
 import '../../../../core/theme.dart';
 import '../../../core/screen_security.dart';
+import '../../../core/widgets/animated_logo.dart';
 import 'widgets.dart';
 
 /// Pantalla de bienvenida: dos caminos claros (crear cuenta / iniciar sesión).
@@ -58,7 +59,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                   ),
                   const Spacer(),
-                  Image.asset('assets/images/logo_login.png', height: 140),
+                  const VaultAnimatedLogo(height: 140),
                   const SizedBox(height: 24),
                   const Text(
                     'Un sistema inteligente que centraliza, monitorea y optimiza '

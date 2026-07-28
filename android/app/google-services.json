@@ -58,11 +58,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "49495820436-k8ofcjhp6liups9vsjftqpm3u1m2gg74.apps.googleusercontent.com",
+          "client_id": "49495820436-m2sqj4vkucvoc4nq9rdhv143oidjp3c0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.noveno.vault",
-            "certificate_hash": "8148108a98654f717a251c3b3d99674589b48d39"
+            "certificate_hash": "000ad8845c2929d6c3ba499273a310c7de4b9bba"
           }
         },
         {

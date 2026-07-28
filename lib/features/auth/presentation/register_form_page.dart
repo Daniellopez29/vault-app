@@ -28,6 +28,15 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  
+  /// Solo permite caracteres válidos de correo: letras, números, punto,
+  /// guión, guión bajo, arroba. Rechaza llaves, paréntesis, espacios, etc.
+  static bool _isValidEmail(String email) {
+    final trimmed = email.trim();
+    if (trimmed.isEmpty) return false;
+    final regex = RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$');
+    return regex.hasMatch(trimmed);
+  }
   bool _obscure = true;
   bool _obscureConfirm = true;
 
@@ -123,7 +132,7 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   validator: (v) =>
-                  v == null || !v.contains('@') ? 'Correo inválido' : null,
+                  v == null || !_isValidEmail(v) ? 'Correo inválido' : null,
                 ),
                 const SizedBox(height: 16),
                 _Field(

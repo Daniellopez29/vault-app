@@ -1,8 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../dimens.dart';
 import '../theme.dart';
 
-/// Bloque gris que pulsa suavemente, usado para armar esqueletos de carga.
+/// Bloque con efecto shimmer deslizante, usado para armar esqueletos de carga.
 ///
 /// Vive en core porque lo usan varias features. Cada pantalla compone sus
 /// propios esqueletos con estas piezas, respetando la forma de su contenido.
@@ -31,8 +31,8 @@ class _SkeletonBoxState extends State<SkeletonBox>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
   }
 
   @override
@@ -43,26 +43,45 @@ class _SkeletonBoxState extends State<SkeletonBox>
 
   @override
   Widget build(BuildContext context) {
-    // Respeta la preferencia de accesibilidad "reducir movimiento".
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
     if (reduceMotion) {
-      return _box(0.55);
+      return _staticBox();
     }
 
     return AnimatedBuilder(
       animation: _controller,
-      builder: (context, _) => _box(0.35 + (_controller.value * 0.35)),
+      builder: (context, _) => _shimmerBox(),
     );
   }
 
-  Widget _box(double opacity) {
+  Widget _staticBox() {
     return Container(
       width: widget.width,
       height: widget.height,
       decoration: BoxDecoration(
-        color: VaultColors.textSecondary.withValues(alpha: opacity * 0.4),
+        color: VaultColors.divider.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(widget.radius),
+      ),
+    );
+  }
+
+  Widget _shimmerBox() {
+    return Container(
+      width: widget.width,
+      height: widget.height,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(widget.radius),
+        gradient: LinearGradient(
+          begin: Alignment(-1.0 + (2.0 * _controller.value), 0),
+          end: Alignment(-1.0 + (2.0 * _controller.value) + 1.0, 0),
+          colors: [
+            VaultColors.divider.withValues(alpha: 0.3),
+            VaultColors.divider.withValues(alpha: 0.7),
+            VaultColors.divider.withValues(alpha: 0.3),
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ),
       ),
     );
   }
@@ -89,4 +108,3 @@ class SkeletonLine extends StatelessWidget {
     );
   }
 }
-
