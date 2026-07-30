@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../../../core/usecase.dart';
 import '../data/datasources.dart';
@@ -74,12 +74,17 @@ class FeedState {
   }
 }
 
+final deletePostUseCaseProvider = Provider<DeletePostUseCase>((ref) {
+  return DeletePostUseCase(ref.read(homeRepositoryProvider));
+});
+
 final feedControllerProvider =
 StateNotifierProvider<FeedController, FeedState>((ref) {
   return FeedController(
     ref.read(getFeedPostsUseCaseProvider),
     ref.read(toggleLikeUseCaseProvider),
     ref.read(toggleSaveUseCaseProvider),
+    ref.read(deletePostUseCaseProvider),
   );
 });
 
@@ -87,8 +92,9 @@ class FeedController extends StateNotifier<FeedState> {
   final GetFeedPostsUseCase _getFeedPosts;
   final ToggleLikeUseCase _toggleLike;
   final ToggleSaveUseCase _toggleSave;
+  final DeletePostUseCase _deletePost;
 
-  FeedController(this._getFeedPosts, this._toggleLike, this._toggleSave)
+  FeedController(this._getFeedPosts, this._toggleLike, this._toggleSave, this._deletePost)
       : super(const FeedState()) {
     loadFeed();
   }
@@ -105,6 +111,16 @@ class FeedController extends StateNotifier<FeedState> {
 
   /// Actualiza el texto de búsqueda. El filtrado es local sobre las
   /// publicaciones ya cargadas; no vuelve a pedirlas al backend.
+  Future<void> deletePost(String postId) async {
+    final optimistic = state.posts.where((p) => p.id != postId).toList();
+    state = state.copyWith(posts: optimistic);
+    final result = await _deletePost(postId);
+    result.fold(
+      (failure) => loadFeed(),
+      (_) {},
+    );
+  }
+
   void search(String query) {
     state = state.copyWith(searchQuery: query);
   }

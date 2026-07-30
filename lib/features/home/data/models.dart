@@ -4,6 +4,7 @@ import '../domain/entities.dart';
 class PostModel extends PostEntity {
   const PostModel({
     required super.id,
+    super.authorId,
     required super.authorName,
     required super.authorAvatarUrl,
     required super.imageUrl,
@@ -28,6 +29,7 @@ class PostModel extends PostEntity {
 
     return PostModel(
       id: json['id'] as String,
+      authorId: json['author_id'] as String? ?? json['user_id'] as String? ?? '',
       authorName: json['author_name'] as String? ?? '',
       authorAvatarUrl: json['author_avatar_url'] as String? ?? '',
       imageUrl: firstPhoto ?? '',

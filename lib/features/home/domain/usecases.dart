@@ -47,3 +47,10 @@ class CreatePostParams {
 
   const CreatePostParams({required this.content, required this.images});
 }
+class DeletePostUseCase {
+  final HomeRepository repository;
+  const DeletePostUseCase(this.repository);
+
+  Future<Either<Failure, void>> call(String postId) =>
+      repository.deletePost(postId);
+}

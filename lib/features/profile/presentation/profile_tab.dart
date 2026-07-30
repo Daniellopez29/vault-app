@@ -7,6 +7,8 @@ import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../auth/presentation/providers.dart';
 import '../../favorites/presentation/favorites_tab.dart';
+import '../../home/presentation/feed_tab.dart';
+import '../../home/presentation/providers.dart' show feedControllerProvider, FeedStatus;
 import 'profile_actions.dart';
 import 'providers.dart';
 import 'asset_widgets.dart';
@@ -26,7 +28,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this)
+    _tabController = TabController(length: 3, vsync: this)
       ..addListener(() => setState(() {}));
   }
 
@@ -58,12 +60,11 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
           unselectedLabelColor: VaultColors.textSecondary,
           tabs: const [
             Tab(text: 'Mis Activos'),
+            Tab(text: 'Publicaciones'),
             Tab(text: 'Guardados'),
           ],
         ),
       ),
-      // Solo tiene sentido agregar un activo desde la pestaÃ±a "Mis Activos"
-      // -- en "Guardados" no se muestra.
       floatingActionButton: _tabController.index == 0
           ? FloatingActionButton(
               heroTag: 'profile_fab',
@@ -99,11 +100,11 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
                 SliverToBoxAdapter(
                   child: AssetsBody(ref: ref, state: assetsState),
                 ),
-                // Deja espacio para que el FAB no tape el Ãºltimo activo.
                 const SliverToBoxAdapter(child: SizedBox(height: 72)),
               ],
             ),
           ),
+          _MyPostsTab(userId: authState.user?.id ?? ''),
           const FavoritesTab(),
         ],
       ),
@@ -111,5 +112,68 @@ class _ProfileTabState extends ConsumerState<ProfileTab>
   }
 }
 
+/// Tab que muestra solo las publicaciones del usuario actual.
+class _MyPostsTab extends ConsumerWidget {
+  final String userId;
 
+  const _MyPostsTab({required this.userId});
 
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final feedState = ref.watch(feedControllerProvider);
+    final controller = ref.read(feedControllerProvider.notifier);
+    final tt = Theme.of(context).textTheme;
+
+    if (feedState.status == FeedStatus.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final myPosts = feedState.posts.where((p) => p.authorId == userId).toList();
+
+    if (myPosts.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(VaultSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.dynamic_feed_outlined,
+                  size: VaultIconSize.xl, color: VaultColors.textSecondary),
+              const SizedBox(height: VaultSpacing.lg),
+              Text(
+                'Sin publicaciones',
+                style: tt.titleLarge,
+              ),
+              const SizedBox(height: VaultSpacing.sm),
+              Text(
+                'Tus publicaciones del feed apareceran aqui.',
+                textAlign: TextAlign.center,
+                style: tt.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => controller.loadFeed(),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(VaultSpacing.md),
+        itemCount: myPosts.length,
+        itemBuilder: (context, index) {
+          final post = myPosts[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: VaultSpacing.lg),
+            child: PostCard(
+              post: post,
+              onLikeTap: () => controller.toggleLike(post.id),
+              onSaveTap: () => controller.toggleSave(post.id),
+              onDeleteTap: () => controller.deletePost(post.id),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

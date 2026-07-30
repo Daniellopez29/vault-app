@@ -1,4 +1,4 @@
-import '../../../core/api_client.dart';
+﻿import '../../../core/api_client.dart';
 import '../../../core/error.dart';
 import '../domain/repositories.dart';
 import 'models.dart';
@@ -8,6 +8,7 @@ abstract class HomeRemoteDataSource {
   Future<void> toggleLike(String postId, bool currentlyLiked);
   Future<void> toggleSave(String postId, bool currentlySaved);
   Future<void> createPost({required String content, required List<PostImageUpload> images});
+  Future<void> deletePost(String postId);
 }
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
@@ -18,48 +19,45 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   @override
   Future<List<PostModel>> getFeedPosts() async {
     try {
-      // auth: true (default) -- /posts es pública igual (OptionalAuth en el
-      // backend), pero si hay sesión hace falta mandar el token para que el
-      // backend sepa qué posts marcar is_liked/is_saved para este usuario.
-      // Antes se forzaba auth: false, así que el feed SIEMPRE volvía sin
-      // esa info y el estado de "guardado" se perdía en cada recarga.
-      final body = await _client.get('/posts');
+      final body = await _client.get('/posts', auth: false);
       final list = body as List<dynamic>? ?? const [];
       return list.map((e) => PostModel.fromJson(e as Map<String, dynamic>)).toList();
     } on Failure {
       rethrow;
     } catch (e) {
-      throw ServerFailure('Error al cargar el feed: $e');
+      throw ServerFailure('Error al cargar el feed: ' + e.toString());
     }
   }
 
   @override
   Future<void> toggleLike(String postId, bool currentlyLiked) async {
     try {
+      final path = '/posts/' + postId + '/likes';
       if (currentlyLiked) {
-        await _client.delete('/posts/$postId/likes');
+        await _client.delete(path);
       } else {
-        await _client.post('/posts/$postId/likes');
+        await _client.post(path);
       }
     } on Failure {
       rethrow;
     } catch (e) {
-      throw ServerFailure('Error al dar like: $e');
+      throw ServerFailure('Error al dar like: ' + e.toString());
     }
   }
 
   @override
   Future<void> toggleSave(String postId, bool currentlySaved) async {
     try {
+      final path = '/posts/' + postId + '/saves';
       if (currentlySaved) {
-        await _client.delete('/posts/$postId/saves');
+        await _client.delete(path);
       } else {
-        await _client.post('/posts/$postId/saves');
+        await _client.post(path);
       }
     } on Failure {
       rethrow;
     } catch (e) {
-      throw ServerFailure('Error al guardar la publicación: $e');
+      throw ServerFailure('Error al guardar: ' + e.toString());
     }
   }
 
@@ -68,20 +66,26 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     required String content,
     required List<PostImageUpload> images,
   }) async {
-    // El content pasa por moderación síncrona en el backend (puede tirar
-    // ModerationFailure) -- si eso pasa, ni el post ni las fotos se suben.
     final body = await _client.post('/posts', body: {'content': content});
     final postId = (body as Map<String, dynamic>)['id'] as String;
-
-    // El post ya quedó creado en este punto; si una foto falla, la
-    // excepción se propaga tal cual (ApiClient ya la deja como Failure).
     for (final image in images) {
       await _client.postMultipart(
-        '/posts/$postId/photos',
+        '/posts/' + postId + '/photos',
         bytes: image.bytes,
         filename: image.filename,
         fieldName: 'image',
       );
+    }
+  }
+
+  @override
+  Future<void> deletePost(String postId) async {
+    try {
+      await _client.delete('/posts/' + postId);
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al eliminar: ' + e.toString());
     }
   }
 }

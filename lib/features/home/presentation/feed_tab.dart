@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
@@ -14,6 +14,7 @@ import '../../comments/domain/entities.dart';
 import '../../comments/presentation/comments_sheet.dart';
 import '../../notifications/presentation/providers.dart' show notificationsControllerProvider;
 import '../domain/entities.dart';
+import '../../auth/presentation/providers.dart' show authControllerProvider;
 import 'feed_skeleton.dart';
 import 'providers.dart';
 
@@ -51,6 +52,7 @@ class FeedTab extends ConsumerWidget {
         );
       case FeedStatus.loaded:
         final controller = ref.read(feedControllerProvider.notifier);
+        final currentUserId = ref.watch(authControllerProvider).user?.id ?? '';
         final posts = state.visiblePosts;
         // Igual que en el Shop: sin anuncios mientras se busca, para no
         // interrumpir resultados que el usuario está filtrando a propósito.
@@ -101,6 +103,9 @@ class FeedTab extends ConsumerWidget {
                             post: post,
                             onLikeTap: () => controller.toggleLike(post.id),
                             onSaveTap: () => controller.toggleSave(post.id),
+                            onDeleteTap: post.authorId == currentUserId
+                                ? () => controller.deletePost(post.id)
+                                : null,
                           );
                         }
                         return Padding(
@@ -123,12 +128,14 @@ class PostCard extends StatefulWidget {
   final PostEntity post;
   final VoidCallback onLikeTap;
   final VoidCallback onSaveTap;
+  final VoidCallback? onDeleteTap;
 
   const PostCard({
     super.key,
     required this.post,
     required this.onLikeTap,
     required this.onSaveTap,
+    this.onDeleteTap,
   });
 
   @override
@@ -258,6 +265,33 @@ class _PostCardState extends State<PostCard> {
                   color: VaultColors.textPrimary,
                   onTap: widget.onSaveTap,
                 ),
+                if (widget.onDeleteTap != null)
+                  IconButton(
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Eliminar publicación'),
+                          content: const Text('Esta acción no se puede deshacer.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(false),
+                              child: const Text('Cancelar'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(true),
+                              child: const Text('Eliminar',
+                                  style: TextStyle(color: VaultColors.error)),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) widget.onDeleteTap!();
+                    },
+                    icon: const Icon(Icons.delete_outline,
+                        color: VaultColors.textSecondary, size: VaultIconSize.md),
+                    visualDensity: VisualDensity.compact,
+                  ),
               ],
             ),
           ),

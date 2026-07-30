@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 class PostEntity extends Equatable {
   final String id;
+  final String authorId;
   final String authorName;
   final String authorAvatarUrl;
   final String imageUrl;
@@ -15,6 +16,7 @@ class PostEntity extends Equatable {
 
   const PostEntity({
     required this.id,
+    this.authorId = '',
     required this.authorName,
     required this.authorAvatarUrl,
     required this.imageUrl,
@@ -34,6 +36,7 @@ class PostEntity extends Equatable {
   }) {
     return PostEntity(
       id: id,
+      authorId: authorId,
       authorName: authorName,
       authorAvatarUrl: authorAvatarUrl,
       imageUrl: imageUrl,

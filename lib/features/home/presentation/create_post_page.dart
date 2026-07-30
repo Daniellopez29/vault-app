@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/dashed_border.dart';
+import '../../../core/image_moderation_service.dart';
 import '../../../core/dimens.dart';
 import '../../../core/error.dart';
 import '../../../core/theme.dart';
@@ -13,9 +14,6 @@ import '../domain/repositories.dart';
 import '../domain/usecases.dart';
 import 'providers.dart';
 
-/// Pantalla del botón "+" de la barra inferior: publicar en el Feed, con
-/// texto y/o fotos. El backend exige texto aunque haya fotos (comentario
-/// mínimo), así que el campo de texto siempre es obligatorio.
 class CreatePostPage extends ConsumerStatefulWidget {
   const CreatePostPage({super.key});
 
@@ -37,7 +35,30 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   Future<void> _addImages() async {
     final picked = await ImagePicker().pickMultiImage(maxWidth: 1600, imageQuality: 85);
     if (picked.isEmpty) return;
-    setState(() => _images.addAll(picked));
+
+    final moderator = ImageModerationService();
+    final approved = <XFile>[];
+
+    for (final image in picked) {
+      final bytes = await image.readAsBytes();
+      final result = await moderator.moderate(bytes);
+
+      if (result.isAllowed) {
+        approved.add(image);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.rejectionReason ?? 'Imagen no permitida'),
+            backgroundColor: VaultColors.error,
+          ),
+        );
+      }
+    }
+
+    if (approved.isNotEmpty) {
+      setState(() => _images.addAll(approved));
+    }
   }
 
   void _removeImage(int index) {
@@ -68,9 +89,6 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
 
     result.fold(
       (failure) {
-        // No se limpia el texto ni las fotos: el usuario puede corregir y
-        // reintentar (importante para ModerationFailure -- contenido
-        // rechazado por ofensivo, o servicio de moderación caído).
         final isModeration = failure is ModerationFailure;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -146,10 +164,11 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
               spacing: VaultSpacing.sm,
               runSpacing: VaultSpacing.sm,
               children: [
-                for (var i = 0; i < _images.length; i++) _ImageThumb(
-                  image: _images[i],
-                  onRemove: () => _removeImage(i),
-                ),
+                for (var i = 0; i < _images.length; i++)
+                  _ImageThumb(
+                    image: _images[i],
+                    onRemove: () => _removeImage(i),
+                  ),
                 _AddImageTile(onTap: _addImages),
               ],
             ),
@@ -172,8 +191,6 @@ class _ImageThumb extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: VaultRadius.cardBorder,
-          // Image.memory (no Image.network/Image.file) funciona igual en
-          // web y móvil a partir de los bytes que ya nos da XFile.
           child: FutureBuilder<Uint8List>(
             future: image.readAsBytes(),
             builder: (context, snapshot) {

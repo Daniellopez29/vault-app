@@ -17,7 +17,7 @@ class HomeRepositoryImpl implements HomeRepository {
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {
-      return Left(ServerFailure('Error inesperado: $e'));
+      return Left(ServerFailure('Error inesperado: ' + e.toString()));
     }
   }
 
@@ -29,7 +29,7 @@ class HomeRepositoryImpl implements HomeRepository {
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {
-      return Left(ServerFailure('Error inesperado: $e'));
+      return Left(ServerFailure('Error inesperado: ' + e.toString()));
     }
   }
 
@@ -41,7 +41,7 @@ class HomeRepositoryImpl implements HomeRepository {
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {
-      return Left(ServerFailure('Error inesperado: $e'));
+      return Left(ServerFailure('Error inesperado: ' + e.toString()));
     }
   }
 
@@ -56,7 +56,19 @@ class HomeRepositoryImpl implements HomeRepository {
     } on Failure catch (e) {
       return Left(e);
     } catch (e) {
-      return Left(ServerFailure('Error inesperado: $e'));
+      return Left(ServerFailure('Error inesperado: ' + e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deletePost(String postId) async {
+    try {
+      await remoteDataSource.deletePost(postId);
+      return const Right(null);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error inesperado: ' + e.toString()));
     }
   }
 }
