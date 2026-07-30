@@ -10,6 +10,7 @@ import 'core/stripe_config.dart';
 import 'core/theme.dart';
 import 'features/auth/presentation/providers.dart';
 import 'features/chat/presentation/providers.dart';
+import 'core/push_notification_service.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -22,6 +23,7 @@ void main() async {
   await ApiConfig.loadOverride();
   await RealtimeConfig.loadOverride();
   Stripe.publishableKey = StripeConfig.publishableKey;
+  await PushNotificationService().initialize();
   await Stripe.instance.applySettings();
   runApp(const ProviderScope(child: VaultApp()));
 }

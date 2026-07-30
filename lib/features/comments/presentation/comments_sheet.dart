@@ -6,8 +6,6 @@ import '../domain/entities.dart';
 import 'providers.dart';
 import 'widgets.dart';
 
-/// Abre el bottom sheet de comentarios para un post o artículo.
-/// [target] es el mismo que se usa en [commentsControllerProvider].
 Future<void> showCommentsSheet(BuildContext context, {required CommentsTarget target}) {
   return showModalBottomSheet(
     context: context,
@@ -20,14 +18,29 @@ Future<void> showCommentsSheet(BuildContext context, {required CommentsTarget ta
   );
 }
 
-class CommentsSheet extends ConsumerWidget {
+class CommentsSheet extends ConsumerStatefulWidget {
   final CommentsTarget target;
 
   const CommentsSheet({super.key, required this.target});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(commentsControllerProvider(target));
+  ConsumerState<CommentsSheet> createState() => _CommentsSheetState();
+}
+
+class _CommentsSheetState extends ConsumerState<CommentsSheet> {
+  CommentEntity? _replyingTo;
+
+  void _setReply(CommentEntity comment) {
+    setState(() => _replyingTo = comment);
+  }
+
+  void _clearReply() {
+    setState(() => _replyingTo = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(commentsControllerProvider(widget.target));
 
     return DraggableScrollableSheet(
       initialChildSize: 0.75,
@@ -56,15 +69,27 @@ class CommentsSheet extends ConsumerWidget {
             const Divider(height: 1, color: VaultColors.divider),
             Expanded(
               child: _CommentsBody(
-                target: target,
+                target: widget.target,
                 state: state,
                 scrollController: scrollController,
+                onReply: _setReply,
               ),
             ),
+            if (_replyingTo != null)
+              _ReplyBanner(
+                authorName: _replyingTo!.authorName,
+                onCancel: _clearReply,
+              ),
             CommentInputBar(
-              onSend: (text) => ref
-                  .read(commentsControllerProvider(target).notifier)
-                  .addComment(text),
+              hintText: _replyingTo != null
+                  ? 'Responder a ${_replyingTo!.authorName}...'
+                  : null,
+              onSend: (text) {
+                ref
+                    .read(commentsControllerProvider(widget.target).notifier)
+                    .addComment(text, parentId: _replyingTo?.id);
+                _clearReply();
+              },
             ),
           ],
         );
@@ -73,15 +98,58 @@ class CommentsSheet extends ConsumerWidget {
   }
 }
 
+class _ReplyBanner extends StatelessWidget {
+  final String authorName;
+  final VoidCallback onCancel;
+
+  const _ReplyBanner({required this.authorName, required this.onCancel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: VaultSpacing.lg,
+        vertical: VaultSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: VaultColors.primary.withValues(alpha: 0.06),
+        border: Border(top: BorderSide(color: VaultColors.divider)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.reply, size: VaultIconSize.sm, color: VaultColors.primary),
+          const SizedBox(width: VaultSpacing.sm),
+          Expanded(
+            child: Text(
+              'Respondiendo a $authorName',
+              style: const TextStyle(
+                fontSize: 13,
+                color: VaultColors.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: onCancel,
+            child: const Icon(Icons.close, size: VaultIconSize.sm, color: VaultColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _CommentsBody extends ConsumerWidget {
   final CommentsTarget target;
   final CommentsState state;
   final ScrollController scrollController;
+  final ValueChanged<CommentEntity> onReply;
 
   const _CommentsBody({
     required this.target,
     required this.state,
     required this.scrollController,
+    required this.onReply,
   });
 
   @override
@@ -119,7 +187,7 @@ class _CommentsBody extends ConsumerWidget {
           controller: scrollController,
           padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.lg),
           itemCount: state.comments.length,
-          separatorBuilder: (_, _) =>
+          separatorBuilder: (_, __) =>
               const Divider(height: 1, color: VaultColors.divider),
           itemBuilder: (context, index) {
             final comment = state.comments[index];
@@ -128,6 +196,10 @@ class _CommentsBody extends ConsumerWidget {
               onLike: () => ref
                   .read(commentsControllerProvider(target).notifier)
                   .toggleLike(comment.id),
+              onDelete: () => ref
+                  .read(commentsControllerProvider(target).notifier)
+                  .deleteComment(comment.id),
+              onReply: () => onReply(comment),
             );
           },
         );

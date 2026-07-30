@@ -8,13 +8,14 @@ abstract class CommentsRemoteDataSource {
   Future<List<CommentModel>> addComment({
     required CommentsTarget target,
     required String text,
+    String? parentId,
+  });
+  Future<List<CommentModel>> deleteComment({
+    required CommentsTarget target,
+    required String commentId,
   });
 }
 
-/// El backend tiene dos tablas separadas -- `comments` (posts) y
-/// `asset_comments` (productos) -- con la misma forma de respuesta salvo la
-/// key del padre (`post_id` vs `asset_id`), por eso el datasource elige la
-/// ruta según `target.type` pero comparte todo lo demás.
 class CommentsRemoteDataSourceImpl implements CommentsRemoteDataSource {
   final ApiClient _client;
 
@@ -44,14 +45,32 @@ class CommentsRemoteDataSourceImpl implements CommentsRemoteDataSource {
   Future<List<CommentModel>> addComment({
     required CommentsTarget target,
     required String text,
+    String? parentId,
   }) async {
     try {
-      await _client.post(_basePath(target), body: {'content': text});
+      final body = <String, dynamic>{'content': text};
+      if (parentId != null) body['parent_id'] = parentId;
+      await _client.post(_basePath(target), body: body);
       return getComments(target);
     } on Failure {
       rethrow;
     } catch (e) {
       throw ServerFailure('Error al publicar el comentario: $e');
+    }
+  }
+
+  @override
+  Future<List<CommentModel>> deleteComment({
+    required CommentsTarget target,
+    required String commentId,
+  }) async {
+    try {
+      await _client.delete('${_basePath(target)}/$commentId');
+      return getComments(target);
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al eliminar el comentario: $e');
     }
   }
 }

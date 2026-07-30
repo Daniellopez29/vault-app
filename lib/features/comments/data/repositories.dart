@@ -17,10 +17,24 @@ class CommentsRepositoryImpl implements CommentsRepository {
   Future<Either<Failure, List<CommentEntity>>> addComment({
     required CommentsTarget target,
     required String text,
+    String? parentId,
   }) =>
-      _guard(() => remoteDataSource.addComment(target: target, text: text));
+      _guard(() => remoteDataSource.addComment(
+            target: target,
+            text: text,
+            parentId: parentId,
+          ));
 
-  /// Centraliza el try/catch → Either para getComments/addComment.
+  @override
+  Future<Either<Failure, List<CommentEntity>>> deleteComment({
+    required CommentsTarget target,
+    required String commentId,
+  }) =>
+      _guard(() => remoteDataSource.deleteComment(
+            target: target,
+            commentId: commentId,
+          ));
+
   Future<Either<Failure, List<CommentEntity>>> _guard(
       Future<List<CommentEntity>> Function() action) async {
     try {

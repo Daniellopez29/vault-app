@@ -17,15 +17,42 @@ class AddCommentUseCase {
   const AddCommentUseCase(this.repository);
 
   Future<Either<Failure, List<CommentEntity>>> call(AddCommentParams params) =>
-      repository.addComment(target: params.target, text: params.text);
+      repository.addComment(
+        target: params.target,
+        text: params.text,
+        parentId: params.parentId,
+      );
 }
 
 class AddCommentParams extends Equatable {
   final CommentsTarget target;
   final String text;
+  final String? parentId;
 
-  const AddCommentParams({required this.target, required this.text});
+  const AddCommentParams({
+    required this.target,
+    required this.text,
+    this.parentId,
+  });
 
   @override
-  List<Object?> get props => [target, text];
+  List<Object?> get props => [target, text, parentId];
+}
+
+class DeleteCommentUseCase {
+  final CommentsRepository repository;
+  const DeleteCommentUseCase(this.repository);
+
+  Future<Either<Failure, List<CommentEntity>>> call(DeleteCommentParams params) =>
+      repository.deleteComment(target: params.target, commentId: params.commentId);
+}
+
+class DeleteCommentParams extends Equatable {
+  final CommentsTarget target;
+  final String commentId;
+
+  const DeleteCommentParams({required this.target, required this.commentId});
+
+  @override
+  List<Object?> get props => [target, commentId];
 }

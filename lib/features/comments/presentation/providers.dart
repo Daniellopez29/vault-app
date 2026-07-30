@@ -20,6 +20,10 @@ final addCommentUseCaseProvider = Provider<AddCommentUseCase>((ref) {
   return AddCommentUseCase(ref.read(commentsRepositoryProvider));
 });
 
+final deleteCommentUseCaseProvider = Provider<DeleteCommentUseCase>((ref) {
+  return DeleteCommentUseCase(ref.read(commentsRepositoryProvider));
+});
+
 enum CommentsStatus { initial, loading, loaded, error }
 
 class CommentsState {
@@ -48,15 +52,12 @@ class CommentsState {
   }
 }
 
-/// Un controller por target (post o artículo). El `.family` recibe el
-/// CommentsTarget completo (id + tipo), así el Feed y el Marketplace usan
-/// la misma lógica apuntando a recursos distintos del backend.
-final commentsControllerProvider = StateNotifierProvider.family<
-    CommentsController, CommentsState, CommentsTarget>((ref, target) {
+final commentsControllerProvider = StateNotifierProvider.family<CommentsController, CommentsState, CommentsTarget>((ref, target) {
   return CommentsController(
     target: target,
     getComments: ref.read(getCommentsUseCaseProvider),
     addComment: ref.read(addCommentUseCaseProvider),
+    deleteComment: ref.read(deleteCommentUseCaseProvider),
   );
 });
 
@@ -64,12 +65,17 @@ class CommentsController extends StateNotifier<CommentsState> {
   final CommentsTarget _target;
   final GetCommentsUseCase _getComments;
   final AddCommentUseCase _addComment;
+  final DeleteCommentUseCase _deleteComment;
 
   CommentsController({
     required CommentsTarget target,
-    required this._getComments,
-    required this._addComment,
+    required GetCommentsUseCase getComments,
+    required AddCommentUseCase addComment,
+    required DeleteCommentUseCase deleteComment,
   })  : _target = target,
+        _getComments = getComments,
+        _addComment = addComment,
+        _deleteComment = deleteComment,
         super(const CommentsState()) {
     loadComments();
   }
@@ -80,17 +86,24 @@ class CommentsController extends StateNotifier<CommentsState> {
     _apply(result);
   }
 
-  Future<void> addComment(String text) async {
+  Future<void> addComment(String text, {String? parentId}) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
     final result = await _addComment(
-      AddCommentParams(target: _target, text: trimmed),
+      AddCommentParams(target: _target, text: trimmed, parentId: parentId),
     );
     _apply(result);
   }
 
-  /// El backend no tiene tabla de likes de comentarios: esto es puramente
-  /// estado local de la sesión, no se llama a la red ni se persiste.
+  Future<void> deleteComment(String commentId) async {
+    final optimistic = state.comments.where((c) => c.id != commentId).toList();
+    state = state.copyWith(comments: optimistic);
+    final result = await _deleteComment(
+      DeleteCommentParams(target: _target, commentId: commentId),
+    );
+    _apply(result);
+  }
+
   void toggleLike(String commentId) {
     final optimistic = state.comments.map((c) {
       if (c.id != commentId) return c;
@@ -102,7 +115,6 @@ class CommentsController extends StateNotifier<CommentsState> {
     state = state.copyWith(comments: optimistic);
   }
 
-  /// Aplica el resultado de un caso de uso al estado, en un solo lugar.
   void _apply(dynamic result) {
     result.fold(
       (failure) => state = state.copyWith(

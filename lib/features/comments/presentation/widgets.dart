@@ -3,34 +3,46 @@ import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
 import '../domain/entities.dart';
 
-/// Una fila de comentario: avatar, autor, texto, fecha y like.
+/// Una fila de comentario con like, responder y swipe-to-delete.
 class CommentTile extends StatelessWidget {
   final CommentEntity comment;
   final VoidCallback onLike;
+  final VoidCallback? onDelete;
+  final VoidCallback? onReply;
 
   const CommentTile({
     super.key,
     required this.comment,
     required this.onLike,
+    this.onDelete,
+    this.onReply,
   });
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final isReply = comment.parentId != null;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: VaultSpacing.sm),
+    final tile = Padding(
+      padding: EdgeInsets.only(
+        top: VaultSpacing.sm,
+        bottom: VaultSpacing.sm,
+        left: isReply ? VaultSpacing.xl : 0,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            radius: 18,
+            radius: isReply ? 14 : 18,
             backgroundColor: VaultColors.primary.withValues(alpha: 0.1),
             child: Text(
               comment.authorName.isNotEmpty
                   ? comment.authorName[0].toUpperCase()
                   : '?',
-              style: tt.titleMedium?.copyWith(color: VaultColors.primary),
+              style: tt.titleMedium?.copyWith(
+                color: VaultColors.primary,
+                fontSize: isReply ? 12 : 14,
+              ),
             ),
           ),
           const SizedBox(width: VaultSpacing.md),
@@ -47,31 +59,93 @@ class CommentTile extends StatelessWidget {
                 ),
                 const SizedBox(height: VaultSpacing.xs),
                 Text(comment.text, style: tt.bodyLarge),
+                const SizedBox(height: VaultSpacing.xs),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: onLike,
+                      child: Row(
+                        children: [
+                          Icon(
+                            comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                            size: 16,
+                            color: comment.isLiked
+                                ? VaultColors.error
+                                : VaultColors.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${comment.likesCount}',
+                            style: tt.labelSmall?.copyWith(
+                              color: comment.isLiked
+                                  ? VaultColors.error
+                                  : VaultColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (onReply != null) ...[
+                      const SizedBox(width: VaultSpacing.lg),
+                      GestureDetector(
+                        onTap: onReply,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.reply,
+                                size: 16, color: VaultColors.textSecondary),
+                            const SizedBox(width: 4),
+                            Text('Responder',
+                                style: tt.labelSmall?.copyWith(
+                                    color: VaultColors.textSecondary)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ],
             ),
           ),
-          const SizedBox(width: VaultSpacing.sm),
-          Column(
-            children: [
-              InkWell(
-                onTap: onLike,
-                borderRadius: VaultRadius.buttonBorder,
-                child: Padding(
-                  padding: const EdgeInsets.all(VaultSpacing.xs),
-                  child: Icon(
-                    comment.isLiked ? Icons.favorite : Icons.favorite_border,
-                    size: VaultIconSize.sm,
-                    color: comment.isLiked
-                        ? VaultColors.error
-                        : VaultColors.textSecondary,
-                  ),
-                ),
-              ),
-              Text('${comment.likesCount}', style: tt.labelSmall),
-            ],
-          ),
         ],
       ),
+    );
+
+    if (onDelete == null) return tile;
+
+    return Dismissible(
+      key: ValueKey(comment.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.lg),
+        decoration: BoxDecoration(
+          color: VaultColors.error.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(VaultRadius.sm),
+        ),
+        child: const Icon(Icons.delete_outline, color: VaultColors.error),
+      ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Eliminar comentario'),
+            content: const Text('¿Estás seguro de que quieres eliminar este comentario?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Eliminar',
+                    style: TextStyle(color: VaultColors.error)),
+              ),
+            ],
+          ),
+        ) ?? false;
+      },
+      onDismissed: (_) => onDelete!(),
+      child: tile,
     );
   }
 }
@@ -79,8 +153,9 @@ class CommentTile extends StatelessWidget {
 /// Barra inferior para escribir un comentario nuevo.
 class CommentInputBar extends StatefulWidget {
   final ValueChanged<String> onSend;
+  final String? hintText;
 
-  const CommentInputBar({super.key, required this.onSend});
+  const CommentInputBar({super.key, required this.onSend, this.hintText});
 
   @override
   State<CommentInputBar> createState() => _CommentInputBarState();
@@ -133,7 +208,7 @@ class _CommentInputBarState extends State<CommentInputBar> {
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _send(),
                 decoration: InputDecoration(
-                  hintText: 'Únete a la charla!',
+                  hintText: widget.hintText ?? 'Únete a la charla!',
                   filled: true,
                   fillColor: VaultColors.background,
                   contentPadding: const EdgeInsets.symmetric(
