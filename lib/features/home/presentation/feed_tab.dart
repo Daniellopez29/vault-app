@@ -247,14 +247,16 @@ class _PostCardState extends State<PostCard> {
                   ),
                 ),
                 const SizedBox(width: VaultSpacing.lg),
-                IconButton(
-                  onPressed: widget.onSaveTap,
-                  icon: Icon(
-                    post.isSaved ? Icons.bookmark : Icons.bookmark_border,
-                    color: VaultColors.textPrimary,
-                    size: VaultIconSize.md,
-                  ),
-                  visualDensity: VisualDensity.compact,
+                // _ActionStat en vez de IconButton: antes el ícono de
+                // guardar quedaba centrado en un bloque más chico (solo
+                // ícono) mientras que like/comentarios usan una columna más
+                // alta (ícono + número debajo), así que el de guardar se
+                // veía más abajo que los otros dos en la misma fila.
+                _ActionStat(
+                  icon: post.isSaved ? Icons.bookmark : Icons.bookmark_border,
+                  count: null,
+                  color: VaultColors.textPrimary,
+                  onTap: widget.onSaveTap,
                 ),
               ],
             ),
@@ -267,7 +269,7 @@ class _PostCardState extends State<PostCard> {
 
 class _ActionStat extends StatelessWidget {
   final IconData icon;
-  final int count;
+  final int? count;
   final Color color;
   final VoidCallback onTap;
 
@@ -286,7 +288,10 @@ class _ActionStat extends StatelessWidget {
       child: Column(
         children: [
           Icon(icon, size: VaultIconSize.md, color: color),
-          Text('$count', style: tt.labelSmall?.copyWith(color: color)),
+          // Texto vacío (no null) cuando no hay conteo -- conserva el
+          // mismo alto que un número real, para que el ícono quede a la
+          // misma altura que los que sí cuentan algo.
+          Text(count != null ? '$count' : '', style: tt.labelSmall?.copyWith(color: color)),
         ],
       ),
     );

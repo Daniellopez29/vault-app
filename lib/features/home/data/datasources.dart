@@ -18,7 +18,12 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   @override
   Future<List<PostModel>> getFeedPosts() async {
     try {
-      final body = await _client.get('/posts', auth: false);
+      // auth: true (default) -- /posts es pública igual (OptionalAuth en el
+      // backend), pero si hay sesión hace falta mandar el token para que el
+      // backend sepa qué posts marcar is_liked/is_saved para este usuario.
+      // Antes se forzaba auth: false, así que el feed SIEMPRE volvía sin
+      // esa info y el estado de "guardado" se perdía en cada recarga.
+      final body = await _client.get('/posts');
       final list = body as List<dynamic>? ?? const [];
       return list.map((e) => PostModel.fromJson(e as Map<String, dynamic>)).toList();
     } on Failure {
