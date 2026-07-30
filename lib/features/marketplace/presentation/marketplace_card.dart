@@ -101,6 +101,32 @@ class MarketplaceCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                Text(
+                  'Vendido por ${item.sellerName}',
+                  style: tt.labelSmall?.copyWith(color: VaultColors.textSecondary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (item.servicesCount > 0 || item.restorationsCount > 0) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      const Icon(Icons.build_outlined,
+                          size: VaultIconSize.sm, color: VaultColors.textSecondary),
+                      const SizedBox(width: 4),
+                      Text(
+                        [
+                          if (item.servicesCount > 0) '${item.servicesCount} servicios',
+                          if (item.restorationsCount > 0)
+                            '${item.restorationsCount} restauraciones',
+                        ].join(' · '),
+                        style: tt.labelSmall?.copyWith(color: VaultColors.textSecondary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: VaultSpacing.xs),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,

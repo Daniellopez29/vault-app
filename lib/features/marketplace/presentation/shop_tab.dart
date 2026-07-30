@@ -169,7 +169,7 @@ class ShopTab extends ConsumerWidget {
                         crossAxisCount: 2,
                         crossAxisSpacing: VaultSpacing.md,
                         mainAxisSpacing: VaultSpacing.md,
-                        mainAxisExtent: 255,
+                        mainAxisExtent: 290,
                       ),
                       delegate: SliverChildBuilderDelegate(
                             (context, index) {
@@ -222,7 +222,7 @@ class ShopTab extends ConsumerWidget {
 }
 
 /// Card de anuncio dentro del grid de productos -- mismo tamaño que
-/// [MarketplaceCard] (`mainAxisExtent: 255` en el `SliverGrid`) para no
+/// [MarketplaceCard] (`mainAxisExtent: 290` en el `SliverGrid`) para no
 /// romper el layout.
 class _AdGridCard extends StatelessWidget {
   final AdEntity ad;

@@ -8,6 +8,7 @@ import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../auth/presentation/providers.dart';
 import '../../maintenance/domain/entities.dart';
+import '../../maintenance/presentation/maintenance_list.dart';
 import '../../maintenance/presentation/providers.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
@@ -50,7 +51,7 @@ class AssetDetailPage extends ConsumerWidget {
           const SizedBox(height: VaultSpacing.lg),
           Text('Historial de mantenimiento', style: tt.titleMedium),
           const SizedBox(height: VaultSpacing.sm),
-          _MaintenanceList(state: maintenanceState),
+          MaintenanceList(state: maintenanceState),
           const SizedBox(height: VaultSpacing.lg),
           Text('Certificado blockchain', style: tt.titleMedium),
           const SizedBox(height: VaultSpacing.sm),
@@ -230,88 +231,6 @@ class _CertificateSection extends ConsumerWidget {
         children: [
           Text(label, style: const TextStyle(color: VaultColors.textSecondary)),
           Text(value, style: const TextStyle(color: VaultColors.textPrimary)),
-        ],
-      ),
-    );
-  }
-}
-
-/// Lista del historial, con estados de carga/vacío/error.
-class _MaintenanceList extends StatelessWidget {
-  final MaintenanceState state;
-
-  const _MaintenanceList({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    switch (state.status) {
-      case MaintenanceStatus.loading:
-        return const Padding(
-          padding: EdgeInsets.all(VaultSpacing.lg),
-          child: Center(child: CircularProgressIndicator()),
-        );
-      case MaintenanceStatus.error:
-        return Padding(
-          padding: const EdgeInsets.all(VaultSpacing.lg),
-          child: Center(
-            child: Text(state.errorMessage ?? 'Error al cargar el historial'),
-          ),
-        );
-      case MaintenanceStatus.loaded:
-        if (state.entries.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(VaultSpacing.xl),
-            child: Center(
-              child: Text(
-                'Sin registros de mantenimiento todavía.',
-                style: TextStyle(color: VaultColors.textSecondary),
-              ),
-            ),
-          );
-        }
-        return Column(
-          children: state.entries.map((e) => _MaintenanceTile(entry: e)).toList(),
-        );
-    }
-  }
-}
-
-class _MaintenanceTile extends StatelessWidget {
-  final MaintenanceEntry entry;
-
-  const _MaintenanceTile({required this.entry});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final dateStr = DateFormat('dd/MM/yyyy').format(entry.date);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: VaultSpacing.sm),
-      padding: const EdgeInsets.all(VaultSpacing.md),
-      decoration: BoxDecoration(
-        color: VaultColors.surface,
-        borderRadius: VaultRadius.cardBorder,
-        border: Border.all(color: VaultColors.divider),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(entry.type.displayName, style: tt.titleSmall),
-              Text(dateStr,
-                  style: const TextStyle(color: VaultColors.textSecondary)),
-            ],
-          ),
-          const SizedBox(height: VaultSpacing.xs),
-          Text(entry.description, style: tt.bodyMedium),
-          if (entry.cost != null) ...[
-            const SizedBox(height: VaultSpacing.xs),
-            Text('Costo: \$${entry.cost!.toStringAsFixed(0)}',
-                style: const TextStyle(color: VaultColors.textSecondary)),
-          ],
         ],
       ),
     );

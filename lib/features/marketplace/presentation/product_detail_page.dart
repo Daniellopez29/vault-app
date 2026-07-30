@@ -10,6 +10,9 @@ import '../../cart/presentation/providers.dart';
 import '../../chat/presentation/chat_page.dart';
 import '../../comments/domain/entities.dart';
 import '../../comments/presentation/comments_sheet.dart';
+import '../../maintenance/presentation/maintenance_list.dart';
+import '../../maintenance/presentation/providers.dart';
+import '../../reviews/presentation/reviews_tab.dart';
 import '../domain/entities.dart';
 
 /// Detalle de un producto del marketplace.
@@ -84,6 +87,24 @@ class ProductDetailPage extends ConsumerWidget {
               VaultSpacing.lg,
             ),
             child: _OpinionsSection(productId: item.id),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              VaultSpacing.md,
+              0,
+              VaultSpacing.md,
+              VaultSpacing.lg,
+            ),
+            child: _MaintenanceSection(assetId: item.id),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              VaultSpacing.md,
+              0,
+              VaultSpacing.md,
+              VaultSpacing.lg,
+            ),
+            child: _SellerReviewsSection(sellerId: item.sellerId),
           ),
         ],
       ),
@@ -582,6 +603,52 @@ class _OpinionsSection extends StatelessWidget {
             ),
           ),
         ),
+      ],
+    );
+  }
+}
+
+/// Historial de mantenimiento del activo, de solo lectura -- el comprador
+/// no puede agregar entradas, solo el dueño (ver [AssetDetailPage]).
+class _MaintenanceSection extends ConsumerWidget {
+  final String assetId;
+
+  const _MaintenanceSection({required this.assetId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tt = Theme.of(context).textTheme;
+    final state = ref.watch(maintenanceControllerProvider(assetId));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Historial de mantenimiento', style: tt.titleMedium),
+        const SizedBox(height: VaultSpacing.sm),
+        MaintenanceList(state: state),
+      ],
+    );
+  }
+}
+
+/// Reseñas del vendedor, de solo lectura -- publicarlas solo se puede desde
+/// "Mis pedidos" tras una compra confirmada (ver [WriteReviewDialog]), nunca
+/// desde el detalle del producto.
+class _SellerReviewsSection extends StatelessWidget {
+  final String sellerId;
+
+  const _SellerReviewsSection({required this.sellerId});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Reseñas del vendedor', style: tt.titleMedium),
+        const SizedBox(height: VaultSpacing.sm),
+        ReviewsTab(providerId: sellerId, shrinkWrap: true),
       ],
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
+import '../../reviews/presentation/write_review_dialog.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
 
@@ -70,6 +71,19 @@ class MyOrdersPage extends ConsumerWidget {
                   final order = state.orders[index];
                   return _OrderTile(
                     order: order,
+                    onReview: order.status == OrderStatus.released
+                        ? () async {
+                            final published = await showDialog<bool>(
+                              context: context,
+                              builder: (_) => WriteReviewDialog(providerId: order.sellerId),
+                            );
+                            if (published == true && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Reseña publicada')),
+                              );
+                            }
+                          }
+                        : null,
                     onConfirm: order.status == OrderStatus.shipped
                         ? () async {
                             final ok = await ref
@@ -99,8 +113,9 @@ class MyOrdersPage extends ConsumerWidget {
 class _OrderTile extends StatelessWidget {
   final OrderEntity order;
   final VoidCallback? onConfirm;
+  final VoidCallback? onReview;
 
-  const _OrderTile({required this.order, required this.onConfirm});
+  const _OrderTile({required this.order, required this.onConfirm, required this.onReview});
 
   /// Copy + color de cada estado -- mismo criterio visual que `_AdTile`
   /// (activo/inactivo) en `my_ads_page.dart`.
@@ -164,6 +179,16 @@ class _OrderTile extends StatelessWidget {
               child: TextButton(
                 onPressed: onConfirm,
                 child: const Text('Confirmar recepción'),
+              ),
+            ),
+          ],
+          if (onReview != null) ...[
+            const SizedBox(height: VaultSpacing.sm),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: onReview,
+                child: const Text('Dejar reseña'),
               ),
             ),
           ],

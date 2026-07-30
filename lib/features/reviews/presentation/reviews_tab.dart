@@ -6,16 +6,28 @@ import '../../auth/presentation/providers.dart';
 import 'providers.dart';
 
 class ReviewsTab extends ConsumerWidget {
-  const ReviewsTab({super.key});
+  /// Si se pasa, muestra las reseñas de ese proveedor (p.ej. el vendedor de
+  /// un producto, siempre de solo lectura -- publicarlas solo se puede
+  /// desde "Mis pedidos" tras una compra confirmada, ver
+  /// `WriteReviewDialog`). Si se omite, muestra las reseñas del usuario
+  /// autenticado (pestaña "Reseñas" del propio perfil).
+  final String? providerId;
+
+  /// true cuando se embebe dentro de otra lista (p.ej. el detalle de un
+  /// producto) -- evita el error de "alto no acotado" de un ListView
+  /// dentro de otro ListView.
+  final bool shrinkWrap;
+
+  const ReviewsTab({super.key, this.providerId, this.shrinkWrap = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userId = ref.watch(authControllerProvider).user?.id;
-    if (userId == null) {
-      return const Center(child: Text('Inicia sesiÃ³n para ver tus reseÃ±as'));
+    final effectiveProviderId = providerId ?? ref.watch(authControllerProvider).user?.id;
+    if (effectiveProviderId == null) {
+      return const Center(child: Text('Inicia sesión para ver tus reseñas'));
     }
 
-    final state = ref.watch(reviewsControllerProvider(userId));
+    final state = ref.watch(reviewsControllerProvider(effectiveProviderId));
     final tt = Theme.of(context).textTheme;
 
     switch (state.status) {
@@ -31,7 +43,7 @@ class ReviewsTab extends ConsumerWidget {
               const SizedBox(height: VaultSpacing.md),
               TextButton(
                 onPressed: () =>
-                    ref.read(reviewsControllerProvider(userId).notifier).loadReviews(),
+                    ref.read(reviewsControllerProvider(effectiveProviderId).notifier).loadReviews(),
                 child: const Text('Reintentar'),
               ),
             ],
@@ -46,13 +58,18 @@ class ReviewsTab extends ConsumerWidget {
                 const Icon(Icons.star_outline,
                     size: VaultIconSize.xl, color: VaultColors.textSecondary),
                 const SizedBox(height: VaultSpacing.lg),
-                Text('Aún no tienes reseñas', style: tt.titleLarge),
+                Text(
+                  providerId != null ? 'Aún no tiene reseñas' : 'Aún no tienes reseñas',
+                  style: tt.titleLarge,
+                ),
                 const SizedBox(height: VaultSpacing.sm),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.xl),
                   child: Text(
-                    'Cuando vendas un artículo o prestes un servicio, las '
-                    'valoraciones que recibas aparecerán aquí.',
+                    providerId != null
+                        ? 'Cuando reciba una reseña de un comprador, aparecerá aquí.'
+                        : 'Cuando vendas un artículo o prestes un servicio, las '
+                            'valoraciones que recibas aparecerán aquí.',
                     textAlign: TextAlign.center,
                     style: tt.bodyMedium?.copyWith(color: VaultColors.textSecondary),
                   ),
@@ -62,9 +79,11 @@ class ReviewsTab extends ConsumerWidget {
           );
         }
         return RefreshIndicator(
-          onRefresh: () => ref.read(reviewsControllerProvider(userId).notifier).loadReviews(),
+          onRefresh: () => ref.read(reviewsControllerProvider(effectiveProviderId).notifier).loadReviews(),
           child: ListView.separated(
             padding: const EdgeInsets.all(VaultSpacing.md),
+            shrinkWrap: shrinkWrap,
+            physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
             itemCount: state.reviews.length,
             separatorBuilder: (_, _) => const SizedBox(height: VaultSpacing.sm),
             itemBuilder: (context, index) {
@@ -91,7 +110,7 @@ class ReviewsTab extends ConsumerWidget {
                     const SizedBox(height: VaultSpacing.xs),
                     GestureDetector(
                       onTap: () => ref
-                          .read(reviewsControllerProvider(userId).notifier)
+                          .read(reviewsControllerProvider(effectiveProviderId).notifier)
                           .toggleLike(review.id),
                       child: Row(
                         children: [

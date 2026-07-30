@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
 import '../../auth/presentation/providers.dart';
+import '../../business/domain/entities.dart';
+import '../../business/presentation/providers.dart';
+import '../../servicerequests/presentation/send_to_service_sheet.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
 
@@ -30,6 +33,15 @@ class ChatPage extends ConsumerWidget {
     final state = ref.watch(conversationControllerProvider(args.recipientId));
     final currentUserId = ref.watch(authControllerProvider).user?.id;
 
+    // Si la otra persona tiene un negocio registrado, se ofrece el botón
+    // de "enviar a servicio/reparación" -- no tiene sentido para un chat
+    // entre dos compradores comunes.
+    final recipientBusiness = ref.watch(allBusinessesProvider).maybeWhen(
+          data: (businesses) =>
+              businesses.where((b) => b.userId == args.recipientId).firstOrNull,
+          orElse: () => null,
+        );
+
     return Scaffold(
       backgroundColor: VaultColors.background,
       appBar: AppBar(
@@ -49,6 +61,7 @@ class ChatPage extends ConsumerWidget {
             ),
           ),
           _ChatInputBar(
+            business: recipientBusiness,
             onSend: (text) => ref
                 .read(conversationControllerProvider(args.recipientId).notifier)
                 .send(text),
@@ -198,7 +211,11 @@ class _ChatInputBar extends StatefulWidget {
   /// (ver `ConversationController.send`).
   final Future<String?> Function(String) onSend;
 
-  const _ChatInputBar({required this.onSend});
+  /// Si la otra persona tiene un negocio registrado, se muestra el botón
+  /// de "enviar a servicio/reparación" junto al campo de texto.
+  final BusinessEntity? business;
+
+  const _ChatInputBar({required this.onSend, this.business});
 
   @override
   State<_ChatInputBar> createState() => _ChatInputBarState();
@@ -246,6 +263,27 @@ class _ChatInputBarState extends State<_ChatInputBar> {
     }
   }
 
+  Future<void> _openSendToService() async {
+    final business = widget.business;
+    if (business == null) return;
+
+    final sent = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: VaultColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(VaultRadius.card)),
+      ),
+      builder: (_) => SendToServiceSheet(businessId: business.id, businessName: business.name),
+    );
+
+    if (sent == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Solicitud enviada')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -259,6 +297,12 @@ class _ChatInputBarState extends State<_ChatInputBar> {
         top: false,
         child: Row(
           children: [
+            if (widget.business != null)
+              IconButton(
+                onPressed: _openSendToService,
+                tooltip: 'Enviar a servicio/reparación',
+                icon: const Icon(Icons.build_outlined, color: VaultColors.primary),
+              ),
             Expanded(
               child: TextField(
                 controller: _controller,

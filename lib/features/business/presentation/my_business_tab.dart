@@ -7,6 +7,7 @@ import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../ads/presentation/advertise_flow.dart';
 import '../../marketplace/presentation/item_image.dart';
+import '../../servicerequests/presentation/incoming_requests_section.dart';
 import '../../subscription/domain/entities.dart';
 import '../domain/entities.dart';
 import 'providers.dart';
@@ -241,6 +242,10 @@ class _AdminViewState extends ConsumerState<_AdminView> {
           ),
           const SizedBox(height: VaultSpacing.md),
         ],
+        _section(
+          title: "Artículos recibidos",
+          child: const IncomingRequestsSection(),
+        ),
         _section(
           title: "Imágenes",
           child: Wrap(

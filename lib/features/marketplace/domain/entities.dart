@@ -12,6 +12,9 @@ class MarketplaceItemEntity extends Equatable {
   final String size;
   final double price;
   final double rating;
+  final int totalReviews;
+  final int servicesCount;
+  final int restorationsCount;
   final bool isVerified;
   final String sellerId;
   final String sellerName;
@@ -27,6 +30,9 @@ class MarketplaceItemEntity extends Equatable {
     required this.rating,
     required this.sellerId,
     required this.sellerName,
+    this.totalReviews = 0,
+    this.servicesCount = 0,
+    this.restorationsCount = 0,
     this.isVerified = false,
   });
 
@@ -40,6 +46,9 @@ class MarketplaceItemEntity extends Equatable {
     size,
     price,
     rating,
+    totalReviews,
+    servicesCount,
+    restorationsCount,
     isVerified,
     sellerId,
     sellerName,

@@ -24,7 +24,7 @@ class ShopSkeleton extends StatelessWidget {
             crossAxisCount: 2,
             crossAxisSpacing: VaultSpacing.md,
             mainAxisSpacing: VaultSpacing.md,
-            mainAxisExtent: 255,
+            mainAxisExtent: 290,
           ),
           itemBuilder: (context, index) => const _ProductCardSkeleton(),
         ),

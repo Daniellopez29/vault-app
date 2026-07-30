@@ -21,6 +21,10 @@ final toggleReviewLikeUseCaseProvider = Provider<ToggleReviewLikeUseCase>((ref) 
   return ToggleReviewLikeUseCase(ref.read(reviewsRepositoryProvider));
 });
 
+final addReviewUseCaseProvider = Provider<AddReviewUseCase>((ref) {
+  return AddReviewUseCase(ref.read(reviewsRepositoryProvider));
+});
+
 enum ReviewsStatus { initial, loading, loaded, error }
 
 class ReviewsState {

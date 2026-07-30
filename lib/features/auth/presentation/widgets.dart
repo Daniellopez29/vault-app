@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/router.dart';
 import '../../../../core/theme.dart';
+import '../../../core/validation.dart';
 import 'providers.dart';
 
 class LoginForm extends ConsumerStatefulWidget {
@@ -101,7 +102,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             keyboardType: TextInputType.emailAddress,
             style: const TextStyle(color: VaultColors.primary),
             validator: (v) =>
-            v == null || !v.contains('@') ? 'Correo inválido' : null,
+            v == null || !isValidEmail(v) ? 'Correo inválido' : null,
           ),
           const SizedBox(height: 16),
           TextFormField(

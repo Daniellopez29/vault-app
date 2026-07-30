@@ -12,12 +12,16 @@ class MarketplaceItemModel extends MarketplaceItemEntity {
     required super.rating,
     required super.sellerId,
     required super.sellerName,
+    super.totalReviews = 0,
+    super.servicesCount = 0,
+    super.restorationsCount = 0,
     super.isVerified = false,
   });
 
   /// Respuesta de GET /api/v1/assets del API Go (solo items con
   /// is_for_sale=true llegan aquí, ver [MarketplaceRemoteDataSourceImpl]).
-  /// No hay rating de vendedor individual en el backend -- queda en 0.
+  /// rating/services_count/restorations_count los calcula la propia consulta
+  /// del backend (subqueries contra reviews/maintenance_logs).
   factory MarketplaceItemModel.fromJson(Map<String, dynamic> json) {
     final photos = json['photos'] as List<dynamic>? ?? const [];
     final cover = photos.isNotEmpty
@@ -35,7 +39,10 @@ class MarketplaceItemModel extends MarketplaceItemEntity {
       origin: json['store_origin'] as String? ?? '',
       size: json['size'] as String? ?? '',
       price: (json['sale_price'] as num?)?.toDouble() ?? 0,
-      rating: 0,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0,
+      totalReviews: (json['total_reviews'] as num?)?.toInt() ?? 0,
+      servicesCount: (json['services_count'] as num?)?.toInt() ?? 0,
+      restorationsCount: (json['restorations_count'] as num?)?.toInt() ?? 0,
       isVerified: (json['blockchain_tx_id'] as String?)?.isNotEmpty ?? false,
       sellerId: json['user_id'] as String,
       sellerName: json['seller_name'] as String? ?? '',

@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/dimens.dart';
 import '../../../core/theme.dart';
 import '../../marketplace/presentation/item_image.dart';
+import '../../servicerequests/domain/entities.dart';
+import '../../servicerequests/presentation/providers.dart';
 import '../domain/entities.dart';
 import 'asset_sheets.dart';
 import 'providers.dart';
@@ -75,13 +77,32 @@ class EmptyAssetsView extends StatelessWidget {
   }
 }
 
-class AssetsGrid extends StatelessWidget {
+class AssetsGrid extends ConsumerWidget {
   final List<AssetEntity> assets;
 
   const AssetsGrid({super.key, required this.assets});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Un artículo "terminado" (el negocio ya lo dejó listo, falta que el
+    // dueño confirme que lo recibió de vuelta) se pasa al frente de la
+    // cuadrícula -- es la acción pendiente más importante, no debería
+    // perderse scrolleando entre el resto de los activos.
+    final requestsByAsset = <String, ServiceRequestEntity>{};
+    for (final r in ref.watch(myServiceRequestsControllerProvider).requests) {
+      if (r.status != ServiceRequestStatus.confirmado) {
+        requestsByAsset.putIfAbsent(r.assetId, () => r);
+      }
+    }
+
+    final ordered = [...assets];
+    ordered.sort((a, b) {
+      final aReady = requestsByAsset[a.id]?.status == ServiceRequestStatus.terminado;
+      final bReady = requestsByAsset[b.id]?.status == ServiceRequestStatus.terminado;
+      if (aReady == bReady) return 0;
+      return aReady ? -1 : 1;
+    });
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -92,8 +113,11 @@ class AssetsGrid extends StatelessWidget {
         crossAxisSpacing: VaultSpacing.md,
         childAspectRatio: 0.66,
       ),
-      itemCount: assets.length,
-      itemBuilder: (context, index) => AssetCard(asset: assets[index]),
+      itemCount: ordered.length,
+      itemBuilder: (context, index) => AssetCard(
+        asset: ordered[index],
+        serviceRequest: requestsByAsset[ordered[index].id],
+      ),
     );
   }
 }
@@ -101,7 +125,41 @@ class AssetsGrid extends StatelessWidget {
 class AssetCard extends ConsumerWidget {
   final AssetEntity asset;
 
-  const AssetCard({super.key, required this.asset});
+  /// Solicitud de servicio/reparación activa para este activo (si hay una),
+  /// ver `AssetsGrid`.
+  final ServiceRequestEntity? serviceRequest;
+
+  const AssetCard({super.key, required this.asset, this.serviceRequest});
+
+  (String, Color)? get _serviceStatusInfo {
+    switch (serviceRequest?.status) {
+      case ServiceRequestStatus.pendienteAceptacion:
+        return ('Enviado', VaultColors.textSecondary);
+      case ServiceRequestStatus.enEspera:
+        return ('En espera', VaultColors.accent);
+      case ServiceRequestStatus.enServicio:
+        return (
+          serviceRequest!.type == ServiceRequestType.reparacion ? 'En reparación' : 'En servicio',
+          VaultColors.primary,
+        );
+      case ServiceRequestStatus.terminado:
+        return ('Listo', VaultColors.success);
+      default:
+        return null;
+    }
+  }
+
+  Future<void> _confirmReceipt(BuildContext context, WidgetRef ref) async {
+    final request = serviceRequest;
+    if (request == null) return;
+    final ok = await ref.read(myServiceRequestsControllerProvider.notifier).confirm(request.id);
+    if (!context.mounted) return;
+    if (!ok) {
+      final error = ref.read(myServiceRequestsControllerProvider).errorMessage ??
+          'No se pudo confirmar la recepción';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
 
   void _openPublishSheet(BuildContext context) {
     showModalBottomSheet(
@@ -194,6 +252,15 @@ class AssetCard extends ConsumerWidget {
                       color: VaultColors.accent,
                     ),
                   ),
+                if (_serviceStatusInfo != null)
+                  Positioned(
+                    bottom: VaultSpacing.xs,
+                    right: VaultSpacing.xs,
+                    child: _StatusBadge(
+                      label: _serviceStatusInfo!.$1,
+                      color: _serviceStatusInfo!.$2,
+                    ),
+                  ),
                 Positioned(
                   bottom: VaultSpacing.xs,
                   left: VaultSpacing.xs,
@@ -250,6 +317,13 @@ class AssetCard extends ConsumerWidget {
                   color: VaultColors.textSecondary,
                   onTap: () => _confirmDelete(context, ref),
                 ),
+                if (serviceRequest?.status == ServiceRequestStatus.terminado)
+                  _CardAction(
+                    icon: Icons.check_circle_outline,
+                    color: VaultColors.success,
+                    tooltip: 'Confirmar recepción',
+                    onTap: () => _confirmReceipt(context, ref),
+                  ),
               ],
             ),
           ),
@@ -292,11 +366,13 @@ class _CardAction extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+  final String? tooltip;
 
   const _CardAction({
     required this.icon,
     required this.color,
     required this.onTap,
+    this.tooltip,
   });
 
   @override
@@ -304,6 +380,7 @@ class _CardAction extends StatelessWidget {
     return IconButton(
       icon: Icon(icon, size: VaultIconSize.sm, color: color),
       onPressed: onTap,
+      tooltip: tooltip,
       visualDensity: VisualDensity.compact,
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(),
