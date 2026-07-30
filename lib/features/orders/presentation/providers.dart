@@ -162,10 +162,13 @@ class MySalesController extends StateNotifier<MySalesState> {
       : super(const MySalesState()) {
     load();
     // Misma razón que en MyOrdersController: sin esto, una venta nueva
-    // (subtype=pedido_recibido, ver StartOrderCreatedConsumer) no aparecía
-    // en "Mis ventas" hasta recargar la pantalla a mano.
+    // (subtype=pedido_recibido, ver StartOrderCreatedConsumer) o el
+    // comprador confirmando recepción (subtype=pedido_liberado, ver
+    // handleOrderConfirmed) no aparecían en "Mis ventas" hasta recargar la
+    // pantalla a mano.
     _createdSubscription = realtimeSocket.events().listen((e) {
-      if (e['event'] == 'notification' && e['subtype'] == 'pedido_recibido') {
+      if (e['event'] == 'notification' &&
+          (e['subtype'] == 'pedido_recibido' || e['subtype'] == 'pedido_liberado')) {
         load();
       }
     });
