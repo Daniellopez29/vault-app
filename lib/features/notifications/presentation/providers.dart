@@ -32,6 +32,14 @@ final markAllNotificationsAsReadUseCaseProvider = Provider<MarkAllNotificationsA
   return MarkAllNotificationsAsReadUseCase(ref.read(notificationsRepositoryProvider));
 });
 
+final registerFcmTokenUseCaseProvider = Provider<RegisterFcmTokenUseCase>((ref) {
+  return RegisterFcmTokenUseCase(ref.read(notificationsRepositoryProvider));
+});
+
+final deleteFcmTokenUseCaseProvider = Provider<DeleteFcmTokenUseCase>((ref) {
+  return DeleteFcmTokenUseCase(ref.read(notificationsRepositoryProvider));
+});
+
 enum NotificationsStatus { loading, loaded, error }
 
 class NotificationsState {

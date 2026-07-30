@@ -7,6 +7,8 @@ abstract class NotificationsRepository {
   Future<Either<Failure, Unit>> markAsRead(String id);
   Future<Either<Failure, Unit>> markAllAsRead();
   Future<Either<Failure, Unit>> delete(String id);
+  Future<Either<Failure, Unit>> registerFcmToken(String token, {String? platform});
+  Future<Either<Failure, Unit>> deleteFcmToken(String token);
 
   /// Notificaciones nuevas en vivo (WebSocket), a medida que llegan.
   Stream<NotificationEntity> incomingNotifications();

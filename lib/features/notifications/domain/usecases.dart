@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:equatable/equatable.dart';
 import '../../../core/error.dart';
 import '../../../core/usecase.dart';
 import 'entities.dart';
@@ -45,5 +46,37 @@ class DeleteNotificationUseCase implements UseCase<Unit, String> {
   @override
   Future<Either<Failure, Unit>> call(String id) {
     return repository.delete(id);
+  }
+}
+
+class RegisterFcmTokenParams extends Equatable {
+  final String token;
+  final String? platform;
+
+  const RegisterFcmTokenParams({required this.token, this.platform});
+
+  @override
+  List<Object?> get props => [token, platform];
+}
+
+class RegisterFcmTokenUseCase implements UseCase<Unit, RegisterFcmTokenParams> {
+  final NotificationsRepository repository;
+
+  RegisterFcmTokenUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, Unit>> call(RegisterFcmTokenParams params) {
+    return repository.registerFcmToken(params.token, platform: params.platform);
+  }
+}
+
+class DeleteFcmTokenUseCase implements UseCase<Unit, String> {
+  final NotificationsRepository repository;
+
+  DeleteFcmTokenUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, Unit>> call(String token) {
+    return repository.deleteFcmToken(token);
   }
 }

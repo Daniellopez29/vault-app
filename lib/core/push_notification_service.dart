@@ -15,6 +15,10 @@ class PushNotificationService {
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
+  /// 'android' o 'ios' -- el backend lo guarda solo como referencia (ver
+  /// columna platform en fcm_tokens), no cambia el envío.
+  static String get platform => Platform.isAndroid ? 'android' : 'ios';
+
   static const _androidChannel = AndroidNotificationChannel(
     'vault_high_importance',
     'Notificaciones de Vault',

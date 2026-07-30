@@ -205,10 +205,14 @@ class ApiClient {
       _multipart('POST', path,
           bytes: bytes, filename: filename, fieldName: fieldName, auth: auth);
 
-  Future<dynamic> delete(String path, {bool auth = true}) async {
+  Future<dynamic> delete(String path, {Object? body, bool auth = true}) async {
     try {
       final response = await _sendWithRetry(
-        () async => _http.delete(_uri(path), headers: await _headers(withAuth: auth)),
+        () async => _http.delete(
+          _uri(path),
+          headers: await _headers(withAuth: auth),
+          body: body != null ? jsonEncode(body) : null,
+        ),
       );
       return _handle(response);
     } on Failure {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +12,8 @@ import 'core/stripe_config.dart';
 import 'core/theme.dart';
 import 'features/auth/presentation/providers.dart';
 import 'features/chat/presentation/providers.dart';
+import 'features/notifications/domain/usecases.dart';
+import 'features/notifications/presentation/providers.dart';
 import 'core/push_notification_service.dart';
 import 'firebase_options.dart';
 
@@ -36,15 +40,28 @@ class VaultApp extends ConsumerStatefulWidget {
 }
 
 class _VaultAppState extends ConsumerState<VaultApp> with WidgetsBindingObserver {
+  StreamSubscription<String>? _tokenRefreshSubscription;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // FCM puede rotar el token en cualquier momento (no solo al reinstalar)
+    // -- sin escuchar esto, un token rotado deja de recibir push hasta el
+    // siguiente login manual.
+    _tokenRefreshSubscription = PushNotificationService().onTokenRefresh.listen((token) {
+      if (ref.read(authControllerProvider).status == AuthStatus.authenticated) {
+        ref.read(registerFcmTokenUseCaseProvider)(
+          RegisterFcmTokenParams(token: token, platform: PushNotificationService.platform),
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _tokenRefreshSubscription?.cancel();
     super.dispose();
   }
 
@@ -79,6 +96,17 @@ class _VaultAppState extends ConsumerState<VaultApp> with WidgetsBindingObserver
           next.status == AuthStatus.authenticated &&
           next.user != null) {
         ref.read(ensurePublicKeyRegisteredUseCaseProvider)(next.user!.id);
+
+        // Fire-and-forget: si falla, este dispositivo simplemente no recibe
+        // push hasta el próximo login o hasta que FCM rote el token (ver
+        // onTokenRefresh arriba), no debe bloquear el login.
+        PushNotificationService().getToken().then((token) {
+          if (token != null) {
+            ref.read(registerFcmTokenUseCaseProvider)(
+              RegisterFcmTokenParams(token: token, platform: PushNotificationService.platform),
+            );
+          }
+        });
       }
     });
 

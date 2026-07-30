@@ -7,6 +7,8 @@ abstract class NotificationsRemoteDataSource {
   Future<void> markAsRead(String id);
   Future<void> markAllAsRead();
   Future<void> delete(String id);
+  Future<void> registerFcmToken(String token, {String? platform});
+  Future<void> deleteFcmToken(String token);
 }
 
 class NotificationsRemoteDataSourceImpl implements NotificationsRemoteDataSource {
@@ -57,6 +59,31 @@ class NotificationsRemoteDataSourceImpl implements NotificationsRemoteDataSource
       rethrow;
     } catch (e) {
       throw ServerFailure('Error al eliminar la notificación: $e');
+    }
+  }
+
+  @override
+  Future<void> registerFcmToken(String token, {String? platform}) async {
+    try {
+      await _client.post('/users/fcm-token', body: {
+        'token': token,
+        if (platform != null) 'platform': platform,
+      });
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al registrar el token de notificaciones: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteFcmToken(String token) async {
+    try {
+      await _client.delete('/users/fcm-token', body: {'token': token});
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al eliminar el token de notificaciones: $e');
     }
   }
 }

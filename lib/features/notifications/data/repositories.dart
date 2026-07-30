@@ -65,4 +65,28 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
       return const Left(ServerFailure('Error al eliminar la notificación.'));
     }
   }
+
+  @override
+  Future<Either<Failure, Unit>> registerFcmToken(String token, {String? platform}) async {
+    try {
+      await remoteDataSource.registerFcmToken(token, platform: platform);
+      return const Right(unit);
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (_) {
+      return const Left(ServerFailure('Error al registrar el token de notificaciones.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> deleteFcmToken(String token) async {
+    try {
+      await remoteDataSource.deleteFcmToken(token);
+      return const Right(unit);
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (_) {
+      return const Left(ServerFailure('Error al eliminar el token de notificaciones.'));
+    }
+  }
 }

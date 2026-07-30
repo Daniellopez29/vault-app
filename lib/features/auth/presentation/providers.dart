@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/enums.dart';
 import '../../../core/providers.dart';
+import '../../../core/push_notification_service.dart';
 import '../../addresses/presentation/providers.dart' show addressesControllerProvider;
 import '../../business/presentation/providers.dart'
     show businessControllerProvider, allBusinessesProvider;
@@ -17,7 +18,7 @@ import '../../chat/presentation/providers.dart'
 import '../../favorites/presentation/providers.dart' show favoritesControllerProvider;
 import '../../home/presentation/providers.dart' show feedControllerProvider;
 import '../../notifications/presentation/providers.dart'
-    show notificationsControllerProvider, notificationsRepositoryProvider;
+    show notificationsControllerProvider, notificationsRepositoryProvider, deleteFcmTokenUseCaseProvider;
 import '../../orders/presentation/providers.dart'
     show myOrdersControllerProvider, mySalesControllerProvider;
 import '../../profile/presentation/providers.dart'
@@ -279,9 +280,25 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     _cancelInactivityTimer();
+    // Tiene que ir antes de _logoutUseCase(): ese limpia el token de sesión
+    // (JWT) que este request necesita para autenticarse -- después de eso el
+    // backend lo rechazaría con 401.
+    await _unregisterPushToken();
     await _logoutUseCase();
     state = const AuthState();
     _invalidateUserScopedProviders();
+  }
+
+  /// Best-effort: si falla, no bloquea el cierre de sesión -- el token
+  /// simplemente queda registrado hasta que el próximo login en este mismo
+  /// dispositivo lo reasigne o hasta que FCM lo invalide por sí solo.
+  Future<void> _unregisterPushToken() async {
+    try {
+      final token = await PushNotificationService().getToken();
+      if (token != null) {
+        await _ref.read(deleteFcmTokenUseCaseProvider)(token);
+      }
+    } catch (_) {}
   }
 
   Future<bool> deleteAccount() async {
