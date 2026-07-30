@@ -5,24 +5,26 @@ import '../../../core/dimens.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../business/presentation/my_business_tab.dart';
+import '../../servicerequests/presentation/incoming_requests_section.dart';
 import '../../subscription/domain/entities.dart';
 import '../../subscription/presentation/providers.dart';
 import '../../profile/presentation/asset_widgets.dart';
 import '../../profile/presentation/providers.dart';
 import '../../ads/presentation/advertise_flow.dart';
 
-/// Vista de comercio del vendedor. Contiene dos apartados:
+/// Vista de comercio del vendedor. Contiene tres apartados:
 /// 1) "En venta": sus productos publicados + suscripción para destacarlos.
-/// 2) "Mi negocio": alta y administración del negocio.
-/// Por ahora es el esqueleto visual; el contenido real de cada pestaña
-/// se conecta después con sus providers.
+/// 2) "Recibidos": artículos que le mandaron a su negocio para servicio o
+///    reparación -- en su propia pestaña porque antes vivía arriba del
+///    formulario de "Mi negocio" y estorbaba visualmente al editarlo.
+/// 3) "Mi negocio": alta y administración del negocio.
 class SellerCommerceView extends StatelessWidget {
   const SellerCommerceView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: VaultColors.background,
         appBar: AppBar(
@@ -37,6 +39,7 @@ class SellerCommerceView extends StatelessWidget {
             indicatorColor: VaultColors.primary,
             tabs: [
               Tab(text: "En venta"),
+              Tab(text: "Recibidos"),
               Tab(text: "Mi negocio"),
             ],
           ),
@@ -44,10 +47,25 @@ class SellerCommerceView extends StatelessWidget {
         body: const TabBarView(
           children: [
             _ProductsForSaleTab(),
+            _IncomingRequestsTab(),
             MyBusinessTab(),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Apartado "Recibidos": artículos enviados al negocio del usuario para
+/// servicio/reparación, con acciones para aceptar/iniciar/marcar terminado.
+class _IncomingRequestsTab extends StatelessWidget {
+  const _IncomingRequestsTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SingleChildScrollView(
+      padding: EdgeInsets.all(VaultSpacing.md),
+      child: IncomingRequestsSection(),
     );
   }
 }

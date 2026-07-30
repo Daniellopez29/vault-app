@@ -24,6 +24,10 @@ abstract class OrderRemoteDataSource {
   /// El vendedor marca el pedido como enviado -- paso de logística
   /// requerido antes de que el comprador pueda confirmar recibido.
   Future<OrderModel> shipOrder(String id);
+
+  /// `GET /orders/has-purchased` -- endpoint deliberadamente público del
+  /// lado del backend, pero igual pasa por el mismo ApiClient.
+  Future<bool> hasPurchased({required String buyerId, required String sellerId});
 }
 
 /// `payment/` (Stripe: suscripciones, ads, órdenes) -- mismo host que
@@ -105,6 +109,21 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
       rethrow;
     } catch (e) {
       throw ServerFailure('Error al marcar el pedido como enviado: $e');
+    }
+  }
+
+  @override
+  Future<bool> hasPurchased({required String buyerId, required String sellerId}) async {
+    try {
+      final body = await _client.get('/orders/has-purchased', query: {
+        'buyer_id': buyerId,
+        'seller_id': sellerId,
+      });
+      return (body as Map<String, dynamic>)['purchased'] as bool? ?? false;
+    } on Failure {
+      rethrow;
+    } catch (e) {
+      throw ServerFailure('Error al verificar la compra: $e');
     }
   }
 }

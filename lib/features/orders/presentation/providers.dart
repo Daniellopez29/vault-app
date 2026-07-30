@@ -32,6 +32,9 @@ final confirmOrderUseCaseProvider =
 final shipOrderUseCaseProvider =
     Provider((ref) => ShipOrderUseCase(ref.read(orderRepositoryProvider)));
 
+final hasPurchasedUseCaseProvider =
+    Provider((ref) => HasPurchasedUseCase(ref.read(orderRepositoryProvider)));
+
 // ─── MIS PEDIDOS (comprador) ────────────────────────────────────────────────
 
 enum MyOrdersStatus { loading, loaded, error }

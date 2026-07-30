@@ -59,3 +59,11 @@ class ShipOrderUseCase {
 
   Future<Either<Failure, OrderEntity>> call(String id) => repository.shipOrder(id);
 }
+
+class HasPurchasedUseCase {
+  final OrderRepository repository;
+  const HasPurchasedUseCase(this.repository);
+
+  Future<Either<Failure, bool>> call({required String buyerId, required String sellerId}) =>
+      repository.hasPurchased(buyerId: buyerId, sellerId: sellerId);
+}

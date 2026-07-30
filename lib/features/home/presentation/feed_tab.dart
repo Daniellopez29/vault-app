@@ -159,24 +159,19 @@ class _PostCardState extends State<PostCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(VaultRadius.card),
+          // Si la publicación se subió sin foto, no se reserva el espacio
+          // de la imagen -- antes quedaba un bloque gris vacío arriba del
+          // texto aunque no hubiera nada que mostrar ahí.
+          if (post.imageUrl.isNotEmpty && !post.imageUrl.startsWith('assets/'))
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(VaultRadius.card),
+              ),
+              child: AspectRatio(
+                aspectRatio: 16 / 11,
+                child: Image.network(post.imageUrl, fit: BoxFit.cover),
+              ),
             ),
-            child: AspectRatio(
-              aspectRatio: 16 / 11,
-              child: post.imageUrl.isEmpty || post.imageUrl.startsWith('assets/')
-                  ? Container(
-                color: VaultColors.background,
-                child: Icon(
-                  Icons.image_outlined,
-                  size: VaultIconSize.xl,
-                  color: VaultColors.textSecondary,
-                ),
-              )
-                  : Image.network(post.imageUrl, fit: BoxFit.cover),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: VaultSpacing.lg,

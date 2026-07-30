@@ -17,7 +17,7 @@ extension _ConditionUI on _Condition {
     switch (this) {
       case _Condition.nuevo: return 'Nuevo';
       case _Condition.usado: return 'Usado';
-      case _Condition.comoNuevo: return 'Como nuevo';
+      case _Condition.comoNuevo: return 'Semi nuevo';
     }
   }
 
@@ -233,6 +233,13 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
                 label: 'Talla',
                 icon: Icons.straighten_outlined,
                 maxLength: 15,
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => setState(() => _sizeController.text = 'Sin talla'),
+                  child: const Text('Sin talla'),
+                ),
               ),
               const SizedBox(height: VaultSpacing.md),
               _AssetField(

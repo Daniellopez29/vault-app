@@ -80,4 +80,16 @@ class OrderRepositoryImpl implements OrderRepository {
       return Left(ServerFailure('Error al marcar el pedido como enviado: $e'));
     }
   }
+
+  @override
+  Future<Either<Failure, bool>> hasPurchased({required String buyerId, required String sellerId}) async {
+    try {
+      final result = await _remote.hasPurchased(buyerId: buyerId, sellerId: sellerId);
+      return Right(result);
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure('Error al verificar la compra: $e'));
+    }
+  }
 }

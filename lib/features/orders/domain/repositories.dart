@@ -22,4 +22,9 @@ abstract class OrderRepository {
   Future<Either<Failure, OrderEntity>> confirmOrder(String id);
 
   Future<Either<Failure, OrderEntity>> shipOrder(String id);
+
+  /// Si [buyerId] le compró algo (con orden liberada) a [sellerId] -- usado
+  /// para decidir si mostrar el compositor de comentarios en la publicación
+  /// de un vendedor (el backend aplica la misma regla en `assetcomments`).
+  Future<Either<Failure, bool>> hasPurchased({required String buyerId, required String sellerId});
 }

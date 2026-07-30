@@ -86,7 +86,7 @@ class ProductDetailPage extends ConsumerWidget {
               VaultSpacing.md,
               VaultSpacing.lg,
             ),
-            child: _OpinionsSection(productId: item.id),
+            child: _OpinionsSection(productId: item.id, sellerId: item.sellerId),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -547,8 +547,9 @@ class _BarAction extends StatelessWidget {
 /// que trabaja sobre un targetId generico: aqui ese objetivo es el producto.
 class _OpinionsSection extends StatelessWidget {
   final String productId;
+  final String sellerId;
 
-  const _OpinionsSection({required this.productId});
+  const _OpinionsSection({required this.productId, required this.sellerId});
 
   @override
   Widget build(BuildContext context) {
@@ -563,6 +564,7 @@ class _OpinionsSection extends StatelessWidget {
           onTap: () => showCommentsSheet(
             context,
             target: CommentsTarget(id: productId, type: CommentTargetType.asset),
+            sellerId: sellerId,
           ),
           borderRadius: BorderRadius.circular(VaultRadius.card),
           child: Container(

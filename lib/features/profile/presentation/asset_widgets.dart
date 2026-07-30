@@ -234,6 +234,10 @@ class AssetCard extends ConsumerWidget {
                 Positioned.fill(
                   child: ItemImage(imageUrl: asset.imageUrl),
                 ),
+                if (serviceRequest?.status == ServiceRequestStatus.terminado)
+                  Positioned.fill(
+                    child: Container(color: Colors.black.withValues(alpha: 0.45)),
+                  ),
                 if (asset.isPublished)
                   Positioned(
                     top: VaultSpacing.xs,
@@ -317,16 +321,29 @@ class AssetCard extends ConsumerWidget {
                   color: VaultColors.textSecondary,
                   onTap: () => _confirmDelete(context, ref),
                 ),
-                if (serviceRequest?.status == ServiceRequestStatus.terminado)
-                  _CardAction(
-                    icon: Icons.check_circle_outline,
-                    color: VaultColors.success,
-                    tooltip: 'Confirmar recepción',
-                    onTap: () => _confirmReceipt(context, ref),
-                  ),
               ],
             ),
           ),
+          if (serviceRequest?.status == ServiceRequestStatus.terminado)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  VaultSpacing.sm, 0, VaultSpacing.sm, VaultSpacing.sm),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _confirmReceipt(context, ref),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: VaultColors.success,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    visualDensity: VisualDensity.compact,
+                    textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                  ),
+                  icon: const Icon(Icons.check_circle_outline, size: 14),
+                  label: const Text('Confirmar recepción'),
+                ),
+              ),
+            ),
         ],
       ),
     );

@@ -68,8 +68,7 @@ class ApiClient {
   }
 
   Never _throwTimeout() => throw ServerFailure(
-        'El servidor no respondió a tiempo. Revisa tu conexión o la URL del '
-        'servidor en Configuración → Avanzado.',
+        'El servidor no respondió a tiempo. Revisa tu conexión e intenta de nuevo.',
       );
 
   /// Reintenta UNA vez, tras una breve espera, si el primer intento falla
