@@ -11,6 +11,7 @@ import 'core/theme.dart';
 import 'features/auth/presentation/providers.dart';
 import 'features/chat/presentation/providers.dart';
 import 'core/push_notification_service.dart';
+import 'core/providers.dart' show apiClientProvider;
 import 'firebase_options.dart';
 
 void main() async {
@@ -79,6 +80,8 @@ class _VaultAppState extends ConsumerState<VaultApp> with WidgetsBindingObserver
           next.status == AuthStatus.authenticated &&
           next.user != null) {
         ref.read(ensurePublicKeyRegisteredUseCaseProvider)(next.user!.id);
+        // Registra el token FCM en el backend para push notifications.
+        PushNotificationService().registerTokenInBackend(ref.read(apiClientProvider));
       }
     });
 

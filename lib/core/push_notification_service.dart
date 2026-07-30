@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'api_client.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
@@ -71,6 +72,18 @@ class PushNotificationService {
   Future<String?> getToken() => _messaging.getToken();
 
   Stream<String> get onTokenRefresh => _messaging.onTokenRefresh;
+
+  /// Registra el token FCM en el backend para que pueda enviar pushes
+  /// dirigidos a este dispositivo. Se llama tras login exitoso.
+  Future<void> registerTokenInBackend(ApiClient client) async {
+    try {
+      final token = await getToken();
+      if (token == null) return;
+      await client.post('/users/fcm-token', body: {'token': token});
+    } catch (_) {
+      // Fire-and-forget: si falla, las push no llegarán pero no bloquea el flujo.
+    }
+  }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
     final notification = message.notification;
