@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/enums.dart';
+import '../../../core/token_storage.dart';
 import '../../../core/providers.dart';
 import '../data/datasources.dart';
 import '../data/repositories.dart';
@@ -103,6 +104,7 @@ StateNotifierProvider<AuthController, AuthState>((ref) {
     updateRoleUseCase: ref.read(updateRoleUseCaseProvider),
     uploadProfilePhotoUseCase: ref.read(uploadProfilePhotoUseCaseProvider),
     logoutUseCase: ref.read(logoutUseCaseProvider),
+    tokenStorage: ref.read(tokenStorageProvider),
   );
 });
 
@@ -117,6 +119,8 @@ class AuthController extends StateNotifier<AuthState> {
   final UpdateRoleUseCase _updateRoleUseCase;
   final UploadProfilePhotoUseCase _uploadProfilePhotoUseCase;
   final LogoutUseCase _logoutUseCase;
+  final TokenStorage _tokenStorage;
+  DateTime? _lastPersistedActivity;
 
   Timer? _inactivityTimer;
 
@@ -131,6 +135,8 @@ class AuthController extends StateNotifier<AuthState> {
     required this._updateRoleUseCase,
     required this._uploadProfilePhotoUseCase,
     required this._logoutUseCase,
+    required TokenStorage tokenStorage,
+    _tokenStorage = tokenStorage,
   }) : super(const AuthState());
 
   Future<void> login({required String email, required String password}) async {
@@ -203,6 +209,7 @@ class AuthController extends StateNotifier<AuthState> {
   Future<void> logout() async {
     _cancelInactivityTimer();
     await _logoutUseCase();
+    await _tokenStorage.clearLastActivity();
     state = const AuthState();
   }
 
@@ -232,6 +239,13 @@ class AuthController extends StateNotifier<AuthState> {
     if (state.status != AuthStatus.authenticated) return;
     _inactivityTimer?.cancel();
     _inactivityTimer = Timer(kInactivityTimeout, logout);
+
+    final now = DateTime.now();
+    if (_lastPersistedActivity == null ||
+        now.difference(_lastPersistedActivity!) > const Duration(seconds: 5)) {
+      _lastPersistedActivity = now;
+      _tokenStorage.saveLastActivity(now); // fire-and-forget
+    }
   }
 
   void _cancelInactivityTimer() {
@@ -323,5 +337,21 @@ class AuthController extends StateNotifier<AuthState> {
         return true;
       },
     );
+  }
+
+  /// Se llama cuando la app vuelve a primer plano. El Timer en memoria de
+  /// [onUserInteraction] no corre si el SO mató el proceso en segundo plano
+  /// -- esta comprobación contra la marca de tiempo guardada en el almacén
+  /// encriptado cubre ese caso: si ya se pasó el tiempo de inactividad
+  /// permitido, cierra sesión de inmediato en vez de esperar otra interacción.
+  Future<void> checkInactivityOnResume() async {
+    if (state.status != AuthStatus.authenticated) return;
+    final lastActivity = await _tokenStorage.readLastActivity();
+    if (lastActivity == null) return;
+    if (DateTime.now().difference(lastActivity) >= kInactivityTimeout) {
+      await logout();
+    } else {
+      onUserInteraction();
+    }
   }
 }
