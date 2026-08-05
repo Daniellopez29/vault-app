@@ -67,7 +67,9 @@ class CommentTile extends StatelessWidget {
                       child: Row(
                         children: [
                           Icon(
-                            comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                            comment.isLiked
+                                ? Icons.favorite
+                                : Icons.favorite_border,
                             size: 16,
                             color: comment.isLiked
                                 ? VaultColors.error
@@ -91,12 +93,18 @@ class CommentTile extends StatelessWidget {
                         onTap: onReply,
                         child: Row(
                           children: [
-                            const Icon(Icons.reply,
-                                size: 16, color: VaultColors.textSecondary),
+                            Icon(
+                              Icons.reply,
+                              size: 16,
+                              color: VaultColors.textSecondary,
+                            ),
                             const SizedBox(width: 4),
-                            Text('Responder',
-                                style: tt.labelSmall?.copyWith(
-                                    color: VaultColors.textSecondary)),
+                            Text(
+                              'Responder',
+                              style: tt.labelSmall?.copyWith(
+                                color: VaultColors.textSecondary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -122,27 +130,32 @@ class CommentTile extends StatelessWidget {
           color: VaultColors.error.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(VaultRadius.sm),
         ),
-        child: const Icon(Icons.delete_outline, color: VaultColors.error),
+        child: Icon(Icons.delete_outline, color: VaultColors.error),
       ),
       confirmDismiss: (_) async {
         return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Eliminar comentario'),
-            content: const Text('¿Estás seguro de que quieres eliminar este comentario?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancelar'),
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Eliminar comentario'),
+                content: const Text(
+                  '¿Estás seguro de que quieres eliminar este comentario?',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: Text(
+                      'Eliminar',
+                      style: TextStyle(color: VaultColors.error),
+                    ),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Eliminar',
-                    style: TextStyle(color: VaultColors.error)),
-              ),
-            ],
-          ),
-        ) ?? false;
+            ) ??
+            false;
       },
       onDismissed: (_) => onDelete!(),
       child: tile,
@@ -192,7 +205,9 @@ class _CommentInputBarState extends State<CommentInputBar> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: VaultSpacing.md, vertical: VaultSpacing.sm),
+        horizontal: VaultSpacing.md,
+        vertical: VaultSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: VaultColors.surface,
         border: Border(top: BorderSide(color: VaultColors.divider)),
@@ -204,7 +219,7 @@ class _CommentInputBarState extends State<CommentInputBar> {
             Expanded(
               child: TextField(
                 controller: _controller,
-                style: const TextStyle(color: VaultColors.primary),
+                style: TextStyle(color: VaultColors.primary),
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _send(),
                 decoration: InputDecoration(
@@ -212,7 +227,9 @@ class _CommentInputBarState extends State<CommentInputBar> {
                   filled: true,
                   fillColor: VaultColors.background,
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: VaultSpacing.md, vertical: VaultSpacing.sm),
+                    horizontal: VaultSpacing.md,
+                    vertical: VaultSpacing.sm,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: VaultRadius.buttonBorder,
                     borderSide: BorderSide.none,

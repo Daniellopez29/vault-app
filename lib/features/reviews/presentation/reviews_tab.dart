@@ -22,7 +22,8 @@ class ReviewsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final effectiveProviderId = providerId ?? ref.watch(authControllerProvider).user?.id;
+    final effectiveProviderId =
+        providerId ?? ref.watch(authControllerProvider).user?.id;
     if (effectiveProviderId == null) {
       return const Center(child: Text('Inicia sesión para ver tus reseñas'));
     }
@@ -42,8 +43,11 @@ class ReviewsTab extends ConsumerWidget {
               Text(state.errorMessage ?? 'Error al cargar tus reseÃ±as'),
               const SizedBox(height: VaultSpacing.md),
               TextButton(
-                onPressed: () =>
-                    ref.read(reviewsControllerProvider(effectiveProviderId).notifier).loadReviews(),
+                onPressed: () => ref
+                    .read(
+                      reviewsControllerProvider(effectiveProviderId).notifier,
+                    )
+                    .loadReviews(),
                 child: const Text('Reintentar'),
               ),
             ],
@@ -55,23 +59,32 @@ class ReviewsTab extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.star_outline,
-                    size: VaultIconSize.xl, color: VaultColors.textSecondary),
+                Icon(
+                  Icons.star_outline,
+                  size: VaultIconSize.xl,
+                  color: VaultColors.textSecondary,
+                ),
                 const SizedBox(height: VaultSpacing.lg),
                 Text(
-                  providerId != null ? 'Aún no tiene reseñas' : 'Aún no tienes reseñas',
+                  providerId != null
+                      ? 'Aún no tiene reseñas'
+                      : 'Aún no tienes reseñas',
                   style: tt.titleLarge,
                 ),
                 const SizedBox(height: VaultSpacing.sm),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.xl),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: VaultSpacing.xl,
+                  ),
                   child: Text(
                     providerId != null
                         ? 'Cuando reciba una reseña de un comprador, aparecerá aquí.'
                         : 'Cuando vendas un artículo o prestes un servicio, las '
-                            'valoraciones que recibas aparecerán aquí.',
+                              'valoraciones que recibas aparecerán aquí.',
                     textAlign: TextAlign.center,
-                    style: tt.bodyMedium?.copyWith(color: VaultColors.textSecondary),
+                    style: tt.bodyMedium?.copyWith(
+                      color: VaultColors.textSecondary,
+                    ),
                   ),
                 ),
               ],
@@ -79,7 +92,9 @@ class ReviewsTab extends ConsumerWidget {
           );
         }
         return RefreshIndicator(
-          onRefresh: () => ref.read(reviewsControllerProvider(effectiveProviderId).notifier).loadReviews(),
+          onRefresh: () => ref
+              .read(reviewsControllerProvider(effectiveProviderId).notifier)
+              .loadReviews(),
           child: ListView.separated(
             padding: const EdgeInsets.all(VaultSpacing.md),
             shrinkWrap: shrinkWrap,
@@ -110,14 +125,22 @@ class ReviewsTab extends ConsumerWidget {
                     const SizedBox(height: VaultSpacing.xs),
                     GestureDetector(
                       onTap: () => ref
-                          .read(reviewsControllerProvider(effectiveProviderId).notifier)
+                          .read(
+                            reviewsControllerProvider(
+                              effectiveProviderId,
+                            ).notifier,
+                          )
                           .toggleLike(review.id),
                       child: Row(
                         children: [
                           Icon(
-                            review.isLiked ? Icons.favorite : Icons.favorite_border,
+                            review.isLiked
+                                ? Icons.favorite
+                                : Icons.favorite_border,
                             size: VaultIconSize.sm,
-                            color: review.isLiked ? VaultColors.error : VaultColors.textSecondary,
+                            color: review.isLiked
+                                ? VaultColors.error
+                                : VaultColors.textSecondary,
                           ),
                           const SizedBox(width: 4),
                           Text('${review.likesCount}', style: tt.labelSmall),
@@ -133,4 +156,3 @@ class ReviewsTab extends ConsumerWidget {
     }
   }
 }
-

@@ -9,10 +9,12 @@ import '../../ads/domain/entities.dart';
 import '../../ads/presentation/ad_impression_tracker.dart';
 import '../../ads/presentation/ad_interleave.dart';
 import '../../ads/presentation/providers.dart';
-import '../../chat/presentation/providers.dart' show conversationsControllerProvider;
+import '../../chat/presentation/providers.dart'
+    show conversationsControllerProvider;
 import '../../comments/domain/entities.dart';
 import '../../comments/presentation/comments_sheet.dart';
-import '../../notifications/presentation/providers.dart' show notificationsControllerProvider;
+import '../../notifications/presentation/providers.dart'
+    show notificationsControllerProvider;
 import '../domain/entities.dart';
 import '../../auth/presentation/providers.dart' show authControllerProvider;
 import 'feed_skeleton.dart';
@@ -25,8 +27,11 @@ class FeedTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(feedControllerProvider);
     final ads = ref.watch(activeAdsControllerProvider(AdSection.feed)).ads;
-    final unreadNotifications =
-        ref.watch(notificationsControllerProvider).notifications.where((n) => !n.read).length;
+    final unreadNotifications = ref
+        .watch(notificationsControllerProvider)
+        .notifications
+        .where((n) => !n.read)
+        .length;
     final unreadChats = ref
         .watch(conversationsControllerProvider)
         .conversations
@@ -44,7 +49,8 @@ class FeedTab extends ConsumerWidget {
               Text(state.errorMessage ?? 'Error al cargar el feed'),
               const SizedBox(height: VaultSpacing.md),
               TextButton(
-                onPressed: () => ref.read(feedControllerProvider.notifier).loadFeed(),
+                onPressed: () =>
+                    ref.read(feedControllerProvider.notifier).loadFeed(),
                 child: const Text('Reintentar'),
               ),
             ],
@@ -82,7 +88,7 @@ class FeedTab extends ConsumerWidget {
                             ? "No se encontraron publicaciones"
                             : "Aún no hay publicaciones",
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: VaultColors.textSecondary),
+                        style: TextStyle(color: VaultColors.textSecondary),
                       ),
                     ),
                   ),
@@ -91,30 +97,30 @@ class FeedTab extends ConsumerWidget {
                 SliverPadding(
                   padding: const EdgeInsets.all(VaultSpacing.md),
                   sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final cell = feedCells[index];
-                        Widget child;
-                        if (cell is AdEntity) {
-                          child = AdImpressionTracker(ad: cell, child: _AdFeedCard(ad: cell));
-                        } else {
-                          final post = cell as PostEntity;
-                          child = PostCard(
-                            post: post,
-                            onLikeTap: () => controller.toggleLike(post.id),
-                            onSaveTap: () => controller.toggleSave(post.id),
-                            onDeleteTap: post.authorId == currentUserId
-                                ? () => controller.deletePost(post.id)
-                                : null,
-                          );
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: VaultSpacing.lg),
-                          child: child,
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final cell = feedCells[index];
+                      Widget child;
+                      if (cell is AdEntity) {
+                        child = AdImpressionTracker(
+                          ad: cell,
+                          child: _AdFeedCard(ad: cell),
                         );
-                      },
-                      childCount: feedCells.length,
-                    ),
+                      } else {
+                        final post = cell as PostEntity;
+                        child = PostCard(
+                          post: post,
+                          onLikeTap: () => controller.toggleLike(post.id),
+                          onSaveTap: () => controller.toggleSave(post.id),
+                          onDeleteTap: post.authorId == currentUserId
+                              ? () => controller.deletePost(post.id)
+                              : null,
+                        );
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: VaultSpacing.lg),
+                        child: child,
+                      );
+                    }, childCount: feedCells.length),
                   ),
                 ),
             ],
@@ -245,7 +251,10 @@ class _PostCardState extends State<PostCard> {
                   color: VaultColors.textPrimary,
                   onTap: () => showCommentsSheet(
                     context,
-                    target: CommentsTarget(id: post.id, type: CommentTargetType.post),
+                    target: CommentsTarget(
+                      id: post.id,
+                      type: CommentTargetType.post,
+                    ),
                   ),
                 ),
                 const SizedBox(width: VaultSpacing.lg),
@@ -267,7 +276,9 @@ class _PostCardState extends State<PostCard> {
                         context: context,
                         builder: (ctx) => AlertDialog(
                           title: const Text('Eliminar publicación'),
-                          content: const Text('Esta acción no se puede deshacer.'),
+                          content: const Text(
+                            'Esta acción no se puede deshacer.',
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.of(ctx).pop(false),
@@ -275,16 +286,21 @@ class _PostCardState extends State<PostCard> {
                             ),
                             TextButton(
                               onPressed: () => Navigator.of(ctx).pop(true),
-                              child: const Text('Eliminar',
-                                  style: TextStyle(color: VaultColors.error)),
+                              child: Text(
+                                'Eliminar',
+                                style: TextStyle(color: VaultColors.error),
+                              ),
                             ),
                           ],
                         ),
                       );
                       if (confirm == true) widget.onDeleteTap!();
                     },
-                    icon: const Icon(Icons.delete_outline,
-                        color: VaultColors.textSecondary, size: VaultIconSize.md),
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: VaultColors.textSecondary,
+                      size: VaultIconSize.md,
+                    ),
                     visualDensity: VisualDensity.compact,
                   ),
               ],
@@ -320,7 +336,10 @@ class _ActionStat extends StatelessWidget {
           // Texto vacío (no null) cuando no hay conteo -- conserva el
           // mismo alto que un número real, para que el ícono quede a la
           // misma altura que los que sí cuentan algo.
-          Text(count != null ? '$count' : '', style: tt.labelSmall?.copyWith(color: color)),
+          Text(
+            count != null ? '$count' : '',
+            style: tt.labelSmall?.copyWith(color: color),
+          ),
         ],
       ),
     );
@@ -354,8 +373,11 @@ class _AdFeedCard extends StatelessWidget {
             child: ad.imageUrl.isEmpty
                 ? Container(
                     color: VaultColors.background,
-                    child: Icon(Icons.campaign_outlined,
-                        size: VaultIconSize.xl, color: VaultColors.textSecondary),
+                    child: Icon(
+                      Icons.campaign_outlined,
+                      size: VaultIconSize.xl,
+                      color: VaultColors.textSecondary,
+                    ),
                   )
                 : Image.network(ad.imageUrl, fit: BoxFit.cover),
           ),
@@ -367,14 +389,22 @@ class _AdFeedCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Patrocinado',
-                    style: tt.labelSmall?.copyWith(color: VaultColors.textSecondary)),
+                Text(
+                  'Patrocinado',
+                  style: tt.labelSmall?.copyWith(
+                    color: VaultColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: VaultSpacing.xs),
                 Text(ad.title, style: tt.titleLarge),
                 if (ad.description.isNotEmpty) ...[
                   const SizedBox(height: VaultSpacing.xs),
-                  Text(ad.description, style: tt.bodyLarge, maxLines: 2,
-                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    ad.description,
+                    style: tt.bodyLarge,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ],
             ),

@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,7 +33,10 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   }
 
   Future<void> _addImages() async {
-    final picked = await ImagePicker().pickMultiImage(maxWidth: 1600, imageQuality: 85);
+    final picked = await ImagePicker().pickMultiImage(
+      maxWidth: 1600,
+      imageQuality: 85,
+    );
     if (picked.isEmpty) return;
 
     final moderator = ImageModerationService();
@@ -68,8 +71,9 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
   Future<void> _publish() async {
     final content = _contentController.text.trim();
     if (content.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Escribe algo para publicar')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Escribe algo para publicar')),
+      );
       return;
     }
 
@@ -77,12 +81,14 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
 
     final images = <PostImageUpload>[];
     for (final image in _images) {
-      images.add(PostImageUpload(bytes: await image.readAsBytes(), filename: image.name));
+      images.add(
+        PostImageUpload(bytes: await image.readAsBytes(), filename: image.name),
+      );
     }
 
-    final result = await ref.read(createPostUseCaseProvider).call(
-          CreatePostParams(content: content, images: images),
-        );
+    final result = await ref
+        .read(createPostUseCaseProvider)
+        .call(CreatePostParams(content: content, images: images));
 
     if (!mounted) return;
     setState(() => _posting = false);
@@ -138,7 +144,7 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
               controller: _contentController,
               maxLines: 6,
               minLines: 3,
-              style: const TextStyle(color: VaultColors.primary),
+              style: TextStyle(color: VaultColors.primary),
               decoration: InputDecoration(
                 hintText: '¿Qué quieres compartir con la comunidad?',
                 filled: true,
@@ -149,11 +155,13 @@ class _CreatePostPageState extends ConsumerState<CreatePostPage> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: VaultRadius.buttonBorder,
-                  borderSide: BorderSide(color: VaultColors.primary.withValues(alpha: 0.2)),
+                  borderSide: BorderSide(
+                    color: VaultColors.primary.withValues(alpha: 0.2),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: VaultRadius.buttonBorder,
-                  borderSide: const BorderSide(color: VaultColors.primary, width: 2),
+                  borderSide: BorderSide(color: VaultColors.primary, width: 2),
                 ),
               ),
             ),
@@ -195,9 +203,18 @@ class _ImageThumb extends StatelessWidget {
             future: image.readAsBytes(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return Container(width: 96, height: 96, color: VaultColors.surface);
+                return Container(
+                  width: 96,
+                  height: 96,
+                  color: VaultColors.surface,
+                );
               }
-              return Image.memory(snapshot.data!, width: 96, height: 96, fit: BoxFit.cover);
+              return Image.memory(
+                snapshot.data!,
+                width: 96,
+                height: 96,
+                fit: BoxFit.cover,
+              );
             },
           ),
         ),
@@ -208,7 +225,10 @@ class _ImageThumb extends StatelessWidget {
             onTap: onRemove,
             child: Container(
               padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
               child: const Icon(Icons.close, size: 16, color: Colors.white),
             ),
           ),
@@ -236,8 +256,11 @@ class _AddImageTile extends StatelessWidget {
             color: VaultColors.surface,
             borderRadius: VaultRadius.cardBorder,
           ),
-          child: Icon(Icons.add_photo_alternate_outlined,
-              color: VaultColors.textSecondary, size: VaultIconSize.lg),
+          child: Icon(
+            Icons.add_photo_alternate_outlined,
+            color: VaultColors.textSecondary,
+            size: VaultIconSize.lg,
+          ),
         ),
       ),
     );

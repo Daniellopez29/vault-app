@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
@@ -30,7 +30,9 @@ class ProductDetailPage extends ConsumerWidget {
   List<String> get _images => [item.imageUrl];
 
   void _addToCart(BuildContext context, WidgetRef ref) {
-    ref.read(cartControllerProvider.notifier).addItem(
+    ref
+        .read(cartControllerProvider.notifier)
+        .addItem(
           CartItemEntity(
             id: item.id,
             sellerId: item.sellerId,
@@ -40,9 +42,9 @@ class ProductDetailPage extends ConsumerWidget {
             unitPrice: item.price,
           ),
         );
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${item.title} anadido al carrito')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('${item.title} anadido al carrito')));
   }
 
   void _buyNow(BuildContext context, WidgetRef ref) {
@@ -86,7 +88,10 @@ class ProductDetailPage extends ConsumerWidget {
               VaultSpacing.md,
               VaultSpacing.lg,
             ),
-            child: _OpinionsSection(productId: item.id, sellerId: item.sellerId),
+            child: _OpinionsSection(
+              productId: item.id,
+              sellerId: item.sellerId,
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -113,12 +118,12 @@ class ProductDetailPage extends ConsumerWidget {
         onChatTap: isOwnItem
             ? null
             : () => context.push(
-                  AppRoutes.chat,
-                  extra: ChatPageArgs(
-                    recipientId: item.sellerId,
-                    recipientName: item.sellerName,
-                  ),
+                AppRoutes.chat,
+                extra: ChatPageArgs(
+                  recipientId: item.sellerId,
+                  recipientName: item.sellerName,
                 ),
+              ),
         onCartTap: () => _addToCart(context, ref),
         onBuyTap: () => _buyNow(context, ref),
       ),
@@ -182,8 +187,11 @@ class _ProductGalleryState extends State<ProductGallery> {
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.verified_user,
-                      color: Colors.white, size: VaultIconSize.sm),
+                  Icon(
+                    Icons.verified_user,
+                    color: Colors.white,
+                    size: VaultIconSize.sm,
+                  ),
                   SizedBox(width: VaultSpacing.xs),
                   Text(
                     'Verificado',
@@ -257,7 +265,7 @@ class _GalleryImage extends StatelessWidget {
       return Container(
         color: VaultColors.surface,
         alignment: Alignment.center,
-        child: const Icon(
+        child: Icon(
           Icons.image_outlined,
           size: VaultIconSize.xl,
           color: VaultColors.textSecondary,
@@ -271,7 +279,7 @@ class _GalleryImage extends StatelessWidget {
       errorBuilder: (context, error, stack) => Container(
         color: VaultColors.surface,
         alignment: Alignment.center,
-        child: const Icon(
+        child: Icon(
           Icons.broken_image_outlined,
           size: VaultIconSize.xl,
           color: VaultColors.textSecondary,
@@ -328,11 +336,12 @@ class _ProductInfo extends StatelessWidget {
         const SizedBox(height: VaultSpacing.sm),
         Row(
           children: [
-            const Icon(Icons.star,
-                size: VaultIconSize.sm, color: VaultColors.accent),
+            Icon(Icons.star, size: VaultIconSize.sm, color: VaultColors.accent),
             const SizedBox(width: VaultSpacing.xs),
             Text(
-              item.rating > 0 ? item.rating.toStringAsFixed(1) : 'Sin calificar',
+              item.rating > 0
+                  ? item.rating.toStringAsFixed(1)
+                  : 'Sin calificar',
               style: tt.bodyMedium,
             ),
           ],
@@ -349,9 +358,9 @@ class _ProductInfo extends StatelessWidget {
           child: Column(
             children: [
               _SpecRow(label: 'Origen', value: item.origin),
-              const Divider(height: 1, color: VaultColors.divider),
+              Divider(height: 1, color: VaultColors.divider),
               _SpecRow(label: 'Talla', value: item.size),
-              const Divider(height: 1, color: VaultColors.divider),
+              Divider(height: 1, color: VaultColors.divider),
               _SpecRow(
                 label: 'Autenticidad',
                 value: item.isVerified ? 'Verificado' : 'Sin verificar',
@@ -424,7 +433,7 @@ class _BuyBar extends StatelessWidget {
     // redondo de agregar al carrito para enterarte hasta pagar).
     if (isOwnItem) {
       return Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: VaultColors.surface,
           border: Border(top: BorderSide(color: VaultColors.divider)),
         ),
@@ -443,7 +452,7 @@ class _BuyBar extends StatelessWidget {
     }
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: VaultColors.surface,
         border: Border(top: BorderSide(color: VaultColors.divider)),
       ),
@@ -466,13 +475,16 @@ class _BuyBar extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(0, 52),
                   foregroundColor: VaultColors.primary,
-                  side: const BorderSide(color: VaultColors.primary),
+                  side: BorderSide(color: VaultColors.primary),
                   padding: const EdgeInsets.symmetric(
                     horizontal: VaultSpacing.lg,
                     vertical: VaultSpacing.md,
                   ),
                 ),
-                icon: const Icon(Icons.add_shopping_cart, size: VaultIconSize.sm),
+                icon: const Icon(
+                  Icons.add_shopping_cart,
+                  size: VaultIconSize.sm,
+                ),
                 label: const Text('Carrito'),
               ),
               const SizedBox(width: VaultSpacing.md),
@@ -496,9 +508,6 @@ class _BuyBar extends StatelessWidget {
     );
   }
 }
-
-
-
 
 /// Acción compacta de la barra inferior (ícono + etiqueta debajo),
 /// para las opciones secundarias como el chat con el vendedor.
@@ -530,10 +539,7 @@ class _BarAction extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: VaultColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 11, color: VaultColors.textSecondary),
             ),
           ],
         ),
@@ -541,7 +547,6 @@ class _BarAction extends StatelessWidget {
     );
   }
 }
-
 
 /// Acceso a las opiniones del producto. Reutiliza la feature de comentarios,
 /// que trabaja sobre un targetId generico: aqui ese objetivo es el producto.
@@ -563,7 +568,10 @@ class _OpinionsSection extends StatelessWidget {
         InkWell(
           onTap: () => showCommentsSheet(
             context,
-            target: CommentsTarget(id: productId, type: CommentTargetType.asset),
+            target: CommentsTarget(
+              id: productId,
+              type: CommentTargetType.asset,
+            ),
             sellerId: sellerId,
           ),
           borderRadius: BorderRadius.circular(VaultRadius.card),
@@ -576,7 +584,7 @@ class _OpinionsSection extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.chat_bubble_outline,
                   color: VaultColors.primary,
                   size: VaultIconSize.md,
@@ -596,7 +604,7 @@ class _OpinionsSection extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.chevron_right,
                   color: VaultColors.textSecondary,
                   size: VaultIconSize.md,

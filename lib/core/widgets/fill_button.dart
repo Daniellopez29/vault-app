@@ -17,11 +17,11 @@ class FillButton extends StatefulWidget {
   final VoidCallback? onPressed;
   final VoidCallback? onCompleted;
   final Duration fillDuration;
-  final Color backgroundColor;
+  final Color? backgroundColor;
   final Color fillColor;
   final Color foregroundColor;
 
-  const FillButton({
+  FillButton({
     super.key,
     required this.label,
     this.fillingLabel = 'Procesando...',
@@ -31,7 +31,7 @@ class FillButton extends StatefulWidget {
     this.onPressed,
     this.onCompleted,
     this.fillDuration = const Duration(milliseconds: 1800),
-    this.backgroundColor = VaultColors.accent,
+    this.backgroundColor,
     this.fillColor = const Color(0xFFE55A2B),
     this.foregroundColor = Colors.white,
   });
@@ -78,7 +78,9 @@ class _FillButtonState extends State<FillButton>
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     final enabled = widget.enabled && !widget.filling;
+    final backgroundColor = widget.backgroundColor ?? VaultColors.accent;
 
     return GestureDetector(
       onTap: enabled ? widget.onPressed : null,
@@ -90,8 +92,8 @@ class _FillButtonState extends State<FillButton>
             height: 52,
             decoration: BoxDecoration(
               color: enabled
-                  ? widget.backgroundColor
-                  : widget.backgroundColor.withValues(alpha: 0.5),
+                  ? backgroundColor
+                  : backgroundColor.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(VaultRadius.button),
             ),
             clipBehavior: Clip.antiAlias,
@@ -116,7 +118,11 @@ class _FillButtonState extends State<FillButton>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (widget.icon != null && !widget.filling) ...[
-                        Icon(widget.icon, color: widget.foregroundColor, size: VaultIconSize.md),
+                        Icon(
+                          widget.icon,
+                          color: widget.foregroundColor,
+                          size: VaultIconSize.md,
+                        ),
                         const SizedBox(width: VaultSpacing.sm),
                       ],
                       if (widget.filling) ...[

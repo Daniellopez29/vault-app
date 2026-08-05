@@ -15,7 +15,7 @@ class ProfileActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
           top: BorderSide(color: VaultColors.divider),
           bottom: BorderSide(color: VaultColors.divider),
@@ -79,10 +79,7 @@ class _QuickAction extends StatelessWidget {
             const SizedBox(height: VaultSpacing.xs),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: VaultColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 11, color: VaultColors.textSecondary),
             ),
           ],
         ),

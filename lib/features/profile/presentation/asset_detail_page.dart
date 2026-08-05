@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -68,7 +68,9 @@ class AssetDetailPage extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: VaultColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(VaultRadius.card)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(VaultRadius.card),
+        ),
       ),
       builder: (_) => _AddMaintenanceSheet(assetId: asset.id, ref: ref),
     );
@@ -104,13 +106,22 @@ class _AssetSummary extends StatelessWidget {
           _row('Origen', asset.origin),
           // originalPrice/acquisitionDate/notes se capturan al registrar el
           // activo (register_asset_page.dart) pero nunca se mostraban acá.
-          _row('Precio original', '\$${asset.originalPrice.toStringAsFixed(0)}'),
-          _row('Fecha de adquisición', DateFormat('dd/MM/yyyy').format(asset.acquisitionDate)),
+          _row(
+            'Precio original',
+            '\$${asset.originalPrice.toStringAsFixed(0)}',
+          ),
+          _row(
+            'Fecha de adquisición',
+            DateFormat('dd/MM/yyyy').format(asset.acquisitionDate),
+          ),
           _row('Servicios', '${asset.servicesCount}'),
           _row('Restauraciones', '${asset.restorationsCount}'),
           if (asset.notes != null && asset.notes!.isNotEmpty) ...[
             const SizedBox(height: VaultSpacing.sm),
-            Text('Comentario', style: const TextStyle(color: VaultColors.textSecondary)),
+            Text(
+              'Comentario',
+              style: TextStyle(color: VaultColors.textSecondary),
+            ),
             const SizedBox(height: VaultSpacing.xs),
             Text(asset.notes!, style: tt.bodyMedium),
           ],
@@ -125,8 +136,8 @@ class _AssetSummary extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: VaultColors.textSecondary)),
-          Text(value, style: const TextStyle(color: VaultColors.textPrimary)),
+          Text(label, style: TextStyle(color: VaultColors.textSecondary)),
+          Text(value, style: TextStyle(color: VaultColors.textPrimary)),
         ],
       ),
     );
@@ -167,14 +178,17 @@ class _CertificateSection extends ConsumerWidget {
 
     final ownerName = ref.watch(authControllerProvider).user?.fullName ?? 'Tú';
     final txId = asset.blockchainTxId ?? '';
-    final shortTxId =
-        txId.length > 14 ? '${txId.substring(0, 8)}…${txId.substring(txId.length - 6)}' : txId;
+    final shortTxId = txId.length > 14
+        ? '${txId.substring(0, 8)}…${txId.substring(txId.length - 6)}'
+        : txId;
 
     // Historial completo (no solo el último tx) -- de ahí sale cuántas
     // veces cambió de dueño. Se degrada en silencio si todavía no carga o
     // falla: es información secundaria, no debe tumbar el certificado.
     final history = ref.watch(certificateHistoryProvider(asset.id)).valueOrNull;
-    final previousOwners = history?.where((c) => c.action == 'TRANSFERRED').length;
+    final previousOwners = history
+        ?.where((c) => c.action == 'TRANSFERRED')
+        .length;
 
     return Container(
       padding: const EdgeInsets.all(VaultSpacing.md),
@@ -188,30 +202,39 @@ class _CertificateSection extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.verified_user, color: VaultColors.success),
+              Icon(Icons.verified_user, color: VaultColors.success),
               const SizedBox(width: VaultSpacing.sm),
-              Text('Certificado de propiedad',
-                  style: Theme.of(context).textTheme.titleSmall),
+              Text(
+                'Certificado de propiedad',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
             ],
           ),
           const SizedBox(height: VaultSpacing.sm),
           _certRow('Dueño', ownerName),
           _certRow('Producto', '${asset.brand} ${asset.name}'),
           _certRow('Categoría', asset.category.displayName),
-          if (previousOwners != null) _certRow('Dueños anteriores', '$previousOwners'),
+          if (previousOwners != null)
+            _certRow('Dueños anteriores', '$previousOwners'),
           const SizedBox(height: VaultSpacing.xs),
           Row(
             children: [
-              const Text('ID en Vara: ', style: TextStyle(color: VaultColors.textSecondary)),
+              Text(
+                'ID en Vara: ',
+                style: TextStyle(color: VaultColors.textSecondary),
+              ),
               Expanded(
-                child: Text(shortTxId, style: const TextStyle(fontFamily: 'monospace')),
+                child: Text(
+                  shortTxId,
+                  style: const TextStyle(fontFamily: 'monospace'),
+                ),
               ),
               TextButton.icon(
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: txId));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('ID copiado')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('ID copiado')));
                 },
                 icon: const Icon(Icons.copy, size: VaultIconSize.sm),
                 label: const Text('Copiar'),
@@ -229,8 +252,8 @@ class _CertificateSection extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: VaultColors.textSecondary)),
-          Text(value, style: const TextStyle(color: VaultColors.textPrimary)),
+          Text(label, style: TextStyle(color: VaultColors.textSecondary)),
+          Text(value, style: TextStyle(color: VaultColors.textPrimary)),
         ],
       ),
     );
@@ -299,8 +322,10 @@ class _AddMaintenanceSheetState extends State<_AddMaintenanceSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Nuevo mantenimiento',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+          const Text(
+            'Nuevo mantenimiento',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: VaultSpacing.md),
           DropdownButtonFormField<MaintenanceType>(
             initialValue: _type,
@@ -309,10 +334,9 @@ class _AddMaintenanceSheetState extends State<_AddMaintenanceSheet> {
               border: OutlineInputBorder(),
             ),
             items: MaintenanceType.values
-                .map((t) => DropdownMenuItem(
-                      value: t,
-                      child: Text(t.displayName),
-                    ))
+                .map(
+                  (t) => DropdownMenuItem(value: t, child: Text(t.displayName)),
+                )
                 .toList(),
             onChanged: (v) => setState(() => _type = v ?? _type),
           ),
@@ -343,8 +367,13 @@ class _AddMaintenanceSheetState extends State<_AddMaintenanceSheet> {
             ),
             child: _saving
                 ? const SizedBox(
-                    height: 20, width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
                 : const Text('Guardar'),
           ),
         ],

@@ -15,13 +15,12 @@ import 'features/chat/presentation/providers.dart';
 import 'features/notifications/domain/usecases.dart';
 import 'features/notifications/presentation/providers.dart';
 import 'core/push_notification_service.dart';
+import 'core/theme_preferences.dart';
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // Recupera la URL del backend si se ajustó manualmente desde
   // Configuración (celular físico en otra red, IP distinta, etc).
   await ApiConfig.loadOverride();
@@ -29,7 +28,21 @@ void main() async {
   Stripe.publishableKey = StripeConfig.publishableKey;
   await PushNotificationService().initialize();
   await Stripe.instance.applySettings();
-  runApp(const ProviderScope(child: VaultApp()));
+
+  final isDark = await ThemePreferences.loadIsDark();
+  final initialThemeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+  VaultTheme.syncBrightness(isDark ? Brightness.dark : Brightness.light);
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        themeModeControllerProvider.overrideWith(
+          (ref) => ThemeModeController(initialThemeMode),
+        ),
+      ],
+      child: const VaultApp(),
+    ),
+  );
 }
 
 class VaultApp extends ConsumerStatefulWidget {
@@ -39,7 +52,8 @@ class VaultApp extends ConsumerStatefulWidget {
   ConsumerState<VaultApp> createState() => _VaultAppState();
 }
 
-class _VaultAppState extends ConsumerState<VaultApp> with WidgetsBindingObserver {
+class _VaultAppState extends ConsumerState<VaultApp>
+    with WidgetsBindingObserver {
   StreamSubscription<String>? _tokenRefreshSubscription;
 
   @override
@@ -49,13 +63,19 @@ class _VaultAppState extends ConsumerState<VaultApp> with WidgetsBindingObserver
     // FCM puede rotar el token en cualquier momento (no solo al reinstalar)
     // -- sin escuchar esto, un token rotado deja de recibir push hasta el
     // siguiente login manual.
-    _tokenRefreshSubscription = PushNotificationService().onTokenRefresh.listen((token) {
-      if (ref.read(authControllerProvider).status == AuthStatus.authenticated) {
-        ref.read(registerFcmTokenUseCaseProvider)(
-          RegisterFcmTokenParams(token: token, platform: PushNotificationService.platform),
-        );
-      }
-    });
+    _tokenRefreshSubscription = PushNotificationService().onTokenRefresh.listen(
+      (token) {
+        if (ref.read(authControllerProvider).status ==
+            AuthStatus.authenticated) {
+          ref.read(registerFcmTokenUseCaseProvider)(
+            RegisterFcmTokenParams(
+              token: token,
+              platform: PushNotificationService.platform,
+            ),
+          );
+        }
+      },
+    );
   }
 
   @override
@@ -103,7 +123,10 @@ class _VaultAppState extends ConsumerState<VaultApp> with WidgetsBindingObserver
         PushNotificationService().getToken().then((token) {
           if (token != null) {
             ref.read(registerFcmTokenUseCaseProvider)(
-              RegisterFcmTokenParams(token: token, platform: PushNotificationService.platform),
+              RegisterFcmTokenParams(
+                token: token,
+                platform: PushNotificationService.platform,
+              ),
             );
           }
         });
@@ -114,13 +137,16 @@ class _VaultAppState extends ConsumerState<VaultApp> with WidgetsBindingObserver
     // observa para reiniciar el temporizador de inactividad de la sesión.
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onTap: () => ref.read(authControllerProvider.notifier).onUserInteraction(),
+      onTap: () =>
+          ref.read(authControllerProvider.notifier).onUserInteraction(),
       onPanDown: (_) =>
           ref.read(authControllerProvider.notifier).onUserInteraction(),
       child: MaterialApp.router(
         title: 'Vault',
         debugShowCheckedModeBanner: false,
         theme: VaultTheme.light,
+        darkTheme: VaultTheme.dark,
+        themeMode: ref.watch(themeModeControllerProvider),
         routerConfig: appRouter,
       ),
     );

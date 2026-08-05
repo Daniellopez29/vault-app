@@ -42,41 +42,46 @@ class _CheckoutAddressPageState extends ConsumerState<CheckoutAddressPage> {
         centerTitle: true,
       ),
       body: switch (state.status) {
-        AddressesStatus.loading =>
-          const Center(child: CircularProgressIndicator()),
+        AddressesStatus.loading => const Center(
+          child: CircularProgressIndicator(),
+        ),
         AddressesStatus.error => Center(
-            child: Text(
-              state.errorMessage ?? 'Error al cargar tus direcciones',
-              style: const TextStyle(color: VaultColors.textSecondary),
-            ),
+          child: Text(
+            state.errorMessage ?? 'Error al cargar tus direcciones',
+            style: TextStyle(color: VaultColors.textSecondary),
           ),
-        AddressesStatus.loaded => state.addresses.isEmpty
-            ? _EmptyPrompt(onAdd: () => context.push(AppRoutes.addresses))
-            : ListView(
-                padding: const EdgeInsets.all(VaultSpacing.md),
-                children: [
-                  Text('Elige donde recibir tu pedido', style: tt.titleMedium),
-                  const SizedBox(height: VaultSpacing.md),
-                  ...state.addresses.map(
-                    (address) => _AddressOption(
-                      label: address.label,
-                      recipient: address.recipient,
-                      summary: address.summary,
-                      selected: address.id == _selectedId,
-                      onTap: () => setState(() => _selectedId = address.id),
+        ),
+        AddressesStatus.loaded =>
+          state.addresses.isEmpty
+              ? _EmptyPrompt(onAdd: () => context.push(AppRoutes.addresses))
+              : ListView(
+                  padding: const EdgeInsets.all(VaultSpacing.md),
+                  children: [
+                    Text(
+                      'Elige donde recibir tu pedido',
+                      style: tt.titleMedium,
                     ),
-                  ),
-                  const SizedBox(height: VaultSpacing.sm),
-                  TextButton.icon(
-                    onPressed: () => context.push(AppRoutes.addresses),
-                    style: TextButton.styleFrom(
-                      foregroundColor: VaultColors.primary,
+                    const SizedBox(height: VaultSpacing.md),
+                    ...state.addresses.map(
+                      (address) => _AddressOption(
+                        label: address.label,
+                        recipient: address.recipient,
+                        summary: address.summary,
+                        selected: address.id == _selectedId,
+                        onTap: () => setState(() => _selectedId = address.id),
+                      ),
                     ),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Agregar otra direccion'),
-                  ),
-                ],
-              ),
+                    const SizedBox(height: VaultSpacing.sm),
+                    TextButton.icon(
+                      onPressed: () => context.push(AppRoutes.addresses),
+                      style: TextButton.styleFrom(
+                        foregroundColor: VaultColors.primary,
+                      ),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Agregar otra direccion'),
+                    ),
+                  ],
+                ),
       },
       bottomNavigationBar: state.addresses.isEmpty
           ? null
@@ -90,8 +95,9 @@ class _CheckoutAddressPageState extends ConsumerState<CheckoutAddressPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: VaultColors.accent,
                     foregroundColor: Colors.white,
-                    padding:
-                        const EdgeInsets.symmetric(vertical: VaultSpacing.md),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: VaultSpacing.md,
+                    ),
                   ),
                   child: const Text('Continuar al pago'),
                 ),
@@ -115,10 +121,13 @@ class _EmptyPrompt extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.location_off_outlined,
-                size: VaultIconSize.xl, color: VaultColors.textSecondary),
+            Icon(
+              Icons.location_off_outlined,
+              size: VaultIconSize.xl,
+              color: VaultColors.textSecondary,
+            ),
             const SizedBox(height: VaultSpacing.lg),
-            const Text(
+            Text(
               'Necesitamos una direccion',
               style: TextStyle(
                 fontSize: 18,
@@ -127,7 +136,7 @@ class _EmptyPrompt extends StatelessWidget {
               ),
             ),
             const SizedBox(height: VaultSpacing.sm),
-            const Text(
+            Text(
               'Registra donde quieres recibir tu pedido para continuar.',
               textAlign: TextAlign.center,
               style: TextStyle(color: VaultColors.textSecondary),
@@ -139,8 +148,9 @@ class _EmptyPrompt extends StatelessWidget {
                 onPressed: onAdd,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: VaultColors.primary,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: VaultSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: VaultSpacing.md,
+                  ),
                 ),
                 icon: const Icon(Icons.add_location_alt_outlined),
                 label: const Text('Agregar direccion'),

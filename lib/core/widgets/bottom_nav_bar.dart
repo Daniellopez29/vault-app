@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../dimens.dart';
 import '../theme.dart';
 
@@ -32,12 +32,14 @@ class VaultBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Sin esto, esta barra (persistente en el shell, nunca reconstruida por
+    // su padre) se queda con los colores del modo con el que se montó,
+    // porque solo usa VaultColors y nunca lee Theme.of.
+    Theme.of(context);
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: VaultColors.surface,
-        border: Border(
-          top: BorderSide(color: VaultColors.divider),
-        ),
+        border: Border(top: BorderSide(color: VaultColors.divider)),
       ),
       child: SafeArea(
         top: false,
@@ -104,7 +106,7 @@ class _AddButton extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: VaultColors.primary, width: 1.5),
         ),
-        child: const Icon(
+        child: Icon(
           Icons.add,
           color: VaultColors.primary,
           size: VaultIconSize.md,

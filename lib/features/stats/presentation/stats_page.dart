@@ -29,7 +29,10 @@ class StatsPage extends ConsumerWidget {
     final businessId = ref.watch(businessControllerProvider).business?.id;
     final servicesCount = businessId == null
         ? 0
-        : ref.watch(businessServicesControllerProvider(businessId)).services.length;
+        : ref
+              .watch(businessServicesControllerProvider(businessId))
+              .services
+              .length;
 
     final hasCollection = stats.totalAssets > 0;
     final hasServices =
@@ -47,7 +50,8 @@ class StatsPage extends ConsumerWidget {
             _CollectionSection(stats: stats),
             if (hasServices) const SizedBox(height: VaultSpacing.xl),
           ],
-          if (hasServices) _ServicesSection(profile: restorer!, servicesCount: servicesCount),
+          if (hasServices)
+            _ServicesSection(profile: restorer!, servicesCount: servicesCount),
           const SizedBox(height: VaultSpacing.xl),
         ],
       ),
@@ -64,10 +68,7 @@ class _StatsScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: VaultColors.background,
-      appBar: AppBar(
-        title: const Text('Estadísticas'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Estadísticas'), centerTitle: true),
       body: child,
     );
   }
@@ -78,14 +79,17 @@ class _EmptyStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(VaultSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.insights_outlined,
-                size: VaultIconSize.xl, color: VaultColors.textSecondary),
+            Icon(
+              Icons.insights_outlined,
+              size: VaultIconSize.xl,
+              color: VaultColors.textSecondary,
+            ),
             SizedBox(height: VaultSpacing.lg),
             Text(
               'Aún no hay datos',
@@ -189,7 +193,8 @@ class _CollectionSection extends StatelessWidget {
               child: _AnimatedStatCard(
                 icon: Icons.build_outlined,
                 label: 'Mantenimientos',
-                targetValue: (stats.servicesCount + stats.restorationsCount).toDouble(),
+                targetValue: (stats.servicesCount + stats.restorationsCount)
+                    .toDouble(),
                 formatValue: (v) => '${v.round()}',
               ),
             ),
@@ -462,7 +467,7 @@ class _AnimatedCategoryRowState extends State<_AnimatedCategoryRow>
                 value: widget.fraction * _barAnimation.value,
                 minHeight: 6,
                 backgroundColor: VaultColors.background,
-                valueColor: const AlwaysStoppedAnimation(VaultColors.primary),
+                valueColor: AlwaysStoppedAnimation(VaultColors.primary),
               ),
             );
           },

@@ -25,28 +25,34 @@ class SubscriptionManagementPage extends ConsumerWidget {
       appBar: AppBar(title: const Text('Mi suscripción')),
       body: SafeArea(
         child: switch (state.status) {
-          SubscriptionStatusLoad.loading =>
-            const Center(child: CircularProgressIndicator()),
+          SubscriptionStatusLoad.loading => const Center(
+            child: CircularProgressIndicator(),
+          ),
           SubscriptionStatusLoad.error => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(VaultSpacing.xl),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(state.errorMessage ?? 'Error al cargar tu suscripción'),
-                    const SizedBox(height: VaultSpacing.md),
-                    TextButton(
-                      onPressed: () =>
-                          ref.read(subscriptionStatusControllerProvider.notifier).load(),
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
+            child: Padding(
+              padding: const EdgeInsets.all(VaultSpacing.xl),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(state.errorMessage ?? 'Error al cargar tu suscripción'),
+                  const SizedBox(height: VaultSpacing.md),
+                  TextButton(
+                    onPressed: () => ref
+                        .read(subscriptionStatusControllerProvider.notifier)
+                        .load(),
+                    child: const Text('Reintentar'),
+                  ),
+                ],
               ),
             ),
-          SubscriptionStatusLoad.loaded => state.subscription == null
-              ? const _NoSubscriptionView()
-              : _ActiveSubscriptionView(subscription: state.subscription!, state: state),
+          ),
+          SubscriptionStatusLoad.loaded =>
+            state.subscription == null
+                ? const _NoSubscriptionView()
+                : _ActiveSubscriptionView(
+                    subscription: state.subscription!,
+                    state: state,
+                  ),
         },
       ),
     );
@@ -65,8 +71,11 @@ class _NoSubscriptionView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.workspace_premium_outlined,
-                size: 56, color: VaultColors.textSecondary),
+            Icon(
+              Icons.workspace_premium_outlined,
+              size: 56,
+              color: VaultColors.textSecondary,
+            ),
             const SizedBox(height: VaultSpacing.md),
             Text(
               'Todavía no tienes una suscripción activa',
@@ -98,7 +107,10 @@ class _ActiveSubscriptionView extends ConsumerWidget {
   final SubscriptionStatus subscription;
   final SubscriptionStatusState state;
 
-  const _ActiveSubscriptionView({required this.subscription, required this.state});
+  const _ActiveSubscriptionView({
+    required this.subscription,
+    required this.state,
+  });
 
   void _confirmCancel(BuildContext context, WidgetRef ref) {
     showDialog(
@@ -117,21 +129,27 @@ class _ActiveSubscriptionView extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
-              final ok =
-                  await ref.read(subscriptionStatusControllerProvider.notifier).cancel();
+              final ok = await ref
+                  .read(subscriptionStatusControllerProvider.notifier)
+                  .cancel();
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
                     ok
                         ? 'Suscripción cancelada'
-                        : ref.read(subscriptionStatusControllerProvider).errorMessage ??
-                            'No se pudo cancelar la suscripción',
+                        : ref
+                                  .read(subscriptionStatusControllerProvider)
+                                  .errorMessage ??
+                              'No se pudo cancelar la suscripción',
                   ),
                 ),
               );
             },
-            child: Text('Cancelar suscripción', style: TextStyle(color: VaultColors.error)),
+            child: Text(
+              'Cancelar suscripción',
+              style: TextStyle(color: VaultColors.error),
+            ),
           ),
         ],
       ),
@@ -144,9 +162,13 @@ class _ActiveSubscriptionView extends ConsumerWidget {
     // Los planes no dependen del tipo (ver SubscriptionPlan), 'product' solo
     // fija el copy de la pantalla de planes -- reutilizamos la misma lista
     // para cruzar el nombre del plan contratado.
-    final plans = ref.watch(plansControllerProvider(SubscriptionType.product)).plans;
+    final plans = ref
+        .watch(plansControllerProvider(SubscriptionType.product))
+        .plans;
     final plan = plans.where((p) => p.id == subscription.planId).firstOrNull;
-    final renewalDate = DateFormat('dd/MM/yyyy').format(subscription.currentPeriodEnd);
+    final renewalDate = DateFormat(
+      'dd/MM/yyyy',
+    ).format(subscription.currentPeriodEnd);
 
     return ListView(
       padding: const EdgeInsets.all(VaultSpacing.lg),
@@ -163,18 +185,29 @@ class _ActiveSubscriptionView extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.workspace_premium_outlined, color: VaultColors.accent),
+                  Icon(
+                    Icons.workspace_premium_outlined,
+                    color: VaultColors.accent,
+                  ),
                   const SizedBox(width: VaultSpacing.sm),
                   Expanded(
-                    child: Text(plan?.name ?? subscription.planId, style: tt.titleMedium),
+                    child: Text(
+                      plan?.name ?? subscription.planId,
+                      style: tt.titleMedium,
+                    ),
                   ),
-                  _StatusChip(active: subscription.isActive, status: subscription.status),
+                  _StatusChip(
+                    active: subscription.isActive,
+                    status: subscription.status,
+                  ),
                 ],
               ),
               const SizedBox(height: VaultSpacing.md),
               _row(
                 context,
-                subscription.status == 'canceled' ? 'Vigente hasta' : 'Próxima renovación',
+                subscription.status == 'canceled'
+                    ? 'Vigente hasta'
+                    : 'Próxima renovación',
                 renewalDate,
               ),
               if (plan != null) ...[
@@ -185,12 +218,18 @@ class _ActiveSubscriptionView extends ConsumerWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.check, size: VaultIconSize.sm, color: VaultColors.success),
+                        Icon(
+                          Icons.check,
+                          size: VaultIconSize.sm,
+                          color: VaultColors.success,
+                        ),
                         const SizedBox(width: VaultSpacing.sm),
                         Expanded(
                           child: Text(
                             b,
-                            style: tt.bodySmall?.copyWith(color: VaultColors.textSecondary),
+                            style: tt.bodySmall?.copyWith(
+                              color: VaultColors.textSecondary,
+                            ),
                           ),
                         ),
                       ],
@@ -204,7 +243,9 @@ class _ActiveSubscriptionView extends ConsumerWidget {
         if (subscription.isActive) ...[
           const SizedBox(height: VaultSpacing.xl),
           OutlinedButton(
-            onPressed: state.canceling ? null : () => _confirmCancel(context, ref),
+            onPressed: state.canceling
+                ? null
+                : () => _confirmCancel(context, ref),
             style: OutlinedButton.styleFrom(
               foregroundColor: VaultColors.error,
               side: BorderSide(color: VaultColors.error),
@@ -228,8 +269,8 @@ class _ActiveSubscriptionView extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: VaultColors.textSecondary)),
-          Text(value, style: const TextStyle(color: VaultColors.textPrimary)),
+          Text(label, style: TextStyle(color: VaultColors.textSecondary)),
+          Text(value, style: TextStyle(color: VaultColors.textPrimary)),
         ],
       ),
     );
@@ -245,14 +286,21 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.sm, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: VaultSpacing.sm,
+        vertical: 2,
+      ),
       decoration: BoxDecoration(
         color: active ? VaultColors.success : VaultColors.textSecondary,
         borderRadius: BorderRadius.circular(VaultRadius.sm),
       ),
       child: Text(
         active ? 'Activa' : status,
-        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

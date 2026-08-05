@@ -30,8 +30,9 @@ class AddressesPage extends ConsumerWidget {
                 onPressed: () => _openSheet(context, ref),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: VaultColors.primary,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: VaultSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: VaultSpacing.md,
+                  ),
                 ),
                 icon: const Icon(Icons.add_location_alt_outlined),
                 label: const Text('Nueva dirección'),
@@ -40,32 +41,34 @@ class AddressesPage extends ConsumerWidget {
           ),
           Expanded(
             child: switch (state.status) {
-              AddressesStatus.loading =>
-                const Center(child: CircularProgressIndicator()),
+              AddressesStatus.loading => const Center(
+                child: CircularProgressIndicator(),
+              ),
               AddressesStatus.error => Center(
-                  child: Text(
-                    state.errorMessage ?? 'Error al cargar tus direcciones',
-                    style: const TextStyle(color: VaultColors.textSecondary),
-                  ),
+                child: Text(
+                  state.errorMessage ?? 'Error al cargar tus direcciones',
+                  style: TextStyle(color: VaultColors.textSecondary),
                 ),
-              AddressesStatus.loaded => state.addresses.isEmpty
-                  ? const _EmptyAddresses()
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(VaultSpacing.md),
-                      itemCount: state.addresses.length,
-                      itemBuilder: (context, index) {
-                        final address = state.addresses[index];
-                        return _AddressCard(
-                          address: address,
-                          onSetDefault: () => ref
-                              .read(addressesControllerProvider.notifier)
-                              .setDefault(address.id),
-                          onDelete: () => ref
-                              .read(addressesControllerProvider.notifier)
-                              .remove(address.id),
-                        );
-                      },
-                    ),
+              ),
+              AddressesStatus.loaded =>
+                state.addresses.isEmpty
+                    ? const _EmptyAddresses()
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(VaultSpacing.md),
+                        itemCount: state.addresses.length,
+                        itemBuilder: (context, index) {
+                          final address = state.addresses[index];
+                          return _AddressCard(
+                            address: address,
+                            onSetDefault: () => ref
+                                .read(addressesControllerProvider.notifier)
+                                .setDefault(address.id),
+                            onDelete: () => ref
+                                .read(addressesControllerProvider.notifier)
+                                .remove(address.id),
+                          );
+                        },
+                      ),
             },
           ),
         ],
@@ -79,8 +82,9 @@ class AddressesPage extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: VaultColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(VaultRadius.card)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(VaultRadius.card),
+        ),
       ),
       builder: (_) => _AddressSheet(ref: ref),
     );
@@ -92,14 +96,17 @@ class _EmptyAddresses extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(VaultSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.location_off_outlined,
-                size: VaultIconSize.xl, color: VaultColors.textSecondary),
+            Icon(
+              Icons.location_off_outlined,
+              size: VaultIconSize.xl,
+              color: VaultColors.textSecondary,
+            ),
             SizedBox(height: VaultSpacing.lg),
             Text(
               'Sin direcciones guardadas',
@@ -171,7 +178,7 @@ class _AddressCard extends StatelessWidget {
                 ),
               IconButton(
                 onPressed: onDelete,
-                icon: const Icon(
+                icon: Icon(
                   Icons.delete_outline,
                   color: VaultColors.textSecondary,
                   size: VaultIconSize.md,
@@ -286,18 +293,22 @@ class _AddressSheetState extends State<_AddressSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Nueva dirección',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            const Text(
+              'Nueva dirección',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: VaultSpacing.md),
             _field(_labelController, 'Etiqueta', hint: 'Casa, Oficina'),
             _field(_recipientController, 'Quién recibe'),
-            _field(_phoneController, 'Teléfono',
-                keyboard: TextInputType.phone),
+            _field(_phoneController, 'Teléfono', keyboard: TextInputType.phone),
             _field(_streetController, 'Calle y número'),
             _field(_cityController, 'Ciudad'),
             _field(_stateController, 'Estado'),
-            _field(_postalController, 'Código postal',
-                keyboard: TextInputType.number),
+            _field(
+              _postalController,
+              'Código postal',
+              keyboard: TextInputType.number,
+            ),
             _field(_referencesController, 'Referencias (opcional)'),
             const SizedBox(height: VaultSpacing.md),
             ElevatedButton(
@@ -311,7 +322,10 @@ class _AddressSheetState extends State<_AddressSheet> {
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white))
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
                   : const Text('Guardar'),
             ),
           ],

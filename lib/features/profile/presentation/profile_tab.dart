@@ -8,7 +8,8 @@ import '../../../core/theme.dart';
 import '../../auth/presentation/providers.dart';
 import '../../favorites/presentation/favorites_tab.dart';
 import '../../home/presentation/feed_tab.dart';
-import '../../home/presentation/providers.dart' show feedControllerProvider, FeedStatus;
+import '../../home/presentation/providers.dart'
+    show feedControllerProvider, FeedStatus;
 import 'profile_actions.dart';
 import 'providers.dart';
 import 'asset_widgets.dart';
@@ -137,13 +138,13 @@ class _MyPostsTab extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.dynamic_feed_outlined,
-                  size: VaultIconSize.xl, color: VaultColors.textSecondary),
-              const SizedBox(height: VaultSpacing.lg),
-              Text(
-                'Sin publicaciones',
-                style: tt.titleLarge,
+              Icon(
+                Icons.dynamic_feed_outlined,
+                size: VaultIconSize.xl,
+                color: VaultColors.textSecondary,
               ),
+              const SizedBox(height: VaultSpacing.lg),
+              Text('Sin publicaciones', style: tt.titleLarge),
               const SizedBox(height: VaultSpacing.sm),
               Text(
                 'Tus publicaciones del feed apareceran aqui.',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/providers.dart';
 import '../../../core/router.dart';
 import '../../../core/theme.dart';
 import '../../auth/presentation/providers.dart';
@@ -38,21 +39,21 @@ class SettingsPage extends ConsumerWidget {
               ),
             ],
           ),
-            _SettingsSection(
-              title: 'Compras',
-              children: [
-                _SettingsTile(
-                  icon: Icons.receipt_long_outlined,
-                  label: 'Mis pedidos',
-                  onTap: () => context.push(AppRoutes.myOrders),
-                ),
-                _SettingsTile(
-                  icon: Icons.location_on_outlined,
-                  label: 'Direcciones de envío',
-                  onTap: () => context.push(AppRoutes.addresses),
-                ),
-              ],
-            ),
+          _SettingsSection(
+            title: 'Compras',
+            children: [
+              _SettingsTile(
+                icon: Icons.receipt_long_outlined,
+                label: 'Mis pedidos',
+                onTap: () => context.push(AppRoutes.myOrders),
+              ),
+              _SettingsTile(
+                icon: Icons.location_on_outlined,
+                label: 'Direcciones de envío',
+                onTap: () => context.push(AppRoutes.addresses),
+              ),
+            ],
+          ),
           _SettingsSection(
             title: 'Negocio',
             children: [
@@ -105,13 +106,33 @@ class SettingsPage extends ConsumerWidget {
               ),
             ],
           ),
+          _SettingsSection(
+            title: 'Apariencia',
+            children: [
+              _SettingsTile(
+                icon: Icons.dark_mode_outlined,
+                label: 'Modo oscuro',
+                trailing: Switch(
+                  value:
+                      ref.watch(themeModeControllerProvider) == ThemeMode.dark,
+                  onChanged: (_) =>
+                      ref.read(themeModeControllerProvider.notifier).toggle(),
+                ),
+                onTap: () =>
+                    ref.read(themeModeControllerProvider.notifier).toggle(),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
   void _showEditNameDialog(
-      BuildContext context, WidgetRef ref, String? currentName) {
+    BuildContext context,
+    WidgetRef ref,
+    String? currentName,
+  ) {
     final controller = TextEditingController(text: currentName ?? '');
     showDialog(
       context: context,
@@ -139,7 +160,8 @@ class SettingsPage extends ConsumerWidget {
               if (success && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                      content: Text('Nombre actualizado correctamente')),
+                    content: Text('Nombre actualizado correctamente'),
+                  ),
                 );
               }
             },
@@ -169,8 +191,9 @@ class SettingsPage extends ConsumerWidget {
             const SizedBox(height: 12),
             TextField(
               controller: confirmPasswordController,
-              decoration:
-              const InputDecoration(labelText: 'Confirmar contraseña'),
+              decoration: const InputDecoration(
+                labelText: 'Confirmar contraseña',
+              ),
               obscureText: true,
             ),
           ],
@@ -189,8 +212,7 @@ class SettingsPage extends ConsumerWidget {
 
               if (newPassword != confirmPassword) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Las contraseñas no coinciden')),
+                  const SnackBar(content: Text('Las contraseñas no coinciden')),
                 );
                 return;
               }
@@ -198,8 +220,10 @@ class SettingsPage extends ConsumerWidget {
               if (newPassword.length < 6) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                      content: Text(
-                          'La contraseña debe tener al menos 6 caracteres')),
+                    content: Text(
+                      'La contraseña debe tener al menos 6 caracteres',
+                    ),
+                  ),
                 );
                 return;
               }
@@ -212,14 +236,15 @@ class SettingsPage extends ConsumerWidget {
               if (success && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                      content: Text('Contraseña actualizada correctamente')),
+                    content: Text('Contraseña actualizada correctamente'),
+                  ),
                 );
               } else if (!success && context.mounted) {
                 final error =
                     ref.read(authControllerProvider).errorMessage ?? 'Error';
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(error)),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(error)));
               }
             },
             child: const Text('Guardar'),
@@ -246,8 +271,10 @@ class SettingsPage extends ConsumerWidget {
               ref.read(authControllerProvider.notifier).logout();
               context.go(AppRoutes.login);
             },
-            child: Text('Cerrar sesión',
-                style: TextStyle(color: VaultColors.error)),
+            child: Text(
+              'Cerrar sesión',
+              style: TextStyle(color: VaultColors.error),
+            ),
           ),
         ],
       ),
@@ -260,7 +287,8 @@ class SettingsPage extends ConsumerWidget {
       builder: (_) => AlertDialog(
         title: const Text('Eliminar cuenta'),
         content: const Text(
-            '¿Estás seguro? Esta acción es permanente y no se puede deshacer.'),
+          '¿Estás seguro? Esta acción es permanente y no se puede deshacer.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -276,8 +304,7 @@ class SettingsPage extends ConsumerWidget {
                 context.go(AppRoutes.login);
               }
             },
-            child:
-            Text('Eliminar', style: TextStyle(color: VaultColors.error)),
+            child: Text('Eliminar', style: TextStyle(color: VaultColors.error)),
           ),
         ],
       ),
@@ -356,11 +383,13 @@ class _SettingsTile extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 160),
               child: trailing,
             )
-          :
-          (onTap != null
-              ? Icon(Icons.chevron_right,
-              color: VaultColors.textSecondary, size: 20)
-              : null),
+          : (onTap != null
+                ? Icon(
+                    Icons.chevron_right,
+                    color: VaultColors.textSecondary,
+                    size: 20,
+                  )
+                : null),
       onTap: onTap,
     );
   }

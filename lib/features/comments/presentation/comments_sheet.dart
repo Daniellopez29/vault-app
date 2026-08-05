@@ -22,7 +22,9 @@ Future<void> showCommentsSheet(
     isScrollControlled: true,
     backgroundColor: VaultColors.surface,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(VaultRadius.card)),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(VaultRadius.card),
+      ),
     ),
     builder: (_) => CommentsSheet(target: target, sellerId: sellerId),
   );
@@ -70,7 +72,9 @@ class _CommentsSheetState extends ConsumerState<CommentsSheet> {
         .read(hasPurchasedUseCaseProvider)
         .call(buyerId: myId, sellerId: sellerId);
     if (!mounted) return;
-    setState(() => _canComment = result.fold((_) => false, (purchased) => purchased));
+    setState(
+      () => _canComment = result.fold((_) => false, (purchased) => purchased),
+    );
   }
 
   void _setReply(CommentEntity comment) {
@@ -105,11 +109,13 @@ class _CommentsSheetState extends ConsumerState<CommentsSheet> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: VaultSpacing.md),
               child: Text(
-                state.count == 0 ? 'Comentarios' : 'Comentarios (${state.count})',
+                state.count == 0
+                    ? 'Comentarios'
+                    : 'Comentarios (${state.count})',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
-            const Divider(height: 1, color: VaultColors.divider),
+            Divider(height: 1, color: VaultColors.divider),
             Expanded(
               child: _CommentsBody(
                 target: widget.target,
@@ -165,7 +171,7 @@ class _CannotCommentBanner extends StatelessWidget {
         horizontal: VaultSpacing.lg,
         vertical: VaultSpacing.md,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: VaultColors.surface,
         border: Border(top: BorderSide(color: VaultColors.divider)),
       ),
@@ -173,15 +179,18 @@ class _CannotCommentBanner extends StatelessWidget {
         top: false,
         child: Row(
           children: [
-            const Icon(Icons.lock_outline, size: VaultIconSize.sm, color: VaultColors.textSecondary),
+            Icon(
+              Icons.lock_outline,
+              size: VaultIconSize.sm,
+              color: VaultColors.textSecondary,
+            ),
             const SizedBox(width: VaultSpacing.sm),
             Expanded(
               child: Text(
                 'Solo quienes le compraron algo a este vendedor pueden comentar aquí.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: VaultColors.textSecondary),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: VaultColors.textSecondary,
+                ),
               ),
             ),
           ],
@@ -210,12 +219,12 @@ class _ReplyBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.reply, size: VaultIconSize.sm, color: VaultColors.primary),
+          Icon(Icons.reply, size: VaultIconSize.sm, color: VaultColors.primary),
           const SizedBox(width: VaultSpacing.sm),
           Expanded(
             child: Text(
               'Respondiendo a $authorName',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 color: VaultColors.primary,
                 fontWeight: FontWeight.w500,
@@ -224,7 +233,11 @@ class _ReplyBanner extends StatelessWidget {
           ),
           GestureDetector(
             onTap: onCancel,
-            child: const Icon(Icons.close, size: VaultIconSize.sm, color: VaultColors.textSecondary),
+            child: Icon(
+              Icons.close,
+              size: VaultIconSize.sm,
+              color: VaultColors.textSecondary,
+            ),
           ),
         ],
       ),
@@ -281,7 +294,7 @@ class _CommentsBody extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.lg),
           itemCount: state.comments.length,
           separatorBuilder: (_, __) =>
-              const Divider(height: 1, color: VaultColors.divider),
+              Divider(height: 1, color: VaultColors.divider),
           itemBuilder: (context, index) {
             final comment = state.comments[index];
             return CommentTile(

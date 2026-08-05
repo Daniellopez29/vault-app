@@ -23,7 +23,8 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     if (_markedAllRead || state.status != NotificationsStatus.loaded) return;
     _markedAllRead = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) ref.read(notificationsControllerProvider.notifier).markAllAsRead();
+      if (mounted)
+        ref.read(notificationsControllerProvider.notifier).markAllAsRead();
     });
   }
 
@@ -64,7 +65,8 @@ class _Body extends ConsumerWidget {
               Text(state.errorMessage ?? 'Error al cargar las notificaciones'),
               const SizedBox(height: VaultSpacing.md),
               TextButton(
-                onPressed: () => ref.read(notificationsControllerProvider.notifier).load(),
+                onPressed: () =>
+                    ref.read(notificationsControllerProvider.notifier).load(),
                 child: const Text('Reintentar'),
               ),
             ],
@@ -79,7 +81,8 @@ class _Body extends ConsumerWidget {
           );
         }
         return RefreshIndicator(
-          onRefresh: () => ref.read(notificationsControllerProvider.notifier).load(),
+          onRefresh: () =>
+              ref.read(notificationsControllerProvider.notifier).load(),
           child: ListView.builder(
             padding: const EdgeInsets.all(VaultSpacing.md),
             itemCount: state.notifications.length,
@@ -90,7 +93,9 @@ class _Body extends ConsumerWidget {
                 direction: DismissDirection.endToStart,
                 background: Container(
                   alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: VaultSpacing.md,
+                  ),
                   margin: const EdgeInsets.only(bottom: VaultSpacing.sm),
                   decoration: BoxDecoration(
                     color: Colors.red.shade400,
@@ -98,14 +103,16 @@ class _Body extends ConsumerWidget {
                   ),
                   child: const Icon(Icons.delete_outline, color: Colors.white),
                 ),
-                onDismissed: (_) =>
-                    ref.read(notificationsControllerProvider.notifier).delete(n.id),
+                onDismissed: (_) => ref
+                    .read(notificationsControllerProvider.notifier)
+                    .delete(n.id),
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: VaultSpacing.sm),
                   child: _NotificationTile(
                     notification: n,
-                    onTap: () =>
-                        ref.read(notificationsControllerProvider.notifier).markAsRead(n.id),
+                    onTap: () => ref
+                        .read(notificationsControllerProvider.notifier)
+                        .markAsRead(n.id),
                   ),
                 ),
               );
@@ -152,7 +159,9 @@ class _NotificationTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(VaultSpacing.md),
         decoration: BoxDecoration(
-          color: notification.read ? VaultColors.surface : VaultColors.primary.withValues(alpha: 0.06),
+          color: notification.read
+              ? VaultColors.surface
+              : VaultColors.primary.withValues(alpha: 0.06),
           borderRadius: VaultRadius.cardBorder,
           border: Border.all(color: VaultColors.divider),
         ),
@@ -168,17 +177,25 @@ class _NotificationTile extends StatelessWidget {
                   Text(
                     notification.title,
                     style: tt.titleSmall?.copyWith(
-                      fontWeight: notification.read ? FontWeight.normal : FontWeight.w700,
+                      fontWeight: notification.read
+                          ? FontWeight.normal
+                          : FontWeight.w700,
                     ),
                   ),
                   if (notification.body.isNotEmpty) ...[
                     const SizedBox(height: VaultSpacing.xs),
-                    Text(notification.body, style: const TextStyle(color: VaultColors.textSecondary)),
+                    Text(
+                      notification.body,
+                      style: TextStyle(color: VaultColors.textSecondary),
+                    ),
                   ],
                   const SizedBox(height: VaultSpacing.xs),
                   Text(
                     timeAgoFrom(notification.createdAt),
-                    style: const TextStyle(color: VaultColors.textSecondary, fontSize: 12),
+                    style: TextStyle(
+                      color: VaultColors.textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -188,7 +205,10 @@ class _NotificationTile extends StatelessWidget {
                 width: 8,
                 height: 8,
                 margin: const EdgeInsets.only(top: 4),
-                decoration: const BoxDecoration(color: VaultColors.primary, shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: VaultColors.primary,
+                  shape: BoxShape.circle,
+                ),
               ),
           ],
         ),
@@ -216,11 +236,15 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: VaultIconSize.xl, color: VaultColors.textSecondary),
+            Icon(
+              icon,
+              size: VaultIconSize.xl,
+              color: VaultColors.textSecondary,
+            ),
             const SizedBox(height: VaultSpacing.lg),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: VaultColors.textPrimary,
@@ -230,7 +254,7 @@ class _EmptyState extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: VaultColors.textSecondary),
+              style: TextStyle(color: VaultColors.textSecondary),
             ),
           ],
         ),

@@ -15,9 +15,12 @@ import 'widgets.dart';
 
 IconData _iconFor(PaymentType type) {
   switch (type) {
-    case PaymentType.card:     return Icons.credit_card;
-    case PaymentType.transfer: return Icons.account_balance;
-    case PaymentType.cash:     return Icons.payments_outlined;
+    case PaymentType.card:
+      return Icons.credit_card;
+    case PaymentType.transfer:
+      return Icons.account_balance;
+    case PaymentType.cash:
+      return Icons.payments_outlined;
   }
 }
 
@@ -41,16 +44,14 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
     final methodsAsync = ref.watch(paymentMethodsProvider);
     final isCardSelected = _selectedType == PaymentType.card;
 
-    final canPay = _selectedType != null &&
+    final canPay =
+        _selectedType != null &&
         !_paying &&
         !(isCardSelected && !_cardComplete);
 
     return Scaffold(
       backgroundColor: VaultColors.background,
-      appBar: AppBar(
-        title: const Text('Método de pago'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Método de pago'), centerTitle: true),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(VaultSpacing.lg),
@@ -58,10 +59,16 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: VaultSpacing.sm),
-              SummaryRow(label: 'Subtotal', value: '\$${summary.subtotal.toStringAsFixed(0)}'),
+              SummaryRow(
+                label: 'Subtotal',
+                value: '\$${summary.subtotal.toStringAsFixed(0)}',
+              ),
               if (summary.discount > 0)
-                SummaryRow(label: 'Descuento', value: '-\$${summary.discount.toStringAsFixed(0)}'),
-              const Divider(color: VaultColors.divider),
+                SummaryRow(
+                  label: 'Descuento',
+                  value: '-\$${summary.discount.toStringAsFixed(0)}',
+                ),
+              Divider(color: VaultColors.divider),
               SummaryRow(
                 label: 'Total',
                 value: '\$${summary.total.toStringAsFixed(0)}',
@@ -100,7 +107,8 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                           if (isCardSelected)
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: VaultSpacing.md),
+                                horizontal: VaultSpacing.md,
+                              ),
                               decoration: BoxDecoration(
                                 color: VaultColors.surface,
                                 borderRadius: VaultRadius.cardBorder,
@@ -109,8 +117,10 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
                               child: stripe.CardField(
                                 enablePostalCode: true,
                                 onCardChanged: (details) {
-                                  setState(() =>
-                                      _cardComplete = details?.complete ?? false);
+                                  setState(
+                                    () => _cardComplete =
+                                        details?.complete ?? false,
+                                  );
                                 },
                               ),
                             ),
@@ -159,7 +169,10 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
     if (email == null || email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('No se pudo identificar tu cuenta para procesar el pago')),
+          content: Text(
+            'No se pudo identificar tu cuenta para procesar el pago',
+          ),
+        ),
       );
       return;
     }
@@ -195,13 +208,15 @@ class _PaymentMethodPageState extends ConsumerState<PaymentMethodPage> {
 
     for (final item in items) {
       final amountCents = (item.lineTotal * 100).round();
-      final result = await createOrder(CreateOrderParams(
-        sellerId: item.sellerId,
-        assetId: item.id,
-        amountCents: amountCents,
-        buyerEmail: email,
-        paymentMethodId: paymentMethod.id,
-      ));
+      final result = await createOrder(
+        CreateOrderParams(
+          sellerId: item.sellerId,
+          assetId: item.id,
+          amountCents: amountCents,
+          buyerEmail: email,
+          paymentMethodId: paymentMethod.id,
+        ),
+      );
       result.fold(
         (failure) => failures.add('${item.title}: ${failure.message}'),
         (_) => succeededIds.add(item.id),

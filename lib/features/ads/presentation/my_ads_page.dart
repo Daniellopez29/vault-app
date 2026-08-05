@@ -18,7 +18,9 @@ class MyAdsPage extends ConsumerWidget {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Eliminar anuncio'),
-        content: Text('¿Eliminar "${ad.title}"? Esta acción no se puede deshacer.'),
+        content: Text(
+          '¿Eliminar "${ad.title}"? Esta acción no se puede deshacer.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -27,7 +29,9 @@ class MyAdsPage extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
-              final ok = await ref.read(myAdsControllerProvider.notifier).delete(ad.id);
+              final ok = await ref
+                  .read(myAdsControllerProvider.notifier)
+                  .delete(ad.id);
               if (!context.mounted) return;
               if (!ok) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -80,7 +84,9 @@ class MyAdsPage extends ConsumerWidget {
               final title = titleController.text.trim();
               if (title.isEmpty) return;
               Navigator.of(context).pop();
-              final ok = await ref.read(myAdsControllerProvider.notifier).update(
+              final ok = await ref
+                  .read(myAdsControllerProvider.notifier)
+                  .update(
                     UpdateAdParams(
                       id: ad.id,
                       title: title,
@@ -118,58 +124,64 @@ class MyAdsPage extends ConsumerWidget {
       body: switch (state.status) {
         MyAdsStatus.loading => const Center(child: CircularProgressIndicator()),
         MyAdsStatus.error => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(VaultSpacing.xl),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(state.errorMessage ?? 'Error al cargar tus anuncios'),
-                  const SizedBox(height: VaultSpacing.md),
-                  TextButton(
-                    onPressed: () => ref.read(myAdsControllerProvider.notifier).load(),
-                    child: const Text('Reintentar'),
-                  ),
-                ],
-              ),
+          child: Padding(
+            padding: const EdgeInsets.all(VaultSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(state.errorMessage ?? 'Error al cargar tus anuncios'),
+                const SizedBox(height: VaultSpacing.md),
+                TextButton(
+                  onPressed: () =>
+                      ref.read(myAdsControllerProvider.notifier).load(),
+                  child: const Text('Reintentar'),
+                ),
+              ],
             ),
           ),
-        MyAdsStatus.loaded => state.ads.isEmpty
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(VaultSpacing.xl),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.campaign_outlined,
-                          size: 56, color: VaultColors.textSecondary),
-                      const SizedBox(height: VaultSpacing.md),
-                      const Text(
-                        'Todavía no tienes anuncios',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: VaultSpacing.xs),
-                      Text(
-                        'Anuncia un producto en venta o tu negocio desde su sección.',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: VaultColors.textSecondary),
-                      ),
-                    ],
+        ),
+        MyAdsStatus.loaded =>
+          state.ads.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(VaultSpacing.xl),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.campaign_outlined,
+                          size: 56,
+                          color: VaultColors.textSecondary,
+                        ),
+                        const SizedBox(height: VaultSpacing.md),
+                        const Text(
+                          'Todavía no tienes anuncios',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: VaultSpacing.xs),
+                        Text(
+                          'Anuncia un producto en venta o tu negocio desde su sección.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: VaultColors.textSecondary),
+                        ),
+                      ],
+                    ),
                   ),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(VaultSpacing.md),
+                  itemCount: state.ads.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: VaultSpacing.sm),
+                  itemBuilder: (context, index) {
+                    final ad = state.ads[index];
+                    return _AdTile(
+                      ad: ad,
+                      onEdit: () => _showEditDialog(context, ref, ad),
+                      onDelete: () => _confirmDelete(context, ref, ad),
+                    );
+                  },
                 ),
-              )
-            : ListView.separated(
-                padding: const EdgeInsets.all(VaultSpacing.md),
-                itemCount: state.ads.length,
-                separatorBuilder: (_, _) => const SizedBox(height: VaultSpacing.sm),
-                itemBuilder: (context, index) {
-                  final ad = state.ads[index];
-                  return _AdTile(
-                    ad: ad,
-                    onEdit: () => _showEditDialog(context, ref, ad),
-                    onDelete: () => _confirmDelete(context, ref, ad),
-                  );
-                },
-              ),
       },
     );
   }
@@ -180,7 +192,11 @@ class _AdTile extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const _AdTile({required this.ad, required this.onEdit, required this.onDelete});
+  const _AdTile({
+    required this.ad,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -200,35 +216,60 @@ class _AdTile extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(ad.title, style: tt.titleSmall, maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
+                child: Text(
+                  ad.title,
+                  style: tt.titleSmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.sm, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: VaultSpacing.sm,
+                  vertical: 2,
+                ),
                 decoration: BoxDecoration(
-                  color: active ? VaultColors.success : VaultColors.textSecondary,
+                  color: active
+                      ? VaultColors.success
+                      : VaultColors.textSecondary,
                   borderRadius: BorderRadius.circular(VaultRadius.sm),
                 ),
                 child: Text(
                   active ? 'Activo' : 'Inactivo',
-                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
           ),
           if (ad.description.isNotEmpty) ...[
             const SizedBox(height: VaultSpacing.xs),
-            Text(ad.description, style: tt.bodySmall?.copyWith(color: VaultColors.textSecondary),
-                maxLines: 2, overflow: TextOverflow.ellipsis),
+            Text(
+              ad.description,
+              style: tt.bodySmall?.copyWith(color: VaultColors.textSecondary),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
           const SizedBox(height: VaultSpacing.sm),
           Row(
             children: [
-              Icon(Icons.visibility_outlined, size: VaultIconSize.sm, color: VaultColors.textSecondary),
+              Icon(
+                Icons.visibility_outlined,
+                size: VaultIconSize.sm,
+                color: VaultColors.textSecondary,
+              ),
               const SizedBox(width: VaultSpacing.xs),
               Text('${ad.impressions}', style: tt.labelSmall),
               const SizedBox(width: VaultSpacing.md),
-              Icon(Icons.touch_app_outlined, size: VaultIconSize.sm, color: VaultColors.textSecondary),
+              Icon(
+                Icons.touch_app_outlined,
+                size: VaultIconSize.sm,
+                color: VaultColors.textSecondary,
+              ),
               const SizedBox(width: VaultSpacing.xs),
               Text('${ad.clicks}', style: tt.labelSmall),
               const Spacer(),
@@ -239,7 +280,10 @@ class _AdTile extends StatelessWidget {
               ),
               IconButton(
                 onPressed: onDelete,
-                icon: Icon(Icons.delete_outline, color: VaultColors.textSecondary),
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: VaultColors.textSecondary,
+                ),
                 visualDensity: VisualDensity.compact,
               ),
             ],

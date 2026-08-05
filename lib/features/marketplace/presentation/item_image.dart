@@ -13,13 +13,14 @@ class ItemImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     final isPlaceholder = imageUrl.isEmpty || imageUrl.startsWith('assets/');
 
     if (isPlaceholder) {
       return Container(
         color: VaultColors.background,
         alignment: Alignment.center,
-        child: const Icon(
+        child: Icon(
           Icons.image_outlined,
           size: VaultIconSize.xl,
           color: VaultColors.textSecondary,
@@ -33,7 +34,7 @@ class ItemImage extends StatelessWidget {
       errorBuilder: (context, error, stackTrace) => Container(
         color: VaultColors.background,
         alignment: Alignment.center,
-        child: const Icon(
+        child: Icon(
           Icons.broken_image_outlined,
           size: VaultIconSize.xl,
           color: VaultColors.textSecondary,

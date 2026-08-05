@@ -29,10 +29,12 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    ref.read(authControllerProvider.notifier).login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
+    ref
+        .read(authControllerProvider.notifier)
+        .login(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
   }
 
   InputDecoration _fieldDecoration({
@@ -42,7 +44,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   }) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(
+      labelStyle: TextStyle(
         color: VaultColors.primary,
         fontWeight: FontWeight.w500,
       ),
@@ -62,21 +64,22 @@ class _LoginFormState extends ConsumerState<LoginForm> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: VaultColors.primary, width: 2),
+        borderSide: BorderSide(color: VaultColors.primary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: VaultColors.error),
+        borderSide: BorderSide(color: VaultColors.error),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: VaultColors.error, width: 2),
+        borderSide: BorderSide(color: VaultColors.error, width: 2),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     final state = ref.watch(authControllerProvider);
     final isLoading = state.status == AuthStatus.loading;
 
@@ -100,9 +103,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
               prefixIcon: Icons.email_outlined,
             ),
             keyboardType: TextInputType.emailAddress,
-            style: const TextStyle(color: VaultColors.primary),
+            style: TextStyle(color: VaultColors.primary),
             validator: (v) =>
-            v == null || !isValidEmail(v) ? 'Correo inválido' : null,
+                v == null || !isValidEmail(v) ? 'Correo inválido' : null,
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -119,9 +122,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                 onPressed: () => setState(() => _obscure = !_obscure),
               ),
             ),
-            style: const TextStyle(color: VaultColors.primary),
+            style: TextStyle(color: VaultColors.primary),
             validator: (v) =>
-            v == null || v.length < 6 ? 'Mínimo 6 caracteres' : null,
+                v == null || v.length < 6 ? 'Mínimo 6 caracteres' : null,
           ),
           if (state.status == AuthStatus.error) ...[
             const SizedBox(height: 12),
@@ -133,7 +136,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
               ),
               child: Text(
                 state.errorMessage ?? '',
-                style: const TextStyle(
+                style: TextStyle(
                   color: VaultColors.error,
                   fontWeight: FontWeight.w500,
                 ),
@@ -146,20 +149,21 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             onPressed: isLoading ? null : _submit,
             child: isLoading
                 ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            )
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
                 : const Text('Iniciar sesión'),
           ),
           const SizedBox(height: 8),
           TextButton(
-            onPressed:
-            isLoading ? null : () => context.push(AppRoutes.roleSelection),
-            child: const Text(
+            onPressed: isLoading
+                ? null
+                : () => context.push(AppRoutes.roleSelection),
+            child: Text(
               '¿No tienes cuenta? Regístrate',
               style: TextStyle(
                 color: VaultColors.primary,
@@ -167,38 +171,41 @@ class _LoginFormState extends ConsumerState<LoginForm> {
               ),
             ),
           ),
-          Row(children: [
-            const Expanded(child: Divider(color: VaultColors.primary)),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                'o',
-                style: TextStyle(
-                  color: VaultColors.primary.withValues(alpha: 0.7),
-                  fontWeight: FontWeight.w500,
+          Row(
+            children: [
+              Expanded(child: Divider(color: VaultColors.primary)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  'o',
+                  style: TextStyle(
+                    color: VaultColors.primary.withValues(alpha: 0.7),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-            ),
-            const Expanded(child: Divider(color: VaultColors.primary)),
-          ]),
+              Expanded(child: Divider(color: VaultColors.primary)),
+            ],
+          ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: isLoading
                 ? null
-                : () =>
-                ref.read(authControllerProvider.notifier).loginWithGoogle(),
-            icon: const FaIcon(
+                : () => ref
+                      .read(authControllerProvider.notifier)
+                      .loginWithGoogle(),
+            icon: FaIcon(
               FontAwesomeIcons.google,
               size: 18,
               color: VaultColors.primary,
             ),
-            label: const Text(
+            label: Text(
               'Continuar con Google',
               style: TextStyle(color: VaultColors.primary),
             ),
             style: OutlinedButton.styleFrom(
               backgroundColor: VaultColors.surface.withValues(alpha: 0.85),
-              side: const BorderSide(color: VaultColors.primary),
+              side: BorderSide(color: VaultColors.primary),
             ),
           ),
         ],

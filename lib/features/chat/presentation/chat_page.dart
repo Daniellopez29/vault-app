@@ -36,7 +36,9 @@ class ChatPage extends ConsumerWidget {
     // Si la otra persona tiene un negocio registrado, se ofrece el botón
     // de "enviar a servicio/reparación" -- no tiene sentido para un chat
     // entre dos compradores comunes.
-    final recipientBusiness = ref.watch(allBusinessesProvider).maybeWhen(
+    final recipientBusiness = ref
+        .watch(allBusinessesProvider)
+        .maybeWhen(
           data: (businesses) =>
               businesses.where((b) => b.userId == args.recipientId).firstOrNull,
           orElse: () => null,
@@ -83,7 +85,11 @@ class _MessagesBody extends ConsumerWidget {
     required this.otherUserId,
   });
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, String messageId) async {
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    String messageId,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -104,7 +110,9 @@ class _MessagesBody extends ConsumerWidget {
       ),
     );
     if (confirmed == true) {
-      await ref.read(conversationControllerProvider(otherUserId).notifier).deleteMessage(messageId);
+      await ref
+          .read(conversationControllerProvider(otherUserId).notifier)
+          .deleteMessage(messageId);
     }
   }
 
@@ -121,13 +129,13 @@ class _MessagesBody extends ConsumerWidget {
             child: Text(
               state.errorMessage ?? 'Error al cargar la conversación',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: VaultColors.textSecondary),
+              style: TextStyle(color: VaultColors.textSecondary),
             ),
           ),
         );
       case ConversationStatus.loaded:
         if (state.messages.isEmpty) {
-          return const Center(
+          return Center(
             child: Padding(
               padding: EdgeInsets.all(VaultSpacing.xl),
               child: Text(
@@ -172,8 +180,11 @@ class _MessageBubble extends StatelessWidget {
 
     // Un mensaje propio de una sesión anterior no se puede volver a
     // descifrar (ver MessageEntity) -- se avisa en vez de mostrar vacío.
-    final text = message.plainText ??
-        (isMine ? 'Mensaje enviado (no se puede volver a mostrar)' : '⚠ No se pudo descifrar');
+    final text =
+        message.plainText ??
+        (isMine
+            ? 'Mensaje enviado (no se puede volver a mostrar)'
+            : '⚠ No se pudo descifrar');
 
     return GestureDetector(
       onLongPress: onLongPress,
@@ -185,7 +196,9 @@ class _MessageBubble extends StatelessWidget {
             horizontal: VaultSpacing.md,
             vertical: VaultSpacing.sm,
           ),
-          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.75,
+          ),
           decoration: BoxDecoration(
             color: isMine ? VaultColors.primary : VaultColors.surface,
             borderRadius: BorderRadius.circular(VaultRadius.card),
@@ -195,7 +208,9 @@ class _MessageBubble extends StatelessWidget {
             text,
             style: tt.bodyMedium?.copyWith(
               color: isMine ? Colors.white : VaultColors.textPrimary,
-              fontStyle: message.plainText == null ? FontStyle.italic : FontStyle.normal,
+              fontStyle: message.plainText == null
+                  ? FontStyle.italic
+                  : FontStyle.normal,
             ),
           ),
         ),
@@ -257,9 +272,9 @@ class _ChatInputBarState extends State<_ChatInputBar> {
     if (error == null) {
       _controller.clear();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo enviar: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('No se pudo enviar: $error')));
     }
   }
 
@@ -272,15 +287,20 @@ class _ChatInputBarState extends State<_ChatInputBar> {
       isScrollControlled: true,
       backgroundColor: VaultColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(VaultRadius.card)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(VaultRadius.card),
+        ),
       ),
-      builder: (_) => SendToServiceSheet(businessId: business.id, businessName: business.name),
+      builder: (_) => SendToServiceSheet(
+        businessId: business.id,
+        businessName: business.name,
+      ),
     );
 
     if (sent == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Solicitud enviada')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Solicitud enviada')));
     }
   }
 
@@ -288,8 +308,10 @@ class _ChatInputBarState extends State<_ChatInputBar> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: VaultSpacing.md, vertical: VaultSpacing.sm),
-      decoration: const BoxDecoration(
+        horizontal: VaultSpacing.md,
+        vertical: VaultSpacing.sm,
+      ),
+      decoration: BoxDecoration(
         color: VaultColors.surface,
         border: Border(top: BorderSide(color: VaultColors.divider)),
       ),
@@ -301,7 +323,7 @@ class _ChatInputBarState extends State<_ChatInputBar> {
               IconButton(
                 onPressed: _openSendToService,
                 tooltip: 'Enviar a servicio/reparación',
-                icon: const Icon(Icons.build_outlined, color: VaultColors.primary),
+                icon: Icon(Icons.build_outlined, color: VaultColors.primary),
               ),
             Expanded(
               child: TextField(
@@ -313,7 +335,9 @@ class _ChatInputBarState extends State<_ChatInputBar> {
                   filled: true,
                   fillColor: VaultColors.background,
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: VaultSpacing.md, vertical: VaultSpacing.sm),
+                    horizontal: VaultSpacing.md,
+                    vertical: VaultSpacing.sm,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: VaultRadius.buttonBorder,
                     borderSide: BorderSide.none,
@@ -335,7 +359,9 @@ class _ChatInputBarState extends State<_ChatInputBar> {
                     onPressed: _canSend ? _send : null,
                     icon: Icon(
                       Icons.send,
-                      color: _canSend ? VaultColors.primary : VaultColors.textSecondary,
+                      color: _canSend
+                          ? VaultColors.primary
+                          : VaultColors.textSecondary,
                     ),
                   ),
           ],

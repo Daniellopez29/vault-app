@@ -15,25 +15,34 @@ enum _Condition { nuevo, usado, comoNuevo }
 extension _ConditionUI on _Condition {
   String get label {
     switch (this) {
-      case _Condition.nuevo: return 'Nuevo';
-      case _Condition.usado: return 'Usado';
-      case _Condition.comoNuevo: return 'Semi nuevo';
+      case _Condition.nuevo:
+        return 'Nuevo';
+      case _Condition.usado:
+        return 'Usado';
+      case _Condition.comoNuevo:
+        return 'Semi nuevo';
     }
   }
 
   String get value {
     switch (this) {
-      case _Condition.nuevo: return 'nuevo';
-      case _Condition.usado: return 'usado';
-      case _Condition.comoNuevo: return 'seminuevo';
+      case _Condition.nuevo:
+        return 'nuevo';
+      case _Condition.usado:
+        return 'usado';
+      case _Condition.comoNuevo:
+        return 'seminuevo';
     }
   }
 
   static _Condition fromValue(String value) {
     switch (value) {
-      case 'usado': return _Condition.usado;
-      case 'seminuevo': return _Condition.comoNuevo;
-      default: return _Condition.nuevo;
+      case 'usado':
+        return _Condition.usado;
+      case 'seminuevo':
+        return _Condition.comoNuevo;
+      default:
+        return _Condition.nuevo;
     }
   }
 }
@@ -55,11 +64,16 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
 
   late final _nameController = TextEditingController(text: widget.asset.name);
   late final _brandController = TextEditingController(text: widget.asset.brand);
-  late final _priceController =
-      TextEditingController(text: widget.asset.originalPrice.toStringAsFixed(0));
-  late final _storeController = TextEditingController(text: widget.asset.origin);
+  late final _priceController = TextEditingController(
+    text: widget.asset.originalPrice.toStringAsFixed(0),
+  );
+  late final _storeController = TextEditingController(
+    text: widget.asset.origin,
+  );
   late final _sizeController = TextEditingController(text: widget.asset.size);
-  late final _notesController = TextEditingController(text: widget.asset.notes ?? '');
+  late final _notesController = TextEditingController(
+    text: widget.asset.notes ?? '',
+  );
 
   late AssetCategory _category = widget.asset.category;
   late _Condition _condition = _ConditionUI.fromValue(widget.asset.condition);
@@ -87,18 +101,19 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
 
     setState(() => _uploadingPhoto = true);
     final bytes = await picked.readAsBytes();
-    final ok = await ref.read(profileAssetsControllerProvider.notifier).uploadPhoto(
-          widget.asset.id,
-          bytes: bytes,
-          filename: picked.name,
-        );
+    final ok = await ref
+        .read(profileAssetsControllerProvider.notifier)
+        .uploadPhoto(widget.asset.id, bytes: bytes, filename: picked.name);
 
     if (!mounted) return;
     setState(() => _uploadingPhoto = false);
     if (!ok) {
-      final error = ref.read(profileAssetsControllerProvider).errorMessage ??
+      final error =
+          ref.read(profileAssetsControllerProvider).errorMessage ??
           'No se pudo subir la foto';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
@@ -108,7 +123,8 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
         .deletePhoto(widget.asset.id, photoId);
     if (!mounted || ok) return;
     final error =
-        ref.read(profileAssetsControllerProvider).errorMessage ?? 'No se pudo quitar la foto';
+        ref.read(profileAssetsControllerProvider).errorMessage ??
+        'No se pudo quitar la foto';
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
   }
 
@@ -120,23 +136,32 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
       name: _nameController.text.trim(),
       brand: _brandController.text.trim(),
       category: _category,
-      originalPrice: double.tryParse(_priceController.text.trim()) ?? widget.asset.originalPrice,
+      originalPrice:
+          double.tryParse(_priceController.text.trim()) ??
+          widget.asset.originalPrice,
       origin: _storeController.text.trim(),
       condition: _condition.value,
       size: _sizeController.text.trim(),
-      notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+      notes: _notesController.text.trim().isEmpty
+          ? null
+          : _notesController.text.trim(),
     );
 
-    final ok = await ref.read(profileAssetsControllerProvider.notifier).editAsset(updated);
+    final ok = await ref
+        .read(profileAssetsControllerProvider.notifier)
+        .editAsset(updated);
 
     if (!mounted) return;
     if (ok) {
       context.pop();
     } else {
       setState(() => _saving = false);
-      final error = ref.read(profileAssetsControllerProvider).errorMessage ??
+      final error =
+          ref.read(profileAssetsControllerProvider).errorMessage ??
           'No se pudieron guardar los cambios';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
@@ -165,7 +190,10 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
                 runSpacing: VaultSpacing.sm,
                 children: [
                   for (final photo in current.photos)
-                    _PhotoThumb(url: photo.url, onRemove: () => _removePhoto(photo.id)),
+                    _PhotoThumb(
+                      url: photo.url,
+                      onRemove: () => _removePhoto(photo.id),
+                    ),
                   _AddPhotoTile(uploading: _uploadingPhoto, onTap: _addPhoto),
                 ],
               ),
@@ -183,7 +211,8 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
                 label: 'Nombre / Modelo',
                 icon: Icons.label_outline,
                 maxLength: 60,
-                validator: (v) => v == null || v.trim().isEmpty ? 'Ingresa el nombre' : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Ingresa el nombre' : null,
               ),
               const SizedBox(height: VaultSpacing.md),
               _AssetField(
@@ -191,7 +220,8 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
                 label: 'Marca',
                 icon: Icons.sell_outlined,
                 maxLength: 40,
-                validator: (v) => v == null || v.trim().isEmpty ? 'Ingresa la marca' : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Ingresa la marca' : null,
               ),
               const SizedBox(height: VaultSpacing.md),
               Row(
@@ -201,9 +231,13 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
                       controller: _priceController,
                       label: 'Precio de compra',
                       icon: Icons.attach_money,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d{0,2}'),
+                        ),
                       ],
                       maxLength: 10,
                     ),
@@ -237,7 +271,8 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
-                  onPressed: () => setState(() => _sizeController.text = 'Sin talla'),
+                  onPressed: () =>
+                      setState(() => _sizeController.text = 'Sin talla'),
                   child: const Text('Sin talla'),
                 ),
               ),
@@ -255,13 +290,18 @@ class _EditAssetPageState extends ConsumerState<EditAssetPage> {
                 onPressed: _saving ? null : _save,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: VaultColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: VaultSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: VaultSpacing.md,
+                  ),
                 ),
                 icon: _saving
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Icon(Icons.save_alt_outlined),
                 label: const Text('Guardar cambios'),
@@ -312,7 +352,10 @@ class _PhotoThumb extends StatelessWidget {
             onTap: onRemove,
             child: Container(
               padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
               child: const Icon(Icons.close, size: 16, color: Colors.white),
             ),
           ),
@@ -344,9 +387,15 @@ class _AddPhotoTile extends StatelessWidget {
           ),
           child: uploading
               ? const SizedBox(
-                  width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : Icon(Icons.add_photo_alternate_outlined,
-                  color: VaultColors.textSecondary, size: VaultIconSize.lg),
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(
+                  Icons.add_photo_alternate_outlined,
+                  color: VaultColors.textSecondary,
+                  size: VaultIconSize.lg,
+                ),
         ),
       ),
     );
@@ -402,18 +451,27 @@ class _ChoiceChip extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _ChoiceChip({required this.label, required this.isSelected, required this.onTap});
+  const _ChoiceChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.lg, vertical: VaultSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: VaultSpacing.lg,
+          vertical: VaultSpacing.sm,
+        ),
         decoration: BoxDecoration(
           color: isSelected ? VaultColors.success : VaultColors.surface,
           borderRadius: VaultRadius.buttonBorder,
-          border: Border.all(color: isSelected ? VaultColors.success : VaultColors.divider),
+          border: Border.all(
+            color: isSelected ? VaultColors.success : VaultColors.divider,
+          ),
         ),
         child: Text(
           label,
@@ -457,7 +515,7 @@ class _AssetField extends StatelessWidget {
       maxLength: maxLength,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
-      style: const TextStyle(color: VaultColors.primary),
+      style: TextStyle(color: VaultColors.primary),
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: VaultColors.primary),
@@ -469,11 +527,13 @@ class _AssetField extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: VaultRadius.buttonBorder,
-          borderSide: BorderSide(color: VaultColors.primary.withValues(alpha: 0.2)),
+          borderSide: BorderSide(
+            color: VaultColors.primary.withValues(alpha: 0.2),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: VaultRadius.buttonBorder,
-          borderSide: const BorderSide(color: VaultColors.primary, width: 2),
+          borderSide: BorderSide(color: VaultColors.primary, width: 2),
         ),
       ),
       validator: validator,

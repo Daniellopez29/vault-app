@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
@@ -33,7 +33,7 @@ class SellerCommerceView extends StatelessWidget {
           elevation: 0,
           foregroundColor: VaultColors.textPrimary,
           title: const Text("Comercio"),
-          bottom: const TabBar(
+          bottom: TabBar(
             labelColor: VaultColors.primary,
             unselectedLabelColor: VaultColors.textSecondary,
             indicatorColor: VaultColors.primary,
@@ -81,7 +81,11 @@ class _ProductsForSaleTab extends ConsumerWidget {
     final state = ref.watch(profileAssetsControllerProvider);
     final forSale = state.assets.where((a) => a.isForSale).toList();
     final hasActiveSubscription =
-        ref.watch(subscriptionStatusControllerProvider).subscription?.isActive ?? false;
+        ref
+            .watch(subscriptionStatusControllerProvider)
+            .subscription
+            ?.isActive ??
+        false;
 
     return ListView(
       padding: const EdgeInsets.all(VaultSpacing.md),
@@ -99,14 +103,27 @@ class _ProductsForSaleTab extends ConsumerWidget {
           ),
           const SizedBox(height: VaultSpacing.sm),
           ElevatedButton.icon(
-            onPressed: () => startAdvertiseFlow(context, ref, type: SubscriptionType.product),
-            style: ElevatedButton.styleFrom(backgroundColor: VaultColors.accent),
+            onPressed: () => startAdvertiseFlow(
+              context,
+              ref,
+              type: SubscriptionType.product,
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: VaultColors.accent,
+            ),
             icon: const Icon(Icons.campaign_outlined, color: Colors.white),
-            label: const Text('Anunciar un producto', style: TextStyle(color: Colors.white)),
+            label: const Text(
+              'Anunciar un producto',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ] else
           _ProductSubscriptionCard(
-            onTap: () => startAdvertiseFlow(context, ref, type: SubscriptionType.product),
+            onTap: () => startAdvertiseFlow(
+              context,
+              ref,
+              type: SubscriptionType.product,
+            ),
           ),
         const SizedBox(height: VaultSpacing.sm),
         TextButton.icon(
@@ -122,42 +139,40 @@ class _ProductsForSaleTab extends ConsumerWidget {
         const SizedBox(height: VaultSpacing.md),
         switch (state.status) {
           ProfileAssetsStatus.initial ||
-          ProfileAssetsStatus.loading =>
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(VaultSpacing.xl),
-                child: CircularProgressIndicator(),
-              ),
+          ProfileAssetsStatus.loading => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(VaultSpacing.xl),
+              child: CircularProgressIndicator(),
             ),
+          ),
           ProfileAssetsStatus.error => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(VaultSpacing.xl),
-                child: Text(
-                  state.errorMessage ?? "Error al cargar tus productos",
-                  style: const TextStyle(color: VaultColors.textSecondary),
-                ),
+            child: Padding(
+              padding: const EdgeInsets.all(VaultSpacing.xl),
+              child: Text(
+                state.errorMessage ?? "Error al cargar tus productos",
+                style: TextStyle(color: VaultColors.textSecondary),
               ),
             ),
-          ProfileAssetsStatus.loaded => forSale.isEmpty
-              ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(VaultSpacing.xl),
-                    child: Text(
-                      "Aún no has puesto ningún artículo en venta.\n"
-                      "Márcalo desde tu Perfil con el ícono de etiqueta.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: VaultColors.textSecondary),
+          ),
+          ProfileAssetsStatus.loaded =>
+            forSale.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(VaultSpacing.xl),
+                      child: Text(
+                        "Aún no has puesto ningún artículo en venta.\n"
+                        "Márcalo desde tu Perfil con el ícono de etiqueta.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: VaultColors.textSecondary),
+                      ),
                     ),
-                  ),
-                )
-              : AssetsGrid(assets: forSale),
+                  )
+                : AssetsGrid(assets: forSale),
         },
       ],
     );
   }
 }
-
-
 
 /// Card de suscripción de productos, arriba de la lista de "En venta".
 /// Da al vendedor acceso directo a destacar sus productos desde donde los
@@ -182,8 +197,11 @@ class _ProductSubscriptionCard extends StatelessWidget {
           padding: const EdgeInsets.all(VaultSpacing.lg),
           child: Row(
             children: [
-              const Icon(Icons.rocket_launch_outlined,
-                  color: Colors.white, size: VaultIconSize.lg),
+              const Icon(
+                Icons.rocket_launch_outlined,
+                color: Colors.white,
+                size: VaultIconSize.lg,
+              ),
               const SizedBox(width: VaultSpacing.md),
               Expanded(
                 child: Column(

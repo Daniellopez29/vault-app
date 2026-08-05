@@ -62,9 +62,10 @@ class _OrderSuccessPageState extends ConsumerState<OrderSuccessPage>
     _checkScale = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _checkController, curve: Curves.elasticOut),
     );
-    _checkOpacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _checkController, curve: Curves.easeIn),
-    );
+    _checkOpacity = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _checkController, curve: Curves.easeIn));
 
     // 3. Texto principal sube con fade
     _contentController = AnimationController(
@@ -74,12 +75,13 @@ class _OrderSuccessPageState extends ConsumerState<OrderSuccessPage>
     _contentOpacity = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _contentController, curve: Curves.easeOut),
     );
-    _contentSlide = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _contentController, curve: Curves.easeOutCubic),
-    );
+    _contentSlide =
+        Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _contentController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     // 4. Resumen sube con fade
     _summaryController = AnimationController(
@@ -89,12 +91,13 @@ class _OrderSuccessPageState extends ConsumerState<OrderSuccessPage>
     _summaryOpacity = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _summaryController, curve: Curves.easeOut),
     );
-    _summarySlide = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _summaryController, curve: Curves.easeOutCubic),
-    );
+    _summarySlide = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _summaryController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     // 5. Botón aparece con fade
     _buttonController = AnimationController(
@@ -159,7 +162,7 @@ class _OrderSuccessPageState extends ConsumerState<OrderSuccessPage>
                 child: Container(
                   width: 96,
                   height: 96,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: VaultColors.success,
                     shape: BoxShape.circle,
                   ),
@@ -229,7 +232,7 @@ class _OrderSuccessPageState extends ConsumerState<OrderSuccessPage>
                             label: 'Descuento',
                             value: '-\$${_summary.discount.toStringAsFixed(0)}',
                           ),
-                        const Divider(color: VaultColors.divider),
+                        Divider(color: VaultColors.divider),
                         SummaryRow(
                           label: 'Total',
                           value: '\$${_summary.total.toStringAsFixed(0)}',

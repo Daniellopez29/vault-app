@@ -7,7 +7,6 @@ import '../../../core/theme.dart';
 import '../../auth/presentation/providers.dart';
 import 'providers.dart';
 
-
 class ProfileHeader extends ConsumerStatefulWidget {
   final String email;
   final int totalArticles;
@@ -46,25 +45,31 @@ class _ProfileHeaderState extends ConsumerState<ProfileHeader> {
 
     setState(() => _uploadingPhoto = true);
     final bytes = await picked.readAsBytes();
-    final ok = await ref.read(authControllerProvider.notifier).uploadProfilePhoto(
-          bytes: bytes,
-          filename: picked.name,
-        );
+    final ok = await ref
+        .read(authControllerProvider.notifier)
+        .uploadProfilePhoto(bytes: bytes, filename: picked.name);
 
     if (!mounted) return;
     setState(() => _uploadingPhoto = false);
     if (!ok) {
-      final error = ref.read(authControllerProvider).errorMessage ??
+      final error =
+          ref.read(authControllerProvider).errorMessage ??
           'No se pudo actualizar la foto de perfil';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final displayName = widget.fullName?.isNotEmpty == true ? widget.fullName! : widget.email;
-    final forSaleCount = ref.watch(profileAssetsControllerProvider).assets
+    final displayName = widget.fullName?.isNotEmpty == true
+        ? widget.fullName!
+        : widget.email;
+    final forSaleCount = ref
+        .watch(profileAssetsControllerProvider)
+        .assets
         .where((a) => a.isForSale)
         .length;
 
@@ -105,7 +110,11 @@ class _ProfileHeaderState extends ConsumerState<ProfileHeader> {
             ],
           ),
           const SizedBox(height: VaultSpacing.sm),
-          Text(displayName, style: tt.headlineSmall, textAlign: TextAlign.center),
+          Text(
+            displayName,
+            style: tt.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
           const Divider(height: VaultSpacing.xl),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -137,7 +146,11 @@ class _AvatarPicker extends StatelessWidget {
   final bool uploading;
   final VoidCallback onTap;
 
-  const _AvatarPicker({required this.avatarUrl, required this.uploading, required this.onTap});
+  const _AvatarPicker({
+    required this.avatarUrl,
+    required this.uploading,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -149,7 +162,9 @@ class _AvatarPicker extends StatelessWidget {
           CircleAvatar(
             radius: 36,
             backgroundColor: VaultColors.primary.withValues(alpha: 0.1),
-            backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+            backgroundImage: avatarUrl.isNotEmpty
+                ? NetworkImage(avatarUrl)
+                : null,
             child: avatarUrl.isEmpty
                 ? Icon(Icons.person, size: 36, color: VaultColors.primary)
                 : null,
@@ -161,11 +176,15 @@ class _AvatarPicker extends StatelessWidget {
           else
             Container(
               padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: VaultColors.primary,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+              child: const Icon(
+                Icons.camera_alt,
+                size: 14,
+                color: Colors.white,
+              ),
             ),
         ],
       ),
@@ -197,7 +216,10 @@ class _CategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.md, vertical: VaultSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: VaultSpacing.md,
+        vertical: VaultSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: VaultColors.background,
         borderRadius: VaultRadius.buttonBorder,
@@ -207,4 +229,3 @@ class _CategoryChip extends StatelessWidget {
     );
   }
 }
-

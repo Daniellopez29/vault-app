@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
@@ -30,7 +30,7 @@ class BusinessesTab extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
+                Text(
                   'No se pudieron cargar los negocios',
                   style: TextStyle(color: VaultColors.textSecondary),
                 ),
@@ -45,7 +45,7 @@ class BusinessesTab extends ConsumerWidget {
         ),
         data: (businesses) {
           if (businesses.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
                 padding: EdgeInsets.all(VaultSpacing.xl),
                 child: Text(
@@ -106,7 +106,7 @@ class _BusinessCard extends ConsumerWidget {
                   : Container(
                       color: VaultColors.background,
                       alignment: Alignment.center,
-                      child: const Icon(
+                      child: Icon(
                         Icons.storefront_outlined,
                         color: VaultColors.primary,
                         size: VaultIconSize.lg,
@@ -131,7 +131,7 @@ class _BusinessCard extends ConsumerWidget {
                     ),
                     if (business.isVerified) ...[
                       const SizedBox(width: VaultSpacing.xs),
-                      const Icon(
+                      Icon(
                         Icons.verified_user,
                         size: VaultIconSize.sm,
                         color: VaultColors.accent,
@@ -141,7 +141,9 @@ class _BusinessCard extends ConsumerWidget {
                 ),
                 Text(
                   business.types.join(' · '),
-                  style: tt.labelSmall?.copyWith(color: VaultColors.textSecondary),
+                  style: tt.labelSmall?.copyWith(
+                    color: VaultColors.textSecondary,
+                  ),
                 ),
                 if (business.description.isNotEmpty) ...[
                   const SizedBox(height: VaultSpacing.xs),
@@ -156,7 +158,7 @@ class _BusinessCard extends ConsumerWidget {
                   const SizedBox(height: VaultSpacing.xs),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.place_outlined,
                         size: VaultIconSize.sm,
                         color: VaultColors.textSecondary,
@@ -191,8 +193,10 @@ class _BusinessCard extends ConsumerWidget {
                         foregroundColor: VaultColors.primary,
                         padding: EdgeInsets.zero,
                       ),
-                      icon: const Icon(Icons.chat_bubble_outline,
-                          size: VaultIconSize.sm),
+                      icon: const Icon(
+                        Icons.chat_bubble_outline,
+                        size: VaultIconSize.sm,
+                      ),
                       label: const Text('Contactar'),
                     ),
                   ),
@@ -258,4 +262,3 @@ class _BusinessCardSkeleton extends StatelessWidget {
     );
   }
 }
-

@@ -55,10 +55,7 @@ class _EmptyCart extends StatelessWidget {
     // contenido del cuerpo.
     return Scaffold(
       backgroundColor: VaultColors.background,
-      appBar: AppBar(
-        title: const Text('Checkout'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Checkout'), centerTitle: true),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -95,10 +92,7 @@ class _CartContent extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: VaultColors.background,
-      appBar: AppBar(
-        title: const Text('Checkout'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Checkout'), centerTitle: true),
       body: Column(
         children: [
           Expanded(
@@ -113,8 +107,9 @@ class _CartContent extends ConsumerWidget {
                 final item = state.items[index];
                 return CartItemRow(
                   item: item,
-                  onRemove: () =>
-                      ref.read(cartControllerProvider.notifier).removeItem(item.id),
+                  onRemove: () => ref
+                      .read(cartControllerProvider.notifier)
+                      .removeItem(item.id),
                 );
               },
             ),
@@ -147,7 +142,7 @@ class _CartContent extends ConsumerWidget {
                       onPressed: () => context.push(AppRoutes.checkoutAddress),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: VaultColors.accent,
-                        side: const BorderSide(color: VaultColors.accent),
+                        side: BorderSide(color: VaultColors.accent),
                       ),
                       icon: const Icon(Icons.arrow_forward),
                       label: const Text('Proceder al Pago'),

@@ -30,12 +30,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     return Scaffold(
       body: Stack(
         children: [
           Positioned.fill(
-            child:
-            Image.asset('assets/images/fondologin.png', fit: BoxFit.cover),
+            child: Image.asset(
+              'assets/images/fondologin.png',
+              fit: BoxFit.cover,
+            ),
           ),
           Positioned.fill(
             child: Container(color: Colors.white.withValues(alpha: 0.55)),
@@ -46,7 +49,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               child: Column(
                 children: [
                   const SizedBox(height: 16),
-                  const Align(
+                  Align(
                     alignment: Alignment.topLeft,
                     child: Text(
                       'VAULT',
@@ -61,10 +64,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   const Spacer(),
                   const VaultAnimatedLogo(height: 140),
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     'Un sistema inteligente que centraliza, monitorea y optimiza '
-                        'el ciclo de vida de tus activos personales de valor para '
-                        'asegurar su preservación, autenticidad y rendimiento en el mercado.',
+                    'el ciclo de vida de tus activos personales de valor para '
+                    'asegurar su preservación, autenticidad y rendimiento en el mercado.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
@@ -91,7 +94,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () => context.push(AppRoutes.legal),
-                    child: const Text(
+                    child: Text(
                       'Términos de Privacidad | Política de Uso',
                       style: TextStyle(
                         fontSize: 12,
@@ -126,8 +129,10 @@ class SignInPage extends ConsumerWidget {
       body: Stack(
         children: [
           Positioned.fill(
-            child:
-            Image.asset('assets/images/fondologin.png', fit: BoxFit.cover),
+            child: Image.asset(
+              'assets/images/fondologin.png',
+              fit: BoxFit.cover,
+            ),
           ),
           Positioned.fill(
             child: Container(color: Colors.white.withValues(alpha: 0.75)),
@@ -139,7 +144,7 @@ class SignInPage extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'VAULT',
                     style: TextStyle(
                       fontSize: 32,
@@ -150,7 +155,7 @@ class SignInPage extends ConsumerWidget {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     '¡Bienvenido otra vez!',
                     style: TextStyle(
                       fontSize: 26,
@@ -160,7 +165,7 @@ class SignInPage extends ConsumerWidget {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Tu colección premium, bajo control inteligente.',
                     style: TextStyle(
                       fontSize: 14,
@@ -174,7 +179,7 @@ class SignInPage extends ConsumerWidget {
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () => context.push(AppRoutes.legal),
-                    child: const Text(
+                    child: Text(
                       'Términos de Privacidad | Política de Uso',
                       style: TextStyle(
                         fontSize: 12,

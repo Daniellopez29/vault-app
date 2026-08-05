@@ -34,7 +34,7 @@ class MarketplaceCard extends StatelessWidget {
               const SizedBox(height: 120, width: double.infinity),
               Positioned.fill(child: ItemImage(imageUrl: item.imageUrl)),
               if (item.isVerified)
-                const Positioned(
+                Positioned(
                   top: VaultSpacing.sm,
                   right: VaultSpacing.sm,
                   child: Icon(
@@ -57,8 +57,11 @@ class MarketplaceCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.star,
-                        size: VaultIconSize.sm, color: VaultColors.accent),
+                    Icon(
+                      Icons.star,
+                      size: VaultIconSize.sm,
+                      color: VaultColors.accent,
+                    ),
                     const SizedBox(width: VaultSpacing.xs),
                     Text(item.rating.toStringAsFixed(1), style: tt.titleMedium),
                   ],
@@ -68,7 +71,7 @@ class MarketplaceCard extends StatelessWidget {
                 if (onCartTap != null)
                   InkWell(
                     onTap: onCartTap,
-                    child: const Icon(
+                    child: Icon(
                       Icons.shopping_cart_outlined,
                       size: VaultIconSize.md,
                       color: VaultColors.primary,
@@ -103,7 +106,9 @@ class MarketplaceCard extends StatelessWidget {
                 ),
                 Text(
                   'Vendido por ${item.sellerName}',
-                  style: tt.labelSmall?.copyWith(color: VaultColors.textSecondary),
+                  style: tt.labelSmall?.copyWith(
+                    color: VaultColors.textSecondary,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -111,16 +116,22 @@ class MarketplaceCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      const Icon(Icons.build_outlined,
-                          size: VaultIconSize.sm, color: VaultColors.textSecondary),
+                      Icon(
+                        Icons.build_outlined,
+                        size: VaultIconSize.sm,
+                        color: VaultColors.textSecondary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         [
-                          if (item.servicesCount > 0) '${item.servicesCount} servicios',
+                          if (item.servicesCount > 0)
+                            '${item.servicesCount} servicios',
                           if (item.restorationsCount > 0)
                             '${item.restorationsCount} restauraciones',
                         ].join(' · '),
-                        style: tt.labelSmall?.copyWith(color: VaultColors.textSecondary),
+                        style: tt.labelSmall?.copyWith(
+                          color: VaultColors.textSecondary,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

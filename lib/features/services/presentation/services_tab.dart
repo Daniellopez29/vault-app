@@ -24,7 +24,9 @@ class ServicesTab extends ConsumerWidget {
         return const Center(child: CircularProgressIndicator());
       case BusinessStatus.error:
         return Center(
-          child: Text(businessState.errorMessage ?? 'Error al cargar tu negocio'),
+          child: Text(
+            businessState.errorMessage ?? 'Error al cargar tu negocio',
+          ),
         );
       case BusinessStatus.loaded:
         final business = businessState.business;
@@ -51,7 +53,11 @@ class _NoBusinessPrompt extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.storefront_outlined, size: VaultIconSize.xl, color: VaultColors.textSecondary),
+            Icon(
+              Icons.storefront_outlined,
+              size: VaultIconSize.xl,
+              color: VaultColors.textSecondary,
+            ),
             const SizedBox(height: VaultSpacing.lg),
             const Text(
               'Registra tu negocio para publicar servicios',
@@ -59,7 +65,7 @@ class _NoBusinessPrompt extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: VaultSpacing.sm),
-            const Text(
+            Text(
               'Tu catálogo de servicios (limpieza, restauración, reparación) '
               'vive dentro de tu negocio en Vault.',
               textAlign: TextAlign.center,
@@ -70,7 +76,10 @@ class _NoBusinessPrompt extends StatelessWidget {
               onPressed: onRegister,
               style: ElevatedButton.styleFrom(
                 backgroundColor: VaultColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: VaultSpacing.md, horizontal: VaultSpacing.lg),
+                padding: const EdgeInsets.symmetric(
+                  vertical: VaultSpacing.md,
+                  horizontal: VaultSpacing.lg,
+                ),
               ),
               icon: const Icon(Icons.add),
               label: const Text('Registrar negocio'),
@@ -87,15 +96,22 @@ class _ServicesList extends ConsumerWidget {
 
   const _ServicesList({required this.businessId});
 
-  void _openSheet(BuildContext context, WidgetRef ref, {BusinessServiceEntity? service}) {
+  void _openSheet(
+    BuildContext context,
+    WidgetRef ref, {
+    BusinessServiceEntity? service,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: VaultColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(VaultRadius.card)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(VaultRadius.card),
+        ),
       ),
-      builder: (_) => _ServiceSheet(businessId: businessId, ref: ref, existing: service),
+      builder: (_) =>
+          _ServiceSheet(businessId: businessId, ref: ref, existing: service),
     );
   }
 
@@ -124,21 +140,25 @@ class _ServicesList extends ConsumerWidget {
           child: state.status == BusinessServicesStatus.loading
               ? const Center(child: CircularProgressIndicator())
               : state.services.isEmpty
-                  ? const _EmptyServices()
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(VaultSpacing.md),
-                      itemCount: state.services.length,
-                      itemBuilder: (context, index) {
-                        final service = state.services[index];
-                        return _ServiceCard(
-                          service: service,
-                          onTap: () => _openSheet(context, ref, service: service),
-                          onDelete: () => ref
-                              .read(businessServicesControllerProvider(businessId).notifier)
-                              .removeService(service.id),
-                        );
-                      },
-                    ),
+              ? const _EmptyServices()
+              : ListView.builder(
+                  padding: const EdgeInsets.all(VaultSpacing.md),
+                  itemCount: state.services.length,
+                  itemBuilder: (context, index) {
+                    final service = state.services[index];
+                    return _ServiceCard(
+                      service: service,
+                      onTap: () => _openSheet(context, ref, service: service),
+                      onDelete: () => ref
+                          .read(
+                            businessServicesControllerProvider(
+                              businessId,
+                            ).notifier,
+                          )
+                          .removeService(service.id),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -150,14 +170,17 @@ class _EmptyServices extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(VaultSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.build_outlined,
-                size: VaultIconSize.xl, color: VaultColors.textSecondary),
+            Icon(
+              Icons.build_outlined,
+              size: VaultIconSize.xl,
+              color: VaultColors.textSecondary,
+            ),
             SizedBox(height: VaultSpacing.lg),
             Text(
               'Aún no ofreces servicios',
@@ -240,7 +263,7 @@ class _ServiceCard extends StatelessWidget {
               ),
               IconButton(
                 onPressed: onDelete,
-                icon: const Icon(
+                icon: Icon(
                   Icons.delete_outline,
                   color: VaultColors.textSecondary,
                   size: VaultIconSize.md,
@@ -306,8 +329,9 @@ class _ServiceSheetState extends State<_ServiceSheet> {
     if (title.isEmpty || price <= 0) return;
     setState(() => _saving = true);
 
-    final notifier =
-        widget.ref.read(businessServicesControllerProvider(widget.businessId).notifier);
+    final notifier = widget.ref.read(
+      businessServicesControllerProvider(widget.businessId).notifier,
+    );
 
     if (_isEditing) {
       await notifier.updateService(
@@ -317,7 +341,11 @@ class _ServiceSheetState extends State<_ServiceSheet> {
         price: price,
       );
     } else {
-      await notifier.addService(title: title, description: description, price: price);
+      await notifier.addService(
+        title: title,
+        description: description,
+        price: price,
+      );
     }
 
     if (mounted) {
@@ -384,7 +412,10 @@ class _ServiceSheetState extends State<_ServiceSheet> {
                     height: 20,
                     width: 20,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white))
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
                 : Text(_isEditing ? 'Guardar cambios' : 'Publicar'),
           ),
         ],

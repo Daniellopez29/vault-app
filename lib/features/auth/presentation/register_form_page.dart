@@ -15,7 +15,11 @@ class RegisterFormPage extends ConsumerStatefulWidget {
   /// en RoleSelectionPage (Home / registrar activo / registrar negocio).
   final String destination;
 
-  const RegisterFormPage({super.key, required this.role, required this.destination});
+  const RegisterFormPage({
+    super.key,
+    required this.role,
+    required this.destination,
+  });
 
   @override
   ConsumerState<RegisterFormPage> createState() => _RegisterFormPageState();
@@ -52,19 +56,23 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
     // Solo visual por ahora. La foto de perfil real se sube desde el
     // Perfil una vez creada la cuenta (ProfileHeader ya lo soporta).
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Puedes agregar tu foto de perfil después, desde Perfil')),
+      const SnackBar(
+        content: Text('Puedes agregar tu foto de perfil después, desde Perfil'),
+      ),
     );
   }
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    ref.read(authControllerProvider.notifier).register(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-      fullName: _nameController.text.trim(),
-      role: widget.role,
-    );
+    ref
+        .read(authControllerProvider.notifier)
+        .register(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+          fullName: _nameController.text.trim(),
+          role: widget.role,
+        );
   }
 
   @override
@@ -81,9 +89,7 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
 
     return Scaffold(
       backgroundColor: VaultColors.background,
-      appBar: AppBar(
-        title: const Text('Crear cuenta'),
-      ),
+      appBar: AppBar(title: const Text('Crear cuenta')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -97,16 +103,11 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
                   style: tt.titleLarge,
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  widget.role.description,
-                  style: tt.bodyMedium,
-                ),
+                Text(widget.role.description, style: tt.bodyMedium),
                 const SizedBox(height: 24),
 
                 // Avatar de foto de perfil (solo visual por ahora).
-                Center(
-                  child: _ProfileAvatarPicker(onTap: _onAvatarTap),
-                ),
+                Center(child: _ProfileAvatarPicker(onTap: _onAvatarTap)),
                 const SizedBox(height: 24),
 
                 _Field(
@@ -114,8 +115,9 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
                   label: 'Nombre completo',
                   icon: Icons.person_outline,
                   textCapitalization: TextCapitalization.words,
-                  validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Ingresa tu nombre' : null,
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? 'Ingresa tu nombre'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 _Field(
@@ -124,7 +126,7 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   validator: (v) =>
-                  v == null || !isValidEmail(v) ? 'Correo inválido' : null,
+                      v == null || !isValidEmail(v) ? 'Correo inválido' : null,
                 ),
                 const SizedBox(height: 16),
                 _Field(
@@ -140,7 +142,7 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                   validator: (v) =>
-                  v == null || v.length < 6 ? 'Mínimo 6 caracteres' : null,
+                      v == null || v.length < 6 ? 'Mínimo 6 caracteres' : null,
                 ),
                 const SizedBox(height: 16),
                 _Field(
@@ -153,10 +155,12 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
                       _obscureConfirm ? Icons.visibility_off : Icons.visibility,
                       color: VaultColors.primary,
                     ),
-                    onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                    onPressed: () =>
+                        setState(() => _obscureConfirm = !_obscureConfirm),
                   ),
-                  validator: (v) =>
-                  v != _passwordController.text ? 'Las contraseñas no coinciden' : null,
+                  validator: (v) => v != _passwordController.text
+                      ? 'Las contraseñas no coinciden'
+                      : null,
                 ),
 
                 if (state.status == AuthStatus.error) ...[
@@ -169,7 +173,7 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
                     ),
                     child: Text(
                       state.errorMessage ?? '',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: VaultColors.error,
                         fontWeight: FontWeight.w500,
                       ),
@@ -183,13 +187,13 @@ class _RegisterFormPageState extends ConsumerState<RegisterFormPage> {
                   onPressed: isLoading ? null : _submit,
                   child: isLoading
                       ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : const Text('Crear cuenta'),
                 ),
                 const SizedBox(height: 16),
@@ -295,7 +299,7 @@ class _Field extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       textCapitalization: textCapitalization,
-      style: const TextStyle(color: VaultColors.primary),
+      style: TextStyle(color: VaultColors.primary),
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: VaultColors.primary),
@@ -314,7 +318,7 @@ class _Field extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: VaultColors.primary, width: 2),
+          borderSide: BorderSide(color: VaultColors.primary, width: 2),
         ),
       ),
       validator: validator,

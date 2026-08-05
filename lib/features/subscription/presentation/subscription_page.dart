@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/dimens.dart';
@@ -23,73 +23,71 @@ class SubscriptionPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: VaultColors.background,
-      appBar: AppBar(
-        title: const Text('Suscripción'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Suscripción'), centerTitle: true),
       body: SafeArea(
         child: switch (state.status) {
-          PlansStatus.loading =>
-            const Center(child: CircularProgressIndicator()),
+          PlansStatus.loading => const Center(
+            child: CircularProgressIndicator(),
+          ),
           PlansStatus.error => Center(
-              child: Text(
-                state.errorMessage ?? 'Error al cargar los planes',
-                style: tt.bodyMedium,
-              ),
+            child: Text(
+              state.errorMessage ?? 'Error al cargar los planes',
+              style: tt.bodyMedium,
             ),
+          ),
           PlansStatus.loaded => Padding(
-              padding: const EdgeInsets.all(VaultSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: VaultSpacing.sm),
-                  Text(
-                    SubscriptionCopy.titleFor(type),
-                    style: tt.headlineSmall,
-                    textAlign: TextAlign.center,
+            padding: const EdgeInsets.all(VaultSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: VaultSpacing.sm),
+                Text(
+                  SubscriptionCopy.titleFor(type),
+                  style: tt.headlineSmall,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: VaultSpacing.xs),
+                Text(
+                  SubscriptionCopy.subtitleFor(type),
+                  style: tt.bodyMedium?.copyWith(
+                    color: VaultColors.textSecondary,
                   ),
-                  const SizedBox(height: VaultSpacing.xs),
-                  Text(
-                    SubscriptionCopy.subtitleFor(type),
-                    style: tt.bodyMedium?.copyWith(
-                      color: VaultColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: VaultSpacing.xl),
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: state.plans.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: VaultSpacing.md),
+                    itemBuilder: (context, index) {
+                      final plan = state.plans[index];
+                      return _PlanTile(
+                        plan: plan,
+                        selected: plan.id == state.selected?.id,
+                        onTap: () => controller.selectPlan(plan),
+                      );
+                    },
                   ),
-                  const SizedBox(height: VaultSpacing.xl),
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: state.plans.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: VaultSpacing.md),
-                      itemBuilder: (context, index) {
-                        final plan = state.plans[index];
-                        return _PlanTile(
-                          plan: plan,
-                          selected: plan.id == state.selected?.id,
-                          onTap: () => controller.selectPlan(plan),
-                        );
-                      },
-                    ),
+                ),
+                const SizedBox(height: VaultSpacing.md),
+                ElevatedButton.icon(
+                  onPressed: state.selected == null
+                      ? null
+                      : () => context.push(
+                          AppRoutes.subscriptionCheckout,
+                          extra: state.selected,
+                        ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: VaultColors.accent,
+                    foregroundColor: Colors.white,
                   ),
-                  const SizedBox(height: VaultSpacing.md),
-                  ElevatedButton.icon(
-                    onPressed: state.selected == null
-                        ? null
-                        : () => context.push(
-                              AppRoutes.subscriptionCheckout,
-                              extra: state.selected,
-                            ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: VaultColors.accent,
-                      foregroundColor: Colors.white,
-                    ),
-                    icon: const Icon(Icons.lock_outline),
-                    label: const Text('Continuar al pago'),
-                  ),
-                ],
-              ),
+                  icon: const Icon(Icons.lock_outline),
+                  label: const Text('Continuar al pago'),
+                ),
+              ],
             ),
+          ),
         },
       ),
     );
@@ -130,9 +128,7 @@ class _PlanTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                Expanded(
-                  child: Text(plan.name, style: tt.titleMedium),
-                ),
+                Expanded(child: Text(plan.name, style: tt.titleMedium)),
                 Text(
                   '\$${plan.price.toStringAsFixed(0)}',
                   style: tt.titleMedium?.copyWith(
@@ -159,7 +155,7 @@ class _PlanTile extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.check,
                       size: VaultIconSize.sm,
                       color: VaultColors.success,
@@ -183,4 +179,3 @@ class _PlanTile extends StatelessWidget {
     );
   }
 }
-

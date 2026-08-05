@@ -24,86 +24,92 @@ class ConversationsListPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: VaultColors.background,
-      appBar: AppBar(
-        title: const Text('Mensajes'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Mensajes'), centerTitle: true),
       body: switch (state.status) {
-        ConversationsStatus.initial ||
-        ConversationsStatus.loading =>
+        ConversationsStatus.initial || ConversationsStatus.loading =>
           const Center(child: CircularProgressIndicator()),
         ConversationsStatus.error => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(VaultSpacing.xl),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    state.errorMessage ?? 'No se pudieron cargar tus mensajes',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: VaultColors.textSecondary),
-                  ),
-                  const SizedBox(height: VaultSpacing.md),
-                  ElevatedButton(
-                    onPressed: () =>
-                        ref.read(conversationsControllerProvider.notifier).load(),
-                    child: const Text('Reintentar'),
-                  ),
-                ],
-              ),
+          child: Padding(
+            padding: const EdgeInsets.all(VaultSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  state.errorMessage ?? 'No se pudieron cargar tus mensajes',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: VaultColors.textSecondary),
+                ),
+                const SizedBox(height: VaultSpacing.md),
+                ElevatedButton(
+                  onPressed: () =>
+                      ref.read(conversationsControllerProvider.notifier).load(),
+                  child: const Text('Reintentar'),
+                ),
+              ],
             ),
           ),
-        ConversationsStatus.loaded => state.conversations.isEmpty
-            ? const _EmptyConversations()
-            : RefreshIndicator(
-                onRefresh: () =>
-                    ref.read(conversationsControllerProvider.notifier).load(),
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: VaultSpacing.sm),
-                  itemCount: state.conversations.length,
-                  separatorBuilder: (_, _) => const Divider(
-                    height: 1,
-                    color: VaultColors.divider,
-                    indent: 72,
-                  ),
-                  itemBuilder: (context, index) {
-                    final conversation = state.conversations[index];
-                    return Dismissible(
-                      key: ValueKey(conversation.otherUserId),
-                      direction: DismissDirection.endToStart,
-                      confirmDismiss: (_) => showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Eliminar conversación'),
-                          content: const Text(
-                            'Solo se elimina de tu lado, la otra persona la sigue viendo.',
+        ),
+        ConversationsStatus.loaded =>
+          state.conversations.isEmpty
+              ? const _EmptyConversations()
+              : RefreshIndicator(
+                  onRefresh: () =>
+                      ref.read(conversationsControllerProvider.notifier).load(),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: VaultSpacing.sm,
+                    ),
+                    itemCount: state.conversations.length,
+                    separatorBuilder: (_, _) => Divider(
+                      height: 1,
+                      color: VaultColors.divider,
+                      indent: 72,
+                    ),
+                    itemBuilder: (context, index) {
+                      final conversation = state.conversations[index];
+                      return Dismissible(
+                        key: ValueKey(conversation.otherUserId),
+                        direction: DismissDirection.endToStart,
+                        confirmDismiss: (_) => showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Eliminar conversación'),
+                            content: const Text(
+                              'Solo se elimina de tu lado, la otra persona la sigue viendo.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('Cancelar'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                child: const Text('Eliminar'),
+                              ),
+                            ],
                           ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('Cancelar'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text('Eliminar'),
-                            ),
-                          ],
                         ),
-                      ),
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.md),
-                        color: Colors.red.shade400,
-                        child: const Icon(Icons.delete_outline, color: Colors.white),
-                      ),
-                      onDismissed: (_) => ref
-                          .read(conversationsControllerProvider.notifier)
-                          .deleteConversation(conversation.otherUserId),
-                      child: _ConversationTile(conversation: conversation),
-                    );
-                  },
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: VaultSpacing.md,
+                          ),
+                          color: Colors.red.shade400,
+                          child: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onDismissed: (_) => ref
+                            .read(conversationsControllerProvider.notifier)
+                            .deleteConversation(conversation.otherUserId),
+                        child: _ConversationTile(conversation: conversation),
+                      );
+                    },
+                  ),
                 ),
-              ),
       },
     );
   }
@@ -120,15 +126,18 @@ class _EmptyConversations extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.chat_bubble_outline,
-                size: VaultIconSize.xl, color: VaultColors.textSecondary),
+            Icon(
+              Icons.chat_bubble_outline,
+              size: VaultIconSize.xl,
+              color: VaultColors.textSecondary,
+            ),
             const SizedBox(height: VaultSpacing.md),
             Text(
               'Todavía no tienes conversaciones',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: VaultSpacing.xs),
-            const Text(
+            Text(
               'Escribe a un vendedor o a un negocio desde su publicación '
               'para empezar a chatear.',
               textAlign: TextAlign.center,
@@ -164,7 +173,7 @@ class _ConversationTile extends StatelessWidget {
             ? NetworkImage(conversation.otherUserAvatarUrl)
             : null,
         child: conversation.otherUserAvatarUrl.isEmpty
-            ? const Icon(Icons.person_outline, color: VaultColors.textSecondary)
+            ? Icon(Icons.person_outline, color: VaultColors.textSecondary)
             : null,
       ),
       title: Text(

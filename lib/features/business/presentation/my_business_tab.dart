@@ -32,7 +32,8 @@ class MyBusinessTab extends ConsumerWidget {
               Text(state.errorMessage ?? 'Error al cargar tu negocio'),
               const SizedBox(height: VaultSpacing.md),
               TextButton(
-                onPressed: () => ref.read(businessControllerProvider.notifier).load(),
+                onPressed: () =>
+                    ref.read(businessControllerProvider.notifier).load(),
                 child: const Text('Reintentar'),
               ),
             ],
@@ -42,8 +43,11 @@ class MyBusinessTab extends ConsumerWidget {
         final business = state.business;
         return business == null
             ? _EmptyView(
-                onAdd: () => context.push(AppRoutes.registerBusiness).then(
-                      (_) => ref.read(businessControllerProvider.notifier).load(),
+                onAdd: () => context
+                    .push(AppRoutes.registerBusiness)
+                    .then(
+                      (_) =>
+                          ref.read(businessControllerProvider.notifier).load(),
                     ),
               )
             : _AdminView(business: business);
@@ -64,10 +68,13 @@ class _EmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.storefront_outlined,
-                size: VaultIconSize.xl, color: VaultColors.textSecondary),
+            Icon(
+              Icons.storefront_outlined,
+              size: VaultIconSize.xl,
+              color: VaultColors.textSecondary,
+            ),
             const SizedBox(height: VaultSpacing.lg),
-            const Text(
+            Text(
               "No tienes un negocio registrado",
               style: TextStyle(
                 fontSize: 18,
@@ -76,7 +83,7 @@ class _EmptyView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: VaultSpacing.sm),
-            const Text(
+            Text(
               "Crea tu negocio para gestionar tus datos, horarios y ubicación.",
               textAlign: TextAlign.center,
               style: TextStyle(color: VaultColors.textSecondary),
@@ -87,7 +94,9 @@ class _EmptyView extends StatelessWidget {
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: VaultColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: VaultSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: VaultSpacing.md,
+                  ),
                 ),
                 onPressed: onAdd,
                 icon: const Icon(Icons.add),
@@ -109,23 +118,30 @@ enum _BusinessCategory { mantenimiento, reparacion }
 extension _BusinessCategoryUI on _BusinessCategory {
   String get label {
     switch (this) {
-      case _BusinessCategory.mantenimiento: return 'Mantenimiento';
-      case _BusinessCategory.reparacion: return 'Reparación';
+      case _BusinessCategory.mantenimiento:
+        return 'Mantenimiento';
+      case _BusinessCategory.reparacion:
+        return 'Reparación';
     }
   }
 
   String get value {
     switch (this) {
-      case _BusinessCategory.mantenimiento: return 'servicio';
-      case _BusinessCategory.reparacion: return 'restaurador';
+      case _BusinessCategory.mantenimiento:
+        return 'servicio';
+      case _BusinessCategory.reparacion:
+        return 'restaurador';
     }
   }
 
   static _BusinessCategory? fromValue(String value) {
     switch (value) {
-      case 'servicio': return _BusinessCategory.mantenimiento;
-      case 'restaurador': return _BusinessCategory.reparacion;
-      default: return null;
+      case 'servicio':
+        return _BusinessCategory.mantenimiento;
+      case 'restaurador':
+        return _BusinessCategory.reparacion;
+      default:
+        return null;
     }
   }
 }
@@ -140,12 +156,14 @@ class _AdminView extends ConsumerStatefulWidget {
 }
 
 class _AdminViewState extends ConsumerState<_AdminView> {
-  late final TextEditingController _nameController =
-      TextEditingController(text: widget.business.name);
+  late final TextEditingController _nameController = TextEditingController(
+    text: widget.business.name,
+  );
   late final TextEditingController _descriptionController =
       TextEditingController(text: widget.business.description);
-  late final TextEditingController _locationController =
-      TextEditingController(text: widget.business.location);
+  late final TextEditingController _locationController = TextEditingController(
+    text: widget.business.location,
+  );
   late final TextEditingController _specialtiesController =
       TextEditingController(text: widget.business.specialties.join(', '));
   late Set<_BusinessCategory> _categories = widget.business.types
@@ -166,23 +184,30 @@ class _AdminViewState extends ConsumerState<_AdminView> {
 
     setState(() => _uploadingPhoto = true);
     final bytes = await picked.readAsBytes();
-    final ok = await ref.read(businessControllerProvider.notifier).uploadPhoto(
-          bytes: bytes,
-          filename: picked.name,
-        );
+    final ok = await ref
+        .read(businessControllerProvider.notifier)
+        .uploadPhoto(bytes: bytes, filename: picked.name);
 
     if (!mounted) return;
     setState(() => _uploadingPhoto = false);
     if (!ok) {
-      final error = ref.read(businessControllerProvider).errorMessage ?? 'No se pudo subir la foto';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      final error =
+          ref.read(businessControllerProvider).errorMessage ??
+          'No se pudo subir la foto';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
   Future<void> _removePhoto(String photoId) async {
-    final ok = await ref.read(businessControllerProvider.notifier).deletePhoto(photoId);
+    final ok = await ref
+        .read(businessControllerProvider.notifier)
+        .deletePhoto(photoId);
     if (!mounted || ok) return;
-    final error = ref.read(businessControllerProvider).errorMessage ?? 'No se pudo quitar la foto';
+    final error =
+        ref.read(businessControllerProvider).errorMessage ??
+        'No se pudo quitar la foto';
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
   }
 
@@ -203,7 +228,9 @@ class _AdminViewState extends ConsumerState<_AdminView> {
       return;
     }
     setState(() => _saving = true);
-    final ok = await ref.read(businessControllerProvider.notifier).update(
+    final ok = await ref
+        .read(businessControllerProvider.notifier)
+        .update(
           name: _nameController.text.trim(),
           types: _categories.map((c) => c.value).toList(),
           description: _descriptionController.text.trim(),
@@ -217,7 +244,9 @@ class _AdminViewState extends ConsumerState<_AdminView> {
     if (mounted) {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ok ? 'Negocio actualizado.' : 'No se pudo guardar.')),
+        SnackBar(
+          content: Text(ok ? 'Negocio actualizado.' : 'No se pudo guardar.'),
+        ),
       );
     }
   }
@@ -226,15 +255,20 @@ class _AdminViewState extends ConsumerState<_AdminView> {
   Widget build(BuildContext context) {
     // Se lee de nuevo del provider (no de widget.business) para que la
     // grilla de fotos refleje subidas/borrados al instante.
-    final business = ref.watch(businessControllerProvider).business ?? widget.business;
+    final business =
+        ref.watch(businessControllerProvider).business ?? widget.business;
 
     return ListView(
       padding: const EdgeInsets.all(VaultSpacing.md),
       children: [
         if (business.isVerified) ...[
-          const Row(
+          Row(
             children: [
-              Icon(Icons.verified, size: VaultIconSize.sm, color: VaultColors.success),
+              Icon(
+                Icons.verified,
+                size: VaultIconSize.sm,
+                color: VaultColors.success,
+              ),
               SizedBox(width: VaultSpacing.xs),
               Text('Verificado', style: TextStyle(color: VaultColors.success)),
             ],
@@ -248,7 +282,10 @@ class _AdminViewState extends ConsumerState<_AdminView> {
             runSpacing: VaultSpacing.sm,
             children: [
               for (final photo in business.photos)
-                _PhotoThumb(url: photo.url, onRemove: () => _removePhoto(photo.id)),
+                _PhotoThumb(
+                  url: photo.url,
+                  onRemove: () => _removePhoto(photo.id),
+                ),
               GestureDetector(
                 onTap: _uploadingPhoto ? null : _addPhoto,
                 child: SizedBox(
@@ -273,7 +310,9 @@ class _AdminViewState extends ConsumerState<_AdminView> {
           child: _BusinessCategoryChips(
             selected: _categories,
             onToggle: (c) => setState(() {
-              _categories.contains(c) ? _categories.remove(c) : _categories.add(c);
+              _categories.contains(c)
+                  ? _categories.remove(c)
+                  : _categories.add(c);
             }),
           ),
         ),
@@ -324,7 +363,10 @@ class _AdminViewState extends ConsumerState<_AdminView> {
                 ? const SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Text('Guardar cambios'),
           ),
@@ -360,7 +402,11 @@ class _AdminViewState extends ConsumerState<_AdminView> {
     );
   }
 
-  Widget _section({required String title, required Widget child, String? note}) {
+  Widget _section({
+    required String title,
+    required Widget child,
+    String? note,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: VaultSpacing.lg),
       child: Column(
@@ -368,7 +414,7 @@ class _AdminViewState extends ConsumerState<_AdminView> {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w600,
               color: VaultColors.textPrimary,
             ),
@@ -377,7 +423,10 @@ class _AdminViewState extends ConsumerState<_AdminView> {
           child,
           if (note != null) ...[
             const SizedBox(height: VaultSpacing.xs),
-            Text(note, style: const TextStyle(color: VaultColors.textSecondary, fontSize: 12)),
+            Text(
+              note,
+              style: TextStyle(color: VaultColors.textSecondary, fontSize: 12),
+            ),
           ],
         ],
       ),
@@ -399,11 +448,7 @@ class _AdminViewState extends ConsumerState<_AdminView> {
   }
 
   Widget _dayChip(String label) {
-    return FilterChip(
-      label: Text(label),
-      selected: false,
-      onSelected: (_) {},
-    );
+    return FilterChip(label: Text(label), selected: false, onSelected: (_) {});
   }
 }
 
@@ -419,7 +464,11 @@ class _PhotoThumb extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(VaultRadius.sm),
-          child: SizedBox(width: 96, height: 96, child: ItemImage(imageUrl: url)),
+          child: SizedBox(
+            width: 96,
+            height: 96,
+            child: ItemImage(imageUrl: url),
+          ),
         ),
         Positioned(
           top: 4,
@@ -428,7 +477,10 @@ class _PhotoThumb extends StatelessWidget {
             onTap: onRemove,
             child: Container(
               padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
               child: const Icon(Icons.close, size: 16, color: Colors.white),
             ),
           ),
@@ -442,7 +494,10 @@ class _BusinessCategoryChips extends StatelessWidget {
   final Set<_BusinessCategory> selected;
   final ValueChanged<_BusinessCategory> onToggle;
 
-  const _BusinessCategoryChips({required this.selected, required this.onToggle});
+  const _BusinessCategoryChips({
+    required this.selected,
+    required this.onToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -461,7 +516,9 @@ class _BusinessCategoryChips extends StatelessWidget {
             decoration: BoxDecoration(
               color: isSelected ? VaultColors.success : VaultColors.surface,
               borderRadius: VaultRadius.buttonBorder,
-              border: Border.all(color: isSelected ? VaultColors.success : VaultColors.divider),
+              border: Border.all(
+                color: isSelected ? VaultColors.success : VaultColors.divider,
+              ),
             ),
             child: Text(
               c.label,
@@ -500,8 +557,11 @@ class _BusinessSubscriptionCard extends StatelessWidget {
           padding: const EdgeInsets.all(VaultSpacing.lg),
           child: Row(
             children: [
-              const Icon(Icons.campaign_outlined,
-                  color: Colors.white, size: VaultIconSize.lg),
+              const Icon(
+                Icons.campaign_outlined,
+                color: Colors.white,
+                size: VaultIconSize.lg,
+              ),
               const SizedBox(width: VaultSpacing.md),
               Expanded(
                 child: Column(

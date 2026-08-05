@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
 import '../../business/presentation/businesses_tab.dart';
 import '../../services/presentation/services_directory_page.dart';
@@ -15,6 +15,10 @@ class ShopView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ShopView vive en el IndexedStack persistente del shell (home_page.dart)
+    // y su padre nunca la reconstruye tras el primer build, así que sin esto
+    // el AppBar/TabBar se quedan con los colores del modo con el que se montó.
+    Theme.of(context);
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -24,7 +28,7 @@ class ShopView extends StatelessWidget {
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           toolbarHeight: 0,
-          bottom: const TabBar(
+          bottom: TabBar(
             labelColor: VaultColors.primary,
             unselectedLabelColor: VaultColors.textSecondary,
             indicatorColor: VaultColors.primary,
@@ -36,14 +40,9 @@ class ShopView extends StatelessWidget {
           ),
         ),
         body: const TabBarView(
-          children: [
-            ShopTab(),
-            BusinessesTab(),
-            ServicesDirectoryPage(),
-          ],
+          children: [ShopTab(), BusinessesTab(), ServicesDirectoryPage()],
         ),
       ),
     );
   }
 }
-

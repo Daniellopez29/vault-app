@@ -20,6 +20,7 @@ class VaultCardField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.md),
       decoration: BoxDecoration(

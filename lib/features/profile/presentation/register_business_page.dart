@@ -22,22 +22,28 @@ enum _BusinessCategory { mantenimiento, reparacion }
 extension _BusinessCategoryUI on _BusinessCategory {
   String get label {
     switch (this) {
-      case _BusinessCategory.mantenimiento: return 'Mantenimiento';
-      case _BusinessCategory.reparacion:    return 'Reparación';
+      case _BusinessCategory.mantenimiento:
+        return 'Mantenimiento';
+      case _BusinessCategory.reparacion:
+        return 'Reparación';
     }
   }
 
   String get businessType {
     switch (this) {
-      case _BusinessCategory.mantenimiento: return 'servicio';
-      case _BusinessCategory.reparacion:    return 'restaurador';
+      case _BusinessCategory.mantenimiento:
+        return 'servicio';
+      case _BusinessCategory.reparacion:
+        return 'restaurador';
     }
   }
 
   UserRole get role {
     switch (this) {
-      case _BusinessCategory.mantenimiento: return UserRole.service;
-      case _BusinessCategory.reparacion:    return UserRole.restorer;
+      case _BusinessCategory.mantenimiento:
+        return UserRole.service;
+      case _BusinessCategory.reparacion:
+        return UserRole.restorer;
     }
   }
 }
@@ -46,7 +52,8 @@ class RegisterBusinessPage extends ConsumerStatefulWidget {
   const RegisterBusinessPage({super.key});
 
   @override
-  ConsumerState<RegisterBusinessPage> createState() => _RegisterBusinessPageState();
+  ConsumerState<RegisterBusinessPage> createState() =>
+      _RegisterBusinessPageState();
 }
 
 class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
@@ -73,7 +80,10 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
   }
 
   Future<void> _addImages() async {
-    final picked = await ImagePicker().pickMultiImage(maxWidth: 1600, imageQuality: 85);
+    final picked = await ImagePicker().pickMultiImage(
+      maxWidth: 1600,
+      imageQuality: 85,
+    );
     if (picked.isEmpty) return;
     setState(() => _images.addAll(picked));
   }
@@ -92,7 +102,9 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
     }
     setState(() => _saving = true);
 
-    final result = await ref.read(registerBusinessUseCaseProvider).call(
+    final result = await ref
+        .read(registerBusinessUseCaseProvider)
+        .call(
           RegisterBusinessParams(
             name: _nameController.text.trim(),
             types: _categories.map((c) => c.businessType).toList(),
@@ -105,8 +117,9 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
 
     final ok = result.fold((failure) {
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(failure.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(failure.message)));
       return false;
     }, (_) => true);
 
@@ -151,7 +164,10 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
           child: ListView(
             padding: const EdgeInsets.all(VaultSpacing.lg),
             children: [
-              Text('Añade tu negocio a nuestra aplicación', style: tt.bodyMedium),
+              Text(
+                'Añade tu negocio a nuestra aplicación',
+                style: tt.bodyMedium,
+              ),
               const SizedBox(height: VaultSpacing.lg),
 
               Text('Fotos (opcional)', style: tt.titleMedium),
@@ -161,7 +177,10 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
                 runSpacing: VaultSpacing.sm,
                 children: [
                   for (var i = 0; i < _images.length; i++)
-                    _BusinessImageThumb(image: _images[i], onRemove: () => _removeImage(i)),
+                    _BusinessImageThumb(
+                      image: _images[i],
+                      onRemove: () => _removeImage(i),
+                    ),
                   _AddBusinessImageTile(onTap: _addImages),
                 ],
               ),
@@ -172,8 +191,9 @@ class _RegisterBusinessPageState extends ConsumerState<RegisterBusinessPage> {
                 controller: _nameController,
                 label: 'Nombre',
                 icon: Icons.storefront_outlined,
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Ingresa el nombre del negocio' : null,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Ingresa el nombre del negocio'
+                    : null,
               ),
               const SizedBox(height: VaultSpacing.lg),
 
@@ -306,9 +326,18 @@ class _BusinessImageThumb extends StatelessWidget {
             future: image.readAsBytes(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return Container(width: 96, height: 96, color: VaultColors.surface);
+                return Container(
+                  width: 96,
+                  height: 96,
+                  color: VaultColors.surface,
+                );
               }
-              return Image.memory(snapshot.data!, width: 96, height: 96, fit: BoxFit.cover);
+              return Image.memory(
+                snapshot.data!,
+                width: 96,
+                height: 96,
+                fit: BoxFit.cover,
+              );
             },
           ),
         ),
@@ -319,7 +348,10 @@ class _BusinessImageThumb extends StatelessWidget {
             onTap: onRemove,
             child: Container(
               padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
               child: const Icon(Icons.close, size: 16, color: Colors.white),
             ),
           ),
@@ -348,8 +380,11 @@ class _AddBusinessImageTile extends StatelessWidget {
             color: VaultColors.surface,
             borderRadius: VaultRadius.cardBorder,
           ),
-          child: Icon(Icons.add_photo_alternate_outlined,
-              color: VaultColors.textSecondary, size: VaultIconSize.lg),
+          child: Icon(
+            Icons.add_photo_alternate_outlined,
+            color: VaultColors.textSecondary,
+            size: VaultIconSize.lg,
+          ),
         ),
       ),
     );
@@ -360,7 +395,10 @@ class _BusinessCategoryChips extends StatelessWidget {
   final Set<_BusinessCategory> selected;
   final ValueChanged<_BusinessCategory> onToggle;
 
-  const _BusinessCategoryChips({required this.selected, required this.onToggle});
+  const _BusinessCategoryChips({
+    required this.selected,
+    required this.onToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -379,7 +417,9 @@ class _BusinessCategoryChips extends StatelessWidget {
             decoration: BoxDecoration(
               color: isSelected ? VaultColors.success : VaultColors.surface,
               borderRadius: VaultRadius.buttonBorder,
-              border: Border.all(color: isSelected ? VaultColors.success : VaultColors.divider),
+              border: Border.all(
+                color: isSelected ? VaultColors.success : VaultColors.divider,
+              ),
             ),
             child: Text(
               c.label,
@@ -416,7 +456,7 @@ class _BusinessField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
-      style: const TextStyle(color: VaultColors.primary),
+      style: TextStyle(color: VaultColors.primary),
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: VaultColors.primary),
@@ -428,11 +468,13 @@ class _BusinessField extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: VaultRadius.buttonBorder,
-          borderSide: BorderSide(color: VaultColors.primary.withValues(alpha: 0.2)),
+          borderSide: BorderSide(
+            color: VaultColors.primary.withValues(alpha: 0.2),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: VaultRadius.buttonBorder,
-          borderSide: const BorderSide(color: VaultColors.primary, width: 2),
+          borderSide: BorderSide(color: VaultColors.primary, width: 2),
         ),
       ),
       validator: validator,

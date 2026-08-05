@@ -33,7 +33,7 @@ class MaintenanceList extends StatelessWidget {
         );
       case MaintenanceStatus.loaded:
         if (state.entries.isEmpty) {
-          return const Padding(
+          return Padding(
             padding: EdgeInsets.all(VaultSpacing.xl),
             child: Center(
               child: Text(
@@ -44,7 +44,9 @@ class MaintenanceList extends StatelessWidget {
           );
         }
         return Column(
-          children: state.entries.map((e) => MaintenanceTile(entry: e)).toList(),
+          children: state.entries
+              .map((e) => MaintenanceTile(entry: e))
+              .toList(),
         );
     }
   }
@@ -75,15 +77,17 @@ class MaintenanceTile extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(entry.type.displayName, style: tt.titleSmall),
-              Text(dateStr, style: const TextStyle(color: VaultColors.textSecondary)),
+              Text(dateStr, style: TextStyle(color: VaultColors.textSecondary)),
             ],
           ),
           const SizedBox(height: VaultSpacing.xs),
           Text(entry.description, style: tt.bodyMedium),
           if (entry.cost != null) ...[
             const SizedBox(height: VaultSpacing.xs),
-            Text('Costo: \$${entry.cost!.toStringAsFixed(0)}',
-                style: const TextStyle(color: VaultColors.textSecondary)),
+            Text(
+              'Costo: \$${entry.cost!.toStringAsFixed(0)}',
+              style: TextStyle(color: VaultColors.textSecondary),
+            ),
           ],
         ],
       ),

@@ -14,6 +14,7 @@ class TitledPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     return Scaffold(
       backgroundColor: VaultColors.background,
       appBar: AppBar(

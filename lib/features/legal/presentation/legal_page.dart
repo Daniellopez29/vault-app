@@ -19,7 +19,7 @@ class LegalPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Legal'),
-          bottom: const TabBar(
+          bottom: TabBar(
             indicatorColor: VaultColors.primary,
             labelColor: VaultColors.primary,
             unselectedLabelColor: VaultColors.textSecondary,

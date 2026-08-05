@@ -17,7 +17,11 @@ class SendToServiceSheet extends ConsumerStatefulWidget {
   final String businessId;
   final String businessName;
 
-  const SendToServiceSheet({super.key, required this.businessId, required this.businessName});
+  const SendToServiceSheet({
+    super.key,
+    required this.businessId,
+    required this.businessName,
+  });
 
   @override
   ConsumerState<SendToServiceSheet> createState() => _SendToServiceSheetState();
@@ -39,7 +43,11 @@ class _SendToServiceSheetState extends ConsumerState<SendToServiceSheet> {
     });
 
     final result = await ref.read(createServiceRequestUseCaseProvider)(
-      CreateServiceRequestParams(assetId: assetId, businessId: widget.businessId, type: _type),
+      CreateServiceRequestParams(
+        assetId: assetId,
+        businessId: widget.businessId,
+        type: _type,
+      ),
     );
 
     if (!mounted) return;
@@ -55,6 +63,7 @@ class _SendToServiceSheetState extends ConsumerState<SendToServiceSheet> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final assetsState = ref.watch(profileAssetsControllerProvider);
     final assets = assetsState.assets;
@@ -70,11 +79,13 @@ class _SendToServiceSheetState extends ConsumerState<SendToServiceSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Enviar a ${widget.businessName}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+          Text(
+            'Enviar a ${widget.businessName}',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: VaultSpacing.md),
           if (assets.isEmpty)
-            const Text(
+            Text(
               'No tienes activos registrados todavía.',
               style: TextStyle(color: VaultColors.textSecondary),
             )
@@ -86,7 +97,10 @@ class _SendToServiceSheetState extends ConsumerState<SendToServiceSheet> {
                 border: OutlineInputBorder(),
               ),
               items: assets
-                  .map((AssetEntity a) => DropdownMenuItem(value: a.id, child: Text(a.name)))
+                  .map(
+                    (AssetEntity a) =>
+                        DropdownMenuItem(value: a.id, child: Text(a.name)),
+                  )
                   .toList(),
               onChanged: (v) => setState(() => _assetId = v),
             ),
@@ -98,14 +112,20 @@ class _SendToServiceSheetState extends ConsumerState<SendToServiceSheet> {
                 border: OutlineInputBorder(),
               ),
               items: const [
-                DropdownMenuItem(value: ServiceRequestType.servicio, child: Text('Servicio')),
-                DropdownMenuItem(value: ServiceRequestType.reparacion, child: Text('Reparación')),
+                DropdownMenuItem(
+                  value: ServiceRequestType.servicio,
+                  child: Text('Servicio'),
+                ),
+                DropdownMenuItem(
+                  value: ServiceRequestType.reparacion,
+                  child: Text('Reparación'),
+                ),
               ],
               onChanged: (v) => setState(() => _type = v ?? _type),
             ),
             if (_errorMessage != null) ...[
               const SizedBox(height: VaultSpacing.sm),
-              Text(_errorMessage!, style: const TextStyle(color: VaultColors.error)),
+              Text(_errorMessage!, style: TextStyle(color: VaultColors.error)),
             ],
             const SizedBox(height: VaultSpacing.lg),
             ElevatedButton(
@@ -118,7 +138,10 @@ class _SendToServiceSheetState extends ConsumerState<SendToServiceSheet> {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Text('Enviar'),
             ),

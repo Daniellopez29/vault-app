@@ -30,6 +30,7 @@ class _AssetCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     return Container(
       decoration: BoxDecoration(
         color: VaultColors.surface,

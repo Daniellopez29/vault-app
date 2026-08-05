@@ -24,7 +24,8 @@ class PaymentInstructionsPage extends StatefulWidget {
   const PaymentInstructionsPage({super.key, required this.type});
 
   @override
-  State<PaymentInstructionsPage> createState() => _PaymentInstructionsPageState();
+  State<PaymentInstructionsPage> createState() =>
+      _PaymentInstructionsPageState();
 }
 
 class _PaymentInstructionsPageState extends State<PaymentInstructionsPage> {
@@ -33,7 +34,9 @@ class _PaymentInstructionsPageState extends State<PaymentInstructionsPage> {
   String _generateReference() {
     final random = Random();
     final digits = List.generate(16, (_) => random.nextInt(10)).join();
-    return [for (var i = 0; i < 16; i += 4) digits.substring(i, i + 4)].join(' ');
+    return [
+      for (var i = 0; i < 16; i += 4) digits.substring(i, i + 4),
+    ].join(' ');
   }
 
   @override
@@ -210,14 +213,12 @@ class _InfoCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: Text(rows[i][1], style: tt.bodyMedium),
-                  ),
+                  Expanded(child: Text(rows[i][1], style: tt.bodyMedium)),
                 ],
               ),
             ),
             if (i < rows.length - 1)
-              const Divider(height: 1, color: VaultColors.divider),
+              Divider(height: 1, color: VaultColors.divider),
           ],
         ],
       ),
@@ -242,8 +243,11 @@ class _Warning extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline,
-              color: VaultColors.textSecondary, size: VaultIconSize.md),
+          Icon(
+            Icons.info_outline,
+            color: VaultColors.textSecondary,
+            size: VaultIconSize.md,
+          ),
           const SizedBox(width: VaultSpacing.md),
           Expanded(
             child: Text(

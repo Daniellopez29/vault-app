@@ -55,13 +55,14 @@ class _WriteReviewDialogState extends ConsumerState<WriteReviewDialog> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     return AlertDialog(
       title: const Text('Dejar reseña'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Cuéntale a otros compradores cómo fue tu experiencia con este vendedor.',
             style: TextStyle(color: VaultColors.textSecondary),
           ),
@@ -79,7 +80,7 @@ class _WriteReviewDialogState extends ConsumerState<WriteReviewDialog> {
           ),
           if (_errorMessage != null) ...[
             const SizedBox(height: VaultSpacing.sm),
-            Text(_errorMessage!, style: const TextStyle(color: VaultColors.error)),
+            Text(_errorMessage!, style: TextStyle(color: VaultColors.error)),
           ],
         ],
       ),

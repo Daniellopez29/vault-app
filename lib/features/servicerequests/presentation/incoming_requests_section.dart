@@ -28,14 +28,16 @@ class IncomingRequestsSection extends ConsumerWidget {
       case ServiceRequestsStatus.error:
         return Padding(
           padding: const EdgeInsets.all(VaultSpacing.lg),
-          child: Text(state.errorMessage ?? 'Error al cargar los artículos recibidos'),
+          child: Text(
+            state.errorMessage ?? 'Error al cargar los artículos recibidos',
+          ),
         );
       case ServiceRequestsStatus.loaded:
         final active = state.requests
             .where((r) => r.status != ServiceRequestStatus.confirmado)
             .toList();
         if (active.isEmpty) {
-          return const Padding(
+          return Padding(
             padding: EdgeInsets.all(VaultSpacing.lg),
             child: Text(
               'No tienes artículos pendientes.',
@@ -44,7 +46,9 @@ class IncomingRequestsSection extends ConsumerWidget {
           );
         }
         return Column(
-          children: active.map((r) => _IncomingRequestTile(request: r)).toList(),
+          children: active
+              .map((r) => _IncomingRequestTile(request: r))
+              .toList(),
         );
     }
   }
@@ -56,19 +60,23 @@ class _IncomingRequestTile extends ConsumerStatefulWidget {
   const _IncomingRequestTile({required this.request});
 
   @override
-  ConsumerState<_IncomingRequestTile> createState() => _IncomingRequestTileState();
+  ConsumerState<_IncomingRequestTile> createState() =>
+      _IncomingRequestTileState();
 }
 
 class _IncomingRequestTileState extends ConsumerState<_IncomingRequestTile> {
   bool _acting = false;
 
   (String, Color) get _statusInfo => switch (widget.request.status) {
-        ServiceRequestStatus.pendienteAceptacion => ('Por aceptar', VaultColors.textSecondary),
-        ServiceRequestStatus.enEspera => ('En espera', VaultColors.accent),
-        ServiceRequestStatus.enServicio => ('En servicio', VaultColors.primary),
-        ServiceRequestStatus.terminado => ('Terminado', VaultColors.success),
-        _ => (widget.request.status, VaultColors.textSecondary),
-      };
+    ServiceRequestStatus.pendienteAceptacion => (
+      'Por aceptar',
+      VaultColors.textSecondary,
+    ),
+    ServiceRequestStatus.enEspera => ('En espera', VaultColors.accent),
+    ServiceRequestStatus.enServicio => ('En servicio', VaultColors.primary),
+    ServiceRequestStatus.terminado => ('Terminado', VaultColors.success),
+    _ => (widget.request.status, VaultColors.textSecondary),
+  };
 
   Future<void> _run(Future<bool> Function(String) action) async {
     setState(() => _acting = true);
@@ -76,14 +84,19 @@ class _IncomingRequestTileState extends ConsumerState<_IncomingRequestTile> {
     if (!mounted) return;
     setState(() => _acting = false);
     if (!ok) {
-      final error = ref.read(incomingServiceRequestsControllerProvider).errorMessage ??
+      final error =
+          ref.read(incomingServiceRequestsControllerProvider).errorMessage ??
           'No se pudo actualizar la solicitud';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
   Widget? _actionButton() {
-    final notifier = ref.read(incomingServiceRequestsControllerProvider.notifier);
+    final notifier = ref.read(
+      incomingServiceRequestsControllerProvider.notifier,
+    );
     final (label, onPressed) = switch (widget.request.status) {
       ServiceRequestStatus.pendienteAceptacion => ('Aceptar', notifier.accept),
       ServiceRequestStatus.enEspera => ('Iniciar', notifier.start),
@@ -96,7 +109,10 @@ class _IncomingRequestTileState extends ConsumerState<_IncomingRequestTile> {
       onPressed: _acting ? null : () => _run(onPressed),
       child: _acting
           ? const SizedBox(
-              width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
           : Text(label),
     );
   }
@@ -135,18 +151,29 @@ class _IncomingRequestTileState extends ConsumerState<_IncomingRequestTile> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Text(widget.request.assetName,
-                          style: tt.titleSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        widget.request.assetName,
+                        style: tt.titleSmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: VaultSpacing.sm, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: VaultSpacing.sm,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: statusColor,
                         borderRadius: BorderRadius.circular(VaultRadius.sm),
                       ),
                       child: Text(
                         statusLabel,
-                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -154,14 +181,18 @@ class _IncomingRequestTileState extends ConsumerState<_IncomingRequestTile> {
                 const SizedBox(height: VaultSpacing.xs),
                 Text(
                   'De ${widget.request.ownerName} · ${widget.request.type == 'reparacion' ? 'Reparación' : 'Servicio'}',
-                  style: tt.bodySmall?.copyWith(color: VaultColors.textSecondary),
+                  style: tt.bodySmall?.copyWith(
+                    color: VaultColors.textSecondary,
+                  ),
                 ),
                 if (widget.request.status == ServiceRequestStatus.terminado)
                   Padding(
                     padding: const EdgeInsets.only(top: VaultSpacing.xs),
                     child: Text(
                       'Esperando que el cliente confirme la entrega.',
-                      style: tt.bodySmall?.copyWith(color: VaultColors.textSecondary),
+                      style: tt.bodySmall?.copyWith(
+                        color: VaultColors.textSecondary,
+                      ),
                     ),
                   ),
                 if (action != null)

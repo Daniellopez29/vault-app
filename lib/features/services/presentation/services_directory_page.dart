@@ -23,49 +23,49 @@ class ServicesDirectoryPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final businessesAsync = ref.watch(allBusinessesProvider);
     return businessesAsync.when(
-        loading: () => const _DirectorySkeleton(),
-        error: (error, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(VaultSpacing.xl),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'No se pudieron cargar los servicios',
-                  style: TextStyle(color: VaultColors.textSecondary),
-                ),
-                const SizedBox(height: VaultSpacing.md),
-                ElevatedButton(
-                  onPressed: () => ref.invalidate(allBusinessesProvider),
-                  child: const Text('Reintentar'),
-                ),
-              ],
-            ),
+      loading: () => const _DirectorySkeleton(),
+      error: (error, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(VaultSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'No se pudieron cargar los servicios',
+                style: TextStyle(color: VaultColors.textSecondary),
+              ),
+              const SizedBox(height: VaultSpacing.md),
+              ElevatedButton(
+                onPressed: () => ref.invalidate(allBusinessesProvider),
+                child: const Text('Reintentar'),
+              ),
+            ],
           ),
         ),
-        data: (businesses) {
-          if (businesses.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(VaultSpacing.xl),
-                child: Text(
-                  'Aún no hay especialistas con servicios publicados.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: VaultColors.textSecondary),
-                ),
+      ),
+      data: (businesses) {
+        if (businesses.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.all(VaultSpacing.xl),
+              child: Text(
+                'Aún no hay especialistas con servicios publicados.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: VaultColors.textSecondary),
               ),
-            );
-          }
-          return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(allBusinessesProvider),
-            child: ListView.builder(
-              padding: const EdgeInsets.all(VaultSpacing.md),
-              itemCount: businesses.length,
-              itemBuilder: (context, index) =>
-                  _BusinessCard(business: businesses[index]),
             ),
           );
-        },
+        }
+        return RefreshIndicator(
+          onRefresh: () async => ref.invalidate(allBusinessesProvider),
+          child: ListView.builder(
+            padding: const EdgeInsets.all(VaultSpacing.md),
+            itemCount: businesses.length,
+            itemBuilder: (context, index) =>
+                _BusinessCard(business: businesses[index]),
+          ),
+        );
+      },
     );
   }
 }
@@ -81,7 +81,9 @@ class _BusinessCard extends ConsumerWidget {
     final tt = Theme.of(context).textTheme;
     final currentUserId = ref.watch(authControllerProvider).user?.id;
     final isSelf = currentUserId != null && currentUserId == business.userId;
-    final servicesState = ref.watch(businessServicesControllerProvider(business.id));
+    final servicesState = ref.watch(
+      businessServicesControllerProvider(business.id),
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: VaultSpacing.md),
@@ -103,7 +105,7 @@ class _BusinessCard extends ConsumerWidget {
                   color: VaultColors.background,
                   borderRadius: BorderRadius.circular(VaultRadius.sm),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.build_outlined,
                   color: VaultColors.primary,
                   size: VaultIconSize.md,
@@ -120,7 +122,9 @@ class _BusinessCard extends ConsumerWidget {
                     ),
                     Text(
                       '${servicesState.services.length} servicios',
-                      style: tt.labelSmall?.copyWith(color: VaultColors.textSecondary),
+                      style: tt.labelSmall?.copyWith(
+                        color: VaultColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -131,14 +135,18 @@ class _BusinessCard extends ConsumerWidget {
                     AppRoutes.chat,
                     extra: ChatPageArgs(
                       recipientId: business.userId,
-                      recipientName: business.name.isNotEmpty ? business.name : 'Especialista',
+                      recipientName: business.name.isNotEmpty
+                          ? business.name
+                          : 'Especialista',
                     ),
                   ),
                   style: TextButton.styleFrom(
                     foregroundColor: VaultColors.primary,
                   ),
-                  icon: const Icon(Icons.chat_bubble_outline,
-                      size: VaultIconSize.sm),
+                  icon: const Icon(
+                    Icons.chat_bubble_outline,
+                    size: VaultIconSize.sm,
+                  ),
                   label: const Text('Contactar'),
                 ),
             ],

@@ -17,9 +17,12 @@ enum _Condition { nuevo, usado, comoNuevo }
 extension _ConditionUI on _Condition {
   String get label {
     switch (this) {
-      case _Condition.nuevo:     return 'Nuevo';
-      case _Condition.usado:     return 'Usado';
-      case _Condition.comoNuevo: return 'Semi nuevo';
+      case _Condition.nuevo:
+        return 'Nuevo';
+      case _Condition.usado:
+        return 'Usado';
+      case _Condition.comoNuevo:
+        return 'Semi nuevo';
     }
   }
 
@@ -27,9 +30,12 @@ extension _ConditionUI on _Condition {
   /// nuevo/seminuevo/usado.
   String get value {
     switch (this) {
-      case _Condition.nuevo:     return 'nuevo';
-      case _Condition.usado:     return 'usado';
-      case _Condition.comoNuevo: return 'seminuevo';
+      case _Condition.nuevo:
+        return 'nuevo';
+      case _Condition.usado:
+        return 'usado';
+      case _Condition.comoNuevo:
+        return 'seminuevo';
     }
   }
 }
@@ -68,7 +74,10 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
   }
 
   Future<void> _addImages() async {
-    final picked = await ImagePicker().pickMultiImage(maxWidth: 1600, imageQuality: 85);
+    final picked = await ImagePicker().pickMultiImage(
+      maxWidth: 1600,
+      imageQuality: 85,
+    );
     if (picked.isEmpty) return;
     setState(() => _images.addAll(picked));
   }
@@ -86,7 +95,8 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
       category: _category,
       brand: _brandController.text.trim(),
       name: _nameController.text.trim(),
-      imageUrl: '', // la portada real la resuelve el backend con las fotos subidas
+      imageUrl:
+          '', // la portada real la resuelve el backend con las fotos subidas
       acquisitionDate: DateTime.now(),
       originalPrice: double.tryParse(_priceController.text.trim()) ?? 0,
       origin: _storeController.text.trim(),
@@ -102,7 +112,12 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
 
     final images = <AssetImageUpload>[];
     for (final image in _images) {
-      images.add(AssetImageUpload(bytes: await image.readAsBytes(), filename: image.name));
+      images.add(
+        AssetImageUpload(
+          bytes: await image.readAsBytes(),
+          filename: image.name,
+        ),
+      );
     }
 
     final ok = await ref
@@ -146,7 +161,10 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
                 runSpacing: VaultSpacing.sm,
                 children: [
                   for (var i = 0; i < _images.length; i++)
-                    _ImageThumb(image: _images[i], onRemove: () => _removeImage(i)),
+                    _ImageThumb(
+                      image: _images[i],
+                      onRemove: () => _removeImage(i),
+                    ),
                   _AddImageTile(onTap: _addImages),
                 ],
               ),
@@ -165,7 +183,7 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
                 icon: Icons.label_outline,
                 maxLength: 60,
                 validator: (v) =>
-                v == null || v.trim().isEmpty ? 'Ingresa el nombre' : null,
+                    v == null || v.trim().isEmpty ? 'Ingresa el nombre' : null,
               ),
               const SizedBox(height: VaultSpacing.md),
               _AssetField(
@@ -174,7 +192,7 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
                 icon: Icons.sell_outlined,
                 maxLength: 40,
                 validator: (v) =>
-                v == null || v.trim().isEmpty ? 'Ingresa la marca' : null,
+                    v == null || v.trim().isEmpty ? 'Ingresa la marca' : null,
               ),
               const SizedBox(height: VaultSpacing.md),
               Row(
@@ -184,9 +202,13 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
                       controller: _priceController,
                       label: 'Precio de compra',
                       icon: Icons.attach_money,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d{0,2}'),
+                        ),
                       ],
                       maxLength: 10,
                     ),
@@ -220,7 +242,8 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
-                  onPressed: () => setState(() => _sizeController.text = 'Sin talla'),
+                  onPressed: () =>
+                      setState(() => _sizeController.text = 'Sin talla'),
                   child: const Text('Sin talla'),
                 ),
               ),
@@ -249,13 +272,13 @@ class _RegisterAssetPageState extends ConsumerState<RegisterAssetPage> {
                       onPressed: _saving ? null : _save,
                       icon: _saving
                           ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
                           : const Icon(Icons.save_alt_outlined),
                       label: const Text('Guardar'),
                     ),
@@ -306,9 +329,18 @@ class _ImageThumb extends StatelessWidget {
             future: image.readAsBytes(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return Container(width: 96, height: 96, color: VaultColors.surface);
+                return Container(
+                  width: 96,
+                  height: 96,
+                  color: VaultColors.surface,
+                );
               }
-              return Image.memory(snapshot.data!, width: 96, height: 96, fit: BoxFit.cover);
+              return Image.memory(
+                snapshot.data!,
+                width: 96,
+                height: 96,
+                fit: BoxFit.cover,
+              );
             },
           ),
         ),
@@ -319,7 +351,10 @@ class _ImageThumb extends StatelessWidget {
             onTap: onRemove,
             child: Container(
               padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
               child: const Icon(Icons.close, size: 16, color: Colors.white),
             ),
           ),
@@ -348,8 +383,11 @@ class _AddImageTile extends StatelessWidget {
             color: VaultColors.surface,
             borderRadius: VaultRadius.cardBorder,
           ),
-          child: Icon(Icons.add_photo_alternate_outlined,
-              color: VaultColors.textSecondary, size: VaultIconSize.lg),
+          child: Icon(
+            Icons.add_photo_alternate_outlined,
+            color: VaultColors.textSecondary,
+            size: VaultIconSize.lg,
+          ),
         ),
       ),
     );
@@ -473,7 +511,7 @@ class _AssetField extends StatelessWidget {
       maxLength: maxLength,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
-      style: const TextStyle(color: VaultColors.primary),
+      style: TextStyle(color: VaultColors.primary),
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: VaultColors.primary),
@@ -491,7 +529,7 @@ class _AssetField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: VaultRadius.buttonBorder,
-          borderSide: const BorderSide(color: VaultColors.primary, width: 2),
+          borderSide: BorderSide(color: VaultColors.primary, width: 2),
         ),
       ),
       validator: validator,

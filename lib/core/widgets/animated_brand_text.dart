@@ -22,7 +22,14 @@ class AnimatedBrandText extends StatefulWidget {
 
 class _AnimatedBrandTextState extends State<AnimatedBrandText>
     with SingleTickerProviderStateMixin {
-  static const _words = ['VAULT', 'SNEAKERS', 'RELOJES', 'BOLSOS', 'GORRAS', 'LENTES'];
+  static const _words = [
+    'VAULT',
+    'SNEAKERS',
+    'RELOJES',
+    'BOLSOS',
+    'GORRAS',
+    'LENTES',
+  ];
 
   int _currentIndex = 0;
   int _nextIndex = 1;
@@ -53,24 +60,20 @@ class _AnimatedBrandTextState extends State<AnimatedBrandText>
         curve: const Interval(0.5, 1, curve: Curves.easeOut),
       ),
     );
-    _slideOut = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, -0.4),
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0, 0.5, curve: Curves.easeIn),
-      ),
-    );
-    _slideIn = Tween<Offset>(
-      begin: const Offset(0, 0.4),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.5, 1, curve: Curves.easeOut),
-      ),
-    );
+    _slideOut = Tween<Offset>(begin: Offset.zero, end: const Offset(0, -0.4))
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0, 0.5, curve: Curves.easeIn),
+          ),
+        );
+    _slideIn = Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.5, 1, curve: Curves.easeOut),
+          ),
+        );
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -100,6 +103,7 @@ class _AnimatedBrandTextState extends State<AnimatedBrandText>
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
     if (reduceMotion) {
@@ -127,7 +131,7 @@ class _AnimatedBrandTextState extends State<AnimatedBrandText>
 
   TextStyle get _effectiveStyle =>
       widget.style ??
-      const TextStyle(
+      TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.w900,
         letterSpacing: 2,

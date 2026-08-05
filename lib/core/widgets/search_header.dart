@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../dimens.dart';
 import '../theme.dart';
 
@@ -29,6 +29,7 @@ class VaultSearchHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     return SliverAppBar(
       floating: true,
       snap: true,
@@ -109,11 +110,11 @@ class _SearchFieldState extends State<_SearchField> {
       controller: _controller,
       onChanged: widget.onChanged,
       textInputAction: TextInputAction.search,
-      style: const TextStyle(color: VaultColors.textPrimary),
+      style: TextStyle(color: VaultColors.textPrimary),
       decoration: InputDecoration(
         hintText: widget.hintText,
-        hintStyle: const TextStyle(color: VaultColors.textSecondary),
-        prefixIcon: const Icon(
+        hintStyle: TextStyle(color: VaultColors.textSecondary),
+        prefixIcon: Icon(
           Icons.search,
           color: VaultColors.textSecondary,
           size: VaultIconSize.md,
@@ -121,7 +122,7 @@ class _SearchFieldState extends State<_SearchField> {
         suffixIcon: _controller.text.isEmpty
             ? null
             : IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.close,
                   color: VaultColors.textSecondary,
                   size: VaultIconSize.sm,
@@ -133,20 +134,18 @@ class _SearchFieldState extends State<_SearchField> {
               ),
         filled: true,
         fillColor: VaultColors.surface,
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: VaultSpacing.sm,
-        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: VaultSpacing.sm),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(VaultRadius.card),
-          borderSide: const BorderSide(color: VaultColors.divider),
+          borderSide: BorderSide(color: VaultColors.divider),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(VaultRadius.card),
-          borderSide: const BorderSide(color: VaultColors.divider),
+          borderSide: BorderSide(color: VaultColors.divider),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(VaultRadius.card),
-          borderSide: const BorderSide(color: VaultColors.primary),
+          borderSide: BorderSide(color: VaultColors.primary),
         ),
       ),
     );
@@ -162,7 +161,11 @@ class _HeaderIconButton extends StatelessWidget {
   final VoidCallback onTap;
   final int badgeCount;
 
-  const _HeaderIconButton({required this.icon, required this.onTap, this.badgeCount = 0});
+  const _HeaderIconButton({
+    required this.icon,
+    required this.onTap,
+    this.badgeCount = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -171,11 +174,7 @@ class _HeaderIconButton extends StatelessWidget {
       icon: Stack(
         clipBehavior: Clip.none,
         children: [
-          Icon(
-            icon,
-            color: VaultColors.textPrimary,
-            size: VaultIconSize.lg,
-          ),
+          Icon(icon, color: VaultColors.textPrimary, size: VaultIconSize.lg),
           if (badgeCount > 0)
             Positioned(
               right: -4,
@@ -183,7 +182,7 @@ class _HeaderIconButton extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                 constraints: const BoxConstraints(minWidth: 16),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: VaultColors.accent,
                   shape: BoxShape.circle,
                 ),
