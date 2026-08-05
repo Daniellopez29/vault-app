@@ -57,6 +57,7 @@ class VaultApp extends ConsumerWidget {
         debugShowCheckedModeBanner: false,
         theme: VaultTheme.light,
         routerConfig: appRouter,
+        builder: (context, child) => FakeGpsGuard(child: child),
       ),
     );
   }
